@@ -53,18 +53,20 @@ const registerUser = asyncHandler(async (req, res) => {
 // @route   POST /api/auth/login
 // @access  Public
 const loginUser = asyncHandler(async (req, res) => {
-    const { email, password } = req.body;
+    const { email, password, rememberMe } = req.body;
 
     // Check for user email
     const user = await User.findOne({ email });
 
     if (user && (await bcrypt.compare(password, user.password))) {
+        const expiresIn = rememberMe ? '7d' : '1d';
+
         res.json({
             _id: user.id,
             name: user.name,
             email: user.email,
             role: user.role,
-            token: generateToken(user._id),
+            token: generateToken(user._id, expiresIn),
         });
     } else {
         res.status(401);
@@ -73,9 +75,9 @@ const loginUser = asyncHandler(async (req, res) => {
 });
 
 // Generate JWT
-const generateToken = (id) => {
+const generateToken = (id, expiresIn = '1d') => {
     return jwt.sign({ id }, process.env.JWT_SECRET, {
-        expiresIn: '30d',
+        expiresIn,
     });
 };
 

@@ -2,11 +2,12 @@ import { useState, useContext, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import AuthContext from '../context/AuthContext';
 import { motion } from 'framer-motion';
-import { Lock, Mail, ArrowRight } from 'lucide-react';
+import { Lock, Mail, ArrowRight, Check } from 'lucide-react';
 
 const Login = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [rememberMe, setRememberMe] = useState(false);
     const { login, user } = useContext(AuthContext);
     const navigate = useNavigate();
     const [error, setError] = useState('');
@@ -24,7 +25,7 @@ const Login = () => {
         setError('');
         setLoading(true);
         try {
-            await login(email, password);
+            await login(email, password, rememberMe);
         } catch (err) {
             setError(err.response?.data?.message || 'Invalid email or password');
         } finally {
@@ -92,6 +93,22 @@ const Login = () => {
                                     onChange={(e) => setPassword(e.target.value)}
                                 />
                             </div>
+                        </div>
+
+                        <div className="flex items-center justify-between">
+                            <label className="flex items-center gap-2 cursor-pointer group">
+                                <div className={`w-5 h-5 rounded-md border flex items-center justify-center transition-all ${rememberMe ? 'bg-blue-600 border-blue-600' : 'bg-transparent border-zinc-700 group-hover:border-zinc-500'}`}>
+                                    {rememberMe && <Check size={14} className="text-white" />}
+                                </div>
+                                <input
+                                    type="checkbox"
+                                    className="hidden"
+                                    checked={rememberMe}
+                                    onChange={(e) => setRememberMe(e.target.checked)}
+                                />
+                                <span className="text-sm text-zinc-400 group-hover:text-zinc-300 transition-colors">Keep me logged in</span>
+                            </label>
+                            <button type="button" className="text-sm font-medium text-blue-500 hover:text-blue-400 transition-colors">Forgot password?</button>
                         </div>
 
                         <button
