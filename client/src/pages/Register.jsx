@@ -79,7 +79,7 @@ const Register = () => {
                                         type="text"
                                         name="name"
                                         required
-                                        placeholder="John Doe"
+                                        placeholder="Kryzo Admin"
                                         className="w-full pl-12 pr-4 py-3 bg-zinc-950 border border-white/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all text-white placeholder:text-zinc-700"
                                         value={formData.name}
                                         onChange={handleChange}
@@ -95,7 +95,7 @@ const Register = () => {
                                         type="email"
                                         name="email"
                                         required
-                                        placeholder="john@example.com"
+                                        placeholder="hello@kryzo.com"
                                         className="w-full pl-12 pr-4 py-3 bg-zinc-950 border border-white/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all text-white placeholder:text-zinc-700"
                                         value={formData.email}
                                         onChange={handleChange}

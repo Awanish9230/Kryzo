@@ -268,8 +268,8 @@ const AddQuestion = () => {
                                                 <Trash2 size={16} />
                                             </button>
                                             <div className="grid grid-cols-2 gap-4">
-                                                <input placeholder="Input" className="bg-black/50 border border-white/10 p-3 rounded-xl text-sm" value={tc.input} onChange={(e) => handleTestCaseChange(idx, 'input', e.target.value)} />
-                                                <input placeholder="Output" className="bg-black/50 border border-white/10 p-3 rounded-xl text-sm" value={tc.output} onChange={(e) => handleTestCaseChange(idx, 'output', e.target.value)} />
+                                                <textarea placeholder="Input" className="bg-black/50 border border-white/10 p-3 rounded-xl text-sm w-full focus:outline-none resize-none font-mono" rows={3} value={tc.input} onChange={(e) => handleTestCaseChange(idx, 'input', e.target.value)} />
+                                                <textarea placeholder="Output" className="bg-black/50 border border-white/10 p-3 rounded-xl text-sm w-full focus:outline-none resize-none font-mono" rows={3} value={tc.output} onChange={(e) => handleTestCaseChange(idx, 'output', e.target.value)} />
                                             </div>
                                             <label className="flex items-center gap-2 text-xs font-bold text-zinc-500">
                                                 <input type="checkbox" checked={tc.isHidden} onChange={(e) => handleTestCaseChange(idx, 'isHidden', e.target.checked)} />

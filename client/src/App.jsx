@@ -11,7 +11,9 @@ import QuestionList from './pages/admin/QuestionList';
 import AddQuestion from './pages/admin/AddQuestion';
 import EditQuestion from './pages/admin/EditQuestion';
 import UserManagement from './pages/admin/UserManagement';
+
 import AdminDocumentation from './pages/admin/AdminDocumentation';
+import AdminProfile from './pages/admin/Profile';
 
 // Student Components
 import StudentDashboard from './pages/student/Dashboard';
@@ -22,38 +24,69 @@ import Profile from './pages/student/Profile';
 
 import Landing from './pages/Landing';
 
+import About from './pages/general/About';
+import Contact from './pages/general/Contact';
+import Careers from './pages/general/Careers';
+import Blog from './pages/general/Blog';
+import Features from './pages/general/Features';
+import Pricing from './pages/general/Pricing';
+import PrivacyPolicy from './pages/general/PrivacyPolicy';
+import TermsOfService from './pages/general/TermsOfService';
+import { Integrations, Changelog, HelpCenter, Documentation } from './pages/general/MiscPages';
+import NotFound from './pages/NotFound';
+
+import ErrorBoundary from './components/ErrorBoundary';
+
 function App() {
   return (
     <AuthProvider>
-      <Router>
-        <Navbar />
-        <Routes>
-          <Route path="/" element={<Landing />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
+      <ErrorBoundary>
+        <Router>
+          <div className="min-h-screen bg-black text-white">
+            <Navbar />
+            <Routes>
+              {/* Public Routes */}
+              <Route path="/" element={<Landing />} />
+              <Route path="/about" element={<About />} />
+              <Route path="/contact" element={<Contact />} />
+              <Route path="/careers" element={<Careers />} />
+              <Route path="/blog" element={<Blog />} />
+              <Route path="/features" element={<Features />} />
+              <Route path="/pricing" element={<Pricing />} />
+              <Route path="/privacy" element={<PrivacyPolicy />} />
+              <Route path="/terms" element={<TermsOfService />} />
+              <Route path="/integrations" element={<Integrations />} />
+              <Route path="/changelog" element={<Changelog />} />
+              <Route path="/help" element={<HelpCenter />} />
+              <Route path="/docs" element={<Documentation />} />
 
-          {/* Protected Student Routes */}
-          <Route element={<PrivateRoute role="student" />}>
-            <Route path="/student/dashboard" element={<StudentDashboard />} />
-            <Route path="/student/profile" element={<Profile />} />
-            <Route path="/student/test/result" element={<TestResult />} />
-            <Route path="/student/test/diagnostic" element={<TestAttempt />} />
-            <Route path="/student/test/custom" element={<CustomTestBuilder />} />
-            <Route path="/student/test/:testId" element={<TestAttempt />} />
-          </Route>
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
 
-          {/* Protected Admin Routes */}
-          <Route element={<PrivateRoute role="admin" />}>
-            <Route path="/admin/dashboard" element={<AdminDashboard />} />
-            <Route path="/admin/profile" element={<Profile />} />
-            <Route path="/admin/questions" element={<QuestionList />} />
-            <Route path="/admin/questions/add" element={<AddQuestion />} />
-            <Route path="/admin/questions/edit/:id" element={<EditQuestion />} />
-            <Route path="/admin/users" element={<UserManagement />} />
-            <Route path="/admin/documentation" element={<AdminDocumentation />} />
-          </Route>
-        </Routes>
-      </Router>
+              {/* Student Routes */}
+              <Route path="/student" element={<PrivateRoute role="student"><StudentDashboard /></PrivateRoute>} />
+              <Route path="/student/dashboard" element={<PrivateRoute role="student"><StudentDashboard /></PrivateRoute>} />
+              <Route path="/student/profile" element={<PrivateRoute role="student"><Profile /></PrivateRoute>} />
+              <Route path="/student/test/diagnostic" element={<PrivateRoute role="student"><TestAttempt /></PrivateRoute>} />
+              <Route path="/student/test/custom" element={<PrivateRoute role="student"><CustomTestBuilder /></PrivateRoute>} />
+              <Route path="/student/test/:testId" element={<PrivateRoute role="student"><TestAttempt /></PrivateRoute>} />
+              <Route path="/student/test/result" element={<PrivateRoute role="student"><TestResult /></PrivateRoute>} />
+
+              {/* Admin Routes */}
+              <Route path="/admin" element={<PrivateRoute role="admin"><AdminDashboard /></PrivateRoute>} />
+              <Route path="/admin/dashboard" element={<PrivateRoute role="admin"><AdminDashboard /></PrivateRoute>} />
+              <Route path="/admin/profile" element={<PrivateRoute role="admin"><AdminProfile /></PrivateRoute>} />
+              <Route path="/admin/questions" element={<PrivateRoute role="admin"><QuestionList /></PrivateRoute>} />
+              <Route path="/admin/questions/add" element={<PrivateRoute role="admin"><AddQuestion /></PrivateRoute>} />
+              <Route path="/admin/questions/edit/:id" element={<PrivateRoute role="admin"><EditQuestion /></PrivateRoute>} />
+              <Route path="/admin/users" element={<PrivateRoute role="admin"><UserManagement /></PrivateRoute>} />
+              <Route path="/admin/documentation" element={<PrivateRoute role="admin"><AdminDocumentation /></PrivateRoute>} />
+
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </div>
+        </Router>
+      </ErrorBoundary>
     </AuthProvider>
   );
 }

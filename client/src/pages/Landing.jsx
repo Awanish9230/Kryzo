@@ -16,6 +16,7 @@ import {
     Twitter,
     Linkedin
 } from 'lucide-react';
+import Footer from '../components/Footer';
 
 const Landing = () => {
     const { user } = useContext(AuthContext);
@@ -136,73 +137,7 @@ const Landing = () => {
             </section>
 
             {/* Enhanced Footer */}
-            <footer className="py-20 px-6 border-t border-white/5 bg-zinc-950">
-                <div className="max-w-7xl mx-auto">
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
-                        {/* Brand Section */}
-                        <div className="md:col-span-1">
-                            <span className="text-2xl font-bold mb-4 tracking-tighter block">KRYZO</span>
-                            <p className="text-zinc-500 text-sm mb-6">
-                                Empowering students with AI-driven assessments and personalized learning paths.
-                            </p>
-                            <div className="flex gap-4">
-                                <a href="https://github.com" target="_blank" rel="noopener noreferrer" className="p-2 bg-white/5 border border-white/10 rounded-lg hover:bg-white/10 transition-all">
-                                    <Github size={20} className="text-zinc-400" />
-                                </a>
-                                <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" className="p-2 bg-white/5 border border-white/10 rounded-lg hover:bg-white/10 transition-all">
-                                    <Twitter size={20} className="text-zinc-400" />
-                                </a>
-                                <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" className="p-2 bg-white/5 border border-white/10 rounded-lg hover:bg-white/10 transition-all">
-                                    <Linkedin size={20} className="text-zinc-400" />
-                                </a>
-                            </div>
-                        </div>
-
-                        {/* Product Links */}
-                        <div>
-                            <h3 className="font-bold text-sm mb-4 text-white">Product</h3>
-                            <div className="flex flex-col gap-3">
-                                <Link to="/features" className="text-zinc-500 text-sm hover:text-white transition-colors">Features</Link>
-                                <Link to="/pricing" className="text-zinc-500 text-sm hover:text-white transition-colors">Pricing</Link>
-                                <Link to="/integrations" className="text-zinc-500 text-sm hover:text-white transition-colors">Integrations</Link>
-                                <Link to="/changelog" className="text-zinc-500 text-sm hover:text-white transition-colors">Changelog</Link>
-                            </div>
-                        </div>
-
-                        {/* Company Links */}
-                        <div>
-                            <h3 className="font-bold text-sm mb-4 text-white">Company</h3>
-                            <div className="flex flex-col gap-3">
-                                <Link to="/about" className="text-zinc-500 text-sm hover:text-white transition-colors">About Us</Link>
-                                <Link to="/careers" className="text-zinc-500 text-sm hover:text-white transition-colors">Careers</Link>
-                                <Link to="/blog" className="text-zinc-500 text-sm hover:text-white transition-colors">Blog</Link>
-                                <Link to="/contact" className="text-zinc-500 text-sm hover:text-white transition-colors">Contact</Link>
-                            </div>
-                        </div>
-
-                        {/* Resources Links */}
-                        <div>
-                            <h3 className="font-bold text-sm mb-4 text-white">Resources</h3>
-                            <div className="flex flex-col gap-3">
-                                <Link to="/docs" className="text-zinc-500 text-sm hover:text-white transition-colors">Documentation</Link>
-                                <Link to="/help" className="text-zinc-500 text-sm hover:text-white transition-colors">Help Center</Link>
-                                <Link to="/privacy" className="text-zinc-500 text-sm hover:text-white transition-colors">Privacy Policy</Link>
-                                <Link to="/terms" className="text-zinc-500 text-sm hover:text-white transition-colors">Terms of Service</Link>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Bottom Bar */}
-                    <div className="pt-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-4">
-                        <p className="text-zinc-600 text-sm">© 2024 Kryzo Platforms Inc. All rights reserved.</p>
-                        <div className="flex gap-6 text-sm text-zinc-600">
-                            <Link to="/privacy" className="hover:text-white transition-colors">Privacy</Link>
-                            <Link to="/terms" className="hover:text-white transition-colors">Terms</Link>
-                            <Link to="/cookies" className="hover:text-white transition-colors">Cookies</Link>
-                        </div>
-                    </div>
-                </div>
-            </footer>
+            <Footer />
         </div>
     );
 };

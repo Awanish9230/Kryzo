@@ -201,9 +201,15 @@ const TestAttempt = () => {
                                         <div className="bg-zinc-950 px-6 py-3 border-b border-white/5 flex items-center justify-between">
                                             <div className="flex items-center gap-2 text-zinc-500">
                                                 <Code2 size={16} />
-                                                <span className="text-xs font-bold uppercase tracking-widest">Editor</span>
+                                                <span className="text-xs font-bold uppercase tracking-widest hidden sm:inline">Editor</span>
                                             </div>
-                                            <div className="flex gap-2">
+                                            <div className="flex items-center gap-3">
+                                                <select className="bg-zinc-900 border border-white/10 text-xs font-bold text-zinc-400 rounded-lg px-2 py-1 focus:outline-none hover:text-white cursor-pointer transition-colors">
+                                                    <option>JavaScript</option>
+                                                    <option>Python</option>
+                                                    <option>Java</option>
+                                                    <option>C++</option>
+                                                </select>
                                                 <button className="px-4 py-1 bg-zinc-800 border border-white/5 rounded-lg text-[10px] font-bold text-white flex items-center gap-2 hover:bg-zinc-700 transition-all">
                                                     <Play size={12} className="text-green-500" />
                                                     Run Code

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import api from '../../utils/api';
 import { motion } from 'framer-motion';
 import {
@@ -107,10 +108,10 @@ const AdminStatCard = ({ label, value, icon }) => (
 );
 
 const QuickActionLink = ({ label, href }) => (
-    <a href={href} className="flex items-center justify-between p-4 bg-white/5 border border-white/5 rounded-2xl hover:bg-white hover:text-black transition-all group">
+    <Link to={href} className="flex items-center justify-between p-4 bg-white/5 border border-white/5 rounded-2xl hover:bg-white hover:text-black transition-all group">
         <span className="font-bold text-sm tracking-tight">{label}</span>
         <ArrowUpRight size={18} className="text-zinc-600 group-hover:text-black" />
-    </a>
+    </Link>
 );
 
 export default AdminDashboard;
