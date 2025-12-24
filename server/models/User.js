@@ -23,6 +23,26 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: false
     },
+    college: {
+        type: String,
+        required: false
+    },
+    passingYear: {
+        type: String,
+        required: false
+    },
+    state: {
+        type: String,
+        required: false
+    },
+    profileImage: {
+        type: String,
+        default: ''
+    },
+    level: {
+        type: String,
+        default: 'Beginner'
+    }
 }, {
     timestamps: true
 });

@@ -395,7 +395,12 @@ const getUserProfile = asyncHandler(async (req, res) => {
         user: {
             name: req.user.name,
             email: req.user.email,
+            email: req.user.email,
             collegeId: req.user.collegeId,
+            college: req.user.college,
+            passingYear: req.user.passingYear,
+            state: req.user.state,
+            profileImage: req.user.profileImage,
             role: req.user.role
         },
         stats: {
@@ -422,6 +427,39 @@ const getTopics = asyncHandler(async (req, res) => {
     res.json(topics.filter(t => t));
 });
 
+// @desc    Update User Profile
+// @route   PUT /api/student/profile
+// @access  Private
+const updateProfile = asyncHandler(async (req, res) => {
+    const user = await require('../models/User').findById(req.user.id);
+
+    if (user) {
+        user.name = req.body.name || user.name;
+        user.college = req.body.college || user.college;
+        user.collegeId = req.body.collegeId || user.collegeId;
+        user.passingYear = req.body.passingYear || user.passingYear;
+        user.state = req.body.state || user.state;
+        user.profileImage = req.body.profileImage || user.profileImage;
+
+        const updatedUser = await user.save();
+
+        res.json({
+            _id: updatedUser._id,
+            name: updatedUser.name,
+            email: updatedUser.email,
+            role: updatedUser.role,
+            college: updatedUser.college,
+            collegeId: updatedUser.collegeId,
+            passingYear: updatedUser.passingYear,
+            state: updatedUser.state,
+            profileImage: updatedUser.profileImage,
+        });
+    } else {
+        res.status(404);
+        throw new Error('User not found');
+    }
+});
+
 module.exports = {
     generateDiagnosticTest,
     submitTest,
@@ -429,5 +467,6 @@ module.exports = {
     createCustomTest,
     getTestById,
     getUserProfile,
-    getTopics
+    getTopics,
+    updateProfile
 };

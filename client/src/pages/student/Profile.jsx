@@ -10,12 +10,21 @@ import {
     Clock,
     CheckCircle2,
     Trophy,
-    Zap
+    Zap,
+    Edit2,
+    Save,
+    X,
+    Camera,
+    MapPin,
+    GraduationCap,
+    Calendar
 } from 'lucide-react';
 
 const Profile = () => {
     const [profile, setProfile] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [isEditing, setIsEditing] = useState(false);
+    const [formData, setFormData] = useState({});
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -26,10 +35,55 @@ const Profile = () => {
         try {
             const { data } = await api.get('/student/profile');
             setProfile(data);
+            setFormData({
+                name: data.user.name,
+                college: data.user.college || '',
+                collegeId: data.user.collegeId || '',
+                passingYear: data.user.passingYear || '',
+                state: data.user.state || '',
+                profileImage: data.user.profileImage || ''
+            });
             setLoading(false);
         } catch (err) {
             console.error(err);
             setLoading(false);
+        }
+    };
+
+    const handleImageUpload = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            if (file.size > 500000) { // 500KB limit
+                alert("File too large. Please upload an image under 500KB.");
+                return;
+            }
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setFormData({ ...formData, profileImage: reader.result });
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
+    const handleSave = async () => {
+        try {
+            const { data } = await api.put('/student/profile', formData);
+            // Update local profile state with returned user data
+            setProfile(prev => ({
+                ...prev,
+                user: {
+                    ...prev.user,
+                    name: data.name,
+                    college: data.college,
+                    collegeId: data.collegeId,
+                    passingYear: data.passingYear,
+                    state: data.state,
+                    profileImage: data.profileImage
+                }
+            }));
+            setIsEditing(false);
+        } catch (err) {
+            alert(err.response?.data?.message || 'Failed to update profile');
         }
     };
 
@@ -46,6 +100,8 @@ const Profile = () => {
             </div>
         </div>
     );
+
+    const level = profile.stats?.level || 'Beginner';
 
     const levelColors = {
         'Beginner': 'from-zinc-500 to-zinc-600',
@@ -64,21 +120,134 @@ const Profile = () => {
     return (
         <div className="min-h-screen bg-black pt-28 pb-20 px-6">
             <div className="max-w-6xl mx-auto">
-                {/* Header */}
-                <header className="mb-12">
-                    <div className="flex items-center gap-4 mb-4">
-                        <div className="p-4 bg-white/5 border border-white/10 rounded-2xl">
-                            <User size={32} className="text-white" />
+                {/* Header Profile Section */}
+                <div className="bg-zinc-900/50 border border-white/5 rounded-[2.5rem] p-8 md:p-10 backdrop-blur-sm mb-12 relative overflow-hidden group">
+                    {/* Edit Button */}
+                    <button
+                        onClick={() => isEditing ? handleSave() : setIsEditing(true)}
+                        className={`absolute top-8 right-8 z-20 flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm transition-all shadow-xl ${isEditing
+                            ? 'bg-white text-black hover:bg-zinc-200'
+                            : 'bg-white/5 text-white border border-white/10 hover:bg-white/10'}`}
+                    >
+                        {isEditing ? (
+                            <>
+                                <Save size={18} />
+                                Save Changes
+                            </>
+                        ) : (
+                            <>
+                                <Edit2 size={18} />
+                                Edit Profile
+                            </>
+                        )}
+                    </button>
+                    {isEditing && (
+                        <button
+                            onClick={() => setIsEditing(false)}
+                            className="absolute top-8 right-44 z-20 p-2.5 bg-red-500/10 text-red-500 rounded-xl hover:bg-red-500/20 transition-all"
+                        >
+                            <X size={18} />
+                        </button>
+                    )}
+
+                    <div className="flex flex-col md:flex-row items-center gap-8 relative z-10">
+                        {/* Profile Image */}
+                        <div className="relative group/image">
+                            <div className="w-32 h-32 md:w-40 md:h-40 rounded-full border-4 border-black bg-zinc-800 overflow-hidden shadow-2xl relative">
+                                {formData.profileImage ? (
+                                    <img src={formData.profileImage} alt="Profile" className="w-full h-full object-cover" />
+                                ) : (
+                                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-zinc-800 to-zinc-900">
+                                        <User size={64} className="text-zinc-600" />
+                                    </div>
+                                )}
+                                {isEditing && (
+                                    <label className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover/image:opacity-100 transition-all cursor-pointer">
+                                        <Camera size={24} className="text-white" />
+                                        <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
+                                    </label>
+                                )}
+                            </div>
+                            <div className={`absolute bottom-2 right-2 p-2 rounded-full border-4 border-black ${levelColors[level].replace('to-', 'bg-')}`}>
+                                {levelIcons[level]}
+                            </div>
                         </div>
-                        <div>
-                            <h1 className="text-4xl font-bold tracking-tight">{profile.user.name}</h1>
-                            <p className="text-zinc-500">{profile.user.email}</p>
+
+                        {/* User Details */}
+                        <div className="flex-1 text-center md:text-left space-y-4 w-full">
+                            {isEditing ? (
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-bold text-zinc-500 uppercase ml-1">Full Name</label>
+                                        <input
+                                            value={formData.name}
+                                            onChange={e => setFormData({ ...formData, name: e.target.value })}
+                                            className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500"
+                                            placeholder="Your Name"
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-bold text-zinc-500 uppercase ml-1">College ID</label>
+                                        <input
+                                            value={formData.collegeId}
+                                            onChange={e => setFormData({ ...formData, collegeId: e.target.value })}
+                                            className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500"
+                                            placeholder="College ID"
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-bold text-zinc-500 uppercase ml-1">College Name</label>
+                                        <input
+                                            value={formData.college}
+                                            onChange={e => setFormData({ ...formData, college: e.target.value })}
+                                            className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500"
+                                            placeholder="Enter College Name"
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-bold text-zinc-500 uppercase ml-1">Passing Year</label>
+                                        <input
+                                            value={formData.passingYear}
+                                            onChange={e => setFormData({ ...formData, passingYear: e.target.value })}
+                                            className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500"
+                                            placeholder="e.g. 2026"
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-bold text-zinc-500 uppercase ml-1">State</label>
+                                        <input
+                                            value={formData.state}
+                                            onChange={e => setFormData({ ...formData, state: e.target.value })}
+                                            className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500"
+                                            placeholder="e.g. California"
+                                        />
+                                    </div>
+                                </div>
+                            ) : (
+                                <>
+                                    <div>
+                                        <h1 className="text-4xl font-bold tracking-tight mb-2">{profile.user.name}</h1>
+                                        <p className="text-zinc-500 font-medium">{profile.user.email}</p>
+                                    </div>
+                                    <div className="flex flex-wrap gap-3 justify-center md:justify-start">
+                                        <div className="px-4 py-2 bg-white/5 border border-white/10 rounded-xl flex items-center gap-2 text-sm text-zinc-300">
+                                            <GraduationCap size={16} className="text-blue-500" />
+                                            {profile.user.college || 'Full Stack University'}
+                                        </div>
+                                        <div className="px-4 py-2 bg-white/5 border border-white/10 rounded-xl flex items-center gap-2 text-sm text-zinc-300">
+                                            <Calendar size={16} className="text-purple-500" />
+                                            Class of {profile.user.passingYear || '2026'}
+                                        </div>
+                                        <div className="px-4 py-2 bg-white/5 border border-white/10 rounded-xl flex items-center gap-2 text-sm text-zinc-300">
+                                            <MapPin size={16} className="text-red-500" />
+                                            {profile.user.state || 'Global'}
+                                        </div>
+                                    </div>
+                                </>
+                            )}
                         </div>
                     </div>
-                    {profile.user.collegeId && (
-                        <p className="text-sm text-zinc-600 font-mono">College ID: {profile.user.collegeId}</p>
-                    )}
-                </header>
+                </div>
 
                 {/* Level Badge & Stats Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
@@ -88,22 +257,22 @@ const Profile = () => {
                         animate={{ opacity: 1, scale: 1 }}
                         className="md:col-span-2 bg-zinc-900/50 border border-white/5 rounded-[2rem] p-8 backdrop-blur-sm relative overflow-hidden"
                     >
-                        <div className={`absolute inset-0 bg-gradient-to-br ${levelColors[profile.level]} opacity-10`}></div>
+                        <div className={`absolute inset-0 bg-gradient-to-br ${levelColors[level]} opacity-10`}></div>
                         <div className="relative z-10">
                             <div className="flex items-center gap-4 mb-4">
-                                <div className={`p-4 bg-gradient-to-br ${levelColors[profile.level]} rounded-2xl text-white`}>
-                                    {levelIcons[profile.level]}
+                                <div className={`p-4 bg-gradient-to-br ${levelColors[level]} rounded-2xl text-white`}>
+                                    {levelIcons[level]}
                                 </div>
                                 <div>
                                     <p className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-1">Current Level</p>
-                                    <h2 className="text-3xl font-bold tracking-tight">{profile.level}</h2>
+                                    <h2 className="text-3xl font-bold tracking-tight">{level}</h2>
                                 </div>
                             </div>
                             <p className="text-zinc-400 text-sm">
-                                {profile.level === 'Beginner' && 'Keep practicing to reach Intermediate!'}
-                                {profile.level === 'Intermediate' && 'Great progress! Aim for Advanced level.'}
-                                {profile.level === 'Advanced' && 'Excellent work! Expert level is within reach.'}
-                                {profile.level === 'Expert' && 'Outstanding! You\'re at the top of your game.'}
+                                {level === 'Beginner' && 'Keep practicing to reach Intermediate!'}
+                                {level === 'Intermediate' && 'Great progress! Aim for Advanced level.'}
+                                {level === 'Advanced' && 'Excellent work! Expert level is within reach.'}
+                                {level === 'Expert' && 'Outstanding! You\'re at the top of your game.'}
                             </p>
                         </div>
                     </motion.div>
@@ -118,18 +287,10 @@ const Profile = () => {
 
                     {/* Questions Solved - NEW */}
                     <StatCard
-                        icon={<Target className="text-purple-500" />} // Changed Icon
+                        icon={<Target className="text-purple-500" />}
                         label="Questions Solved"
                         value={profile.stats?.totalQuestionsSolved || 0}
                         delay={0.15}
-                    />
-
-                    {/* Average Score */}
-                    <StatCard
-                        icon={<TrendingUp className="text-blue-500" />}
-                        label="Avg Score"
-                        value={`${profile.stats?.averageScore || profile.averageScore}%`}
-                        delay={0.2}
                     />
                 </div>
 

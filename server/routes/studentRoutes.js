@@ -7,7 +7,8 @@ const {
     createCustomTest,
     getTestById,
     getUserProfile,
-    getTopics
+    getTopics,
+    updateProfile
 } = require('../controllers/studentController');
 const { protect } = require('../middleware/authMiddleware');
 
@@ -20,5 +21,6 @@ router.post('/test/custom', createCustomTest);
 router.get('/test/:id', getTestById);
 router.post('/test/submit', submitTest);
 router.get('/plan', getImprovementPlan);
+router.put('/profile', require('../controllers/studentController').updateProfile);
 
 module.exports = router;
