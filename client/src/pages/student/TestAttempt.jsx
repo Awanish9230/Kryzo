@@ -21,6 +21,35 @@ const TestAttempt = () => {
     const [answers, setAnswers] = useState({});
     const [timeLeft, setTimeLeft] = useState(0);
     const [loading, setLoading] = useState(true);
+    const [isRunning, setIsRunning] = useState(false);
+    const [runResults, setRunResults] = useState(null);
+    const [selectedLanguage, setSelectedLanguage] = useState('JavaScript');
+
+
+    const handleRunCode = async () => {
+        const currentQ = test.questions[currentIdx];
+        if (!answers[currentQ._id]) {
+            alert('Please write some code first!');
+            return;
+        }
+
+        setIsRunning(true);
+        setRunResults(null);
+        try {
+            const { data } = await api.post('/compiler/run', {
+                code: answers[currentQ._id],
+                language: selectedLanguage,
+                questionId: currentQ._id
+            });
+            setRunResults(data);
+        } catch (err) {
+            console.error(err);
+            alert('Compilation failed or server error');
+        } finally {
+            setIsRunning(false);
+        }
+    };
+
 
     useEffect(() => {
         const fetchTest = async () => {
@@ -197,31 +226,91 @@ const TestAttempt = () => {
                                         ))}
                                     </div>
                                 ) : (
-                                    <div className="bg-zinc-900 border border-white/5 rounded-3xl overflow-hidden">
-                                        <div className="bg-zinc-950 px-6 py-3 border-b border-white/5 flex items-center justify-between">
-                                            <div className="flex items-center gap-2 text-zinc-500">
-                                                <Code2 size={16} />
-                                                <span className="text-xs font-bold uppercase tracking-widest hidden sm:inline">Editor</span>
+                                    <div className="flex flex-col h-[600px] gap-4">
+                                        <div className="bg-zinc-900 border border-white/5 rounded-3xl overflow-hidden flex-1 flex flex-col">
+                                            <div className="bg-zinc-950 px-6 py-3 border-b border-white/5 flex items-center justify-between shrink-0">
+                                                <div className="flex items-center gap-2 text-zinc-500">
+                                                    <Code2 size={16} />
+                                                    <span className="text-xs font-bold uppercase tracking-widest hidden sm:inline">Editor</span>
+                                                </div>
+                                                <div className="flex items-center gap-3">
+                                                    <select
+                                                        className="bg-zinc-900 border border-white/10 text-xs font-bold text-zinc-400 rounded-lg px-2 py-1 focus:outline-none hover:text-white cursor-pointer transition-colors"
+                                                        value={selectedLanguage}
+                                                        onChange={(e) => setSelectedLanguage(e.target.value)}
+                                                    >
+                                                        <option value="JavaScript">JavaScript</option>
+                                                        <option value="Python">Python</option>
+                                                        <option value="Java">Java</option>
+                                                        <option value="C++">C++</option>
+                                                    </select>
+                                                    <button
+                                                        onClick={handleRunCode}
+                                                        disabled={isRunning}
+                                                        className="px-4 py-1.5 bg-zinc-800 border border-white/5 rounded-lg text-[10px] font-bold text-white flex items-center gap-2 hover:bg-zinc-700 transition-all disabled:opacity-50"
+                                                    >
+                                                        {isRunning ? (
+                                                            <div className="w-3 h-3 border-2 border-white/20 border-t-green-500 rounded-full animate-spin" />
+                                                        ) : (
+                                                            <Play size={12} className="text-green-500" />
+                                                        )}
+                                                        {isRunning ? 'Running...' : 'Run Code'}
+                                                    </button>
+                                                </div>
                                             </div>
-                                            <div className="flex items-center gap-3">
-                                                <select className="bg-zinc-900 border border-white/10 text-xs font-bold text-zinc-400 rounded-lg px-2 py-1 focus:outline-none hover:text-white cursor-pointer transition-colors">
-                                                    <option>JavaScript</option>
-                                                    <option>Python</option>
-                                                    <option>Java</option>
-                                                    <option>C++</option>
-                                                </select>
-                                                <button className="px-4 py-1 bg-zinc-800 border border-white/5 rounded-lg text-[10px] font-bold text-white flex items-center gap-2 hover:bg-zinc-700 transition-all">
-                                                    <Play size={12} className="text-green-500" />
-                                                    Run Code
-                                                </button>
+                                            <textarea
+                                                className="w-full flex-1 p-6 bg-black text-white font-mono text-sm focus:outline-none resize-none leading-relaxed"
+                                                placeholder="// Write your solution here..."
+                                                value={answers[currentQuestion._id] || ''}
+                                                onChange={(e) => handleAnswer(currentQuestion._id, e.target.value)}
+                                                spellCheck="false"
+                                            />
+                                        </div>
+
+                                        {/* Output Console */}
+                                        <div className="bg-black border border-white/10 rounded-3xl overflow-hidden h-48 flex flex-col">
+                                            <div className="bg-zinc-900/50 px-6 py-2 border-b border-white/5 flex items-center justify-between">
+                                                <span className="text-xs font-bold text-zinc-500 uppercase tracking-widest">Console Output</span>
+                                                {runResults && (
+                                                    <span className={`text-xs font-bold ${runResults.summary.passed === runResults.summary.total ? 'text-green-500' : 'text-red-500'}`}>
+                                                        {runResults.summary.passed} / {runResults.summary.total} Passed
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <div className="p-4 overflow-y-auto font-mono text-xs space-y-4">
+                                                {!runResults && !isRunning && <span className="text-zinc-600">Run your code to see output...</span>}
+                                                {isRunning && <span className="text-zinc-500 animate-pulse">Compiling and executing...</span>}
+
+                                                {runResults && runResults.results.map((res, idx) => (
+                                                    <div key={idx} className="border-b border-white/5 pb-2 last:border-0 last:pb-0">
+                                                        <div className="flex items-center gap-2 mb-1">
+                                                            <span className={`w-2 h-2 rounded-full ${res.passed ? 'bg-green-500' : 'bg-red-500'}`} />
+                                                            <span className="text-zinc-400 font-bold">Test Case {idx + 1}</span>
+                                                        </div>
+                                                        {res.error ? (
+                                                            <div className="text-red-400 pl-4">{res.error}</div>
+                                                        ) : (
+                                                            <div className="pl-4 space-y-1">
+                                                                <div className="flex gap-2">
+                                                                    <span className="text-zinc-600">Input:</span>
+                                                                    <span className="text-zinc-300">{res.input}</span>
+                                                                </div>
+                                                                <div className="flex gap-2">
+                                                                    <span className="text-zinc-600">Output:</span>
+                                                                    <span className="text-zinc-300">{res.actualOutput}</span>
+                                                                </div>
+                                                                {!res.passed && (
+                                                                    <div className="flex gap-2">
+                                                                        <span className="text-zinc-600">Expected:</span>
+                                                                        <span className="text-green-400/80">{res.expectedOutput}</span>
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                ))}
                                             </div>
                                         </div>
-                                        <textarea
-                                            className="w-full h-96 p-8 bg-black text-white font-mono text-sm focus:outline-none resize-none"
-                                            placeholder="// Write your solution here..."
-                                            value={answers[currentQuestion._id] || ''}
-                                            onChange={(e) => handleAnswer(currentQuestion._id, e.target.value)}
-                                        />
                                     </div>
                                 )}
                             </div>
