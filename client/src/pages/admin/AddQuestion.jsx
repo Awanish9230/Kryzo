@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../utils/api';
+import TOPICS_DATA from '../../utils/topicsData';
 import { motion } from 'framer-motion';
 import {
     ArrowLeft,
@@ -16,11 +17,12 @@ import {
 const AddQuestion = () => {
     const navigate = useNavigate();
     const [type, setType] = useState('MCQ');
+    const [selectedTopic, setSelectedTopic] = useState('');
+    const [selectedSubtopic, setSelectedSubtopic] = useState('');
     const [formData, setFormData] = useState({
         title: '',
         description: '',
         difficulty: 'medium',
-        topics: '',
         status: 'published',
         expectedTime: 10,
         options: [
@@ -96,7 +98,8 @@ const AddQuestion = () => {
             const payload = {
                 ...formData,
                 type,
-                topics: formData.topics.split(',').map(t => t.trim()).filter(t => t),
+                topic: selectedTopic,
+                subtopic: selectedSubtopic,
                 evaluationCriteria: formData.evaluationCriteria.filter(c => c.trim()),
                 expectedDeliverables: formData.expectedDeliverables.filter(d => d.trim())
             };
@@ -147,7 +150,7 @@ const AddQuestion = () => {
                                 <label className="text-sm font-medium text-zinc-400 ml-1">Description</label>
                                 <textarea name="description" required rows={4} placeholder="Problem description..." className="w-full px-5 py-4 bg-zinc-950 border border-white/10 rounded-2xl text-white focus:outline-none focus:border-blue-500 transition-all resize-none" value={formData.description} onChange={handleChange} />
                             </div>
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div className="space-y-2">
                                     <label className="text-sm font-medium text-zinc-400 ml-1">Difficulty</label>
                                     <select name="difficulty" className="w-full px-5 py-4 bg-zinc-950 border border-white/10 rounded-2xl text-white focus:outline-none" value={formData.difficulty} onChange={handleChange}>
@@ -157,12 +160,40 @@ const AddQuestion = () => {
                                     </select>
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-sm font-medium text-zinc-400 ml-1">Topics</label>
-                                    <input name="topics" placeholder="Arrays, Linked List..." className="w-full px-5 py-4 bg-zinc-950 border border-white/10 rounded-2xl text-white focus:outline-none" value={formData.topics} onChange={handleChange} />
-                                </div>
-                                <div className="space-y-2">
                                     <label className="text-sm font-medium text-zinc-400 ml-1">Time (mins)</label>
                                     <input name="expectedTime" type="number" className="w-full px-5 py-4 bg-zinc-950 border border-white/10 rounded-2xl text-white focus:outline-none" value={formData.expectedTime} onChange={handleChange} />
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium text-zinc-400 ml-1">Topic</label>
+                                    <select
+                                        className="w-full px-5 py-4 bg-zinc-950 border border-white/10 rounded-2xl text-white focus:outline-none"
+                                        value={selectedTopic}
+                                        onChange={(e) => {
+                                            setSelectedTopic(e.target.value);
+                                            setSelectedSubtopic(''); // Reset subtopic when topic changes
+                                        }}
+                                    >
+                                        <option value="">Select Topic</option>
+                                        {Object.keys(TOPICS_DATA).map(topic => (
+                                            <option key={topic} value={topic}>{topic}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium text-zinc-400 ml-1">Subtopic</label>
+                                    <select
+                                        className="w-full px-5 py-4 bg-zinc-950 border border-white/10 rounded-2xl text-white focus:outline-none"
+                                        value={selectedSubtopic}
+                                        onChange={(e) => setSelectedSubtopic(e.target.value)}
+                                        disabled={!selectedTopic}
+                                    >
+                                        <option value="">Select Subtopic</option>
+                                        {selectedTopic && TOPICS_DATA[selectedTopic]?.map(subtopic => (
+                                            <option key={subtopic} value={subtopic}>{subtopic}</option>
+                                        ))}
+                                    </select>
                                 </div>
                             </div>
                         </div>

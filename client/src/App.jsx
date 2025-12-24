@@ -11,10 +11,12 @@ import QuestionList from './pages/admin/QuestionList';
 import AddQuestion from './pages/admin/AddQuestion';
 import EditQuestion from './pages/admin/EditQuestion';
 import UserManagement from './pages/admin/UserManagement';
+import AdminDocumentation from './pages/admin/AdminDocumentation';
 
 // Student Components
 import StudentDashboard from './pages/student/Dashboard';
 import TestAttempt from './pages/student/TestAttempt';
+import TestResult from './pages/student/TestResult';
 import CustomTestBuilder from './pages/student/CustomTestBuilder';
 import Profile from './pages/student/Profile';
 
@@ -34,6 +36,7 @@ function App() {
           <Route element={<PrivateRoute role="student" />}>
             <Route path="/student/dashboard" element={<StudentDashboard />} />
             <Route path="/student/profile" element={<Profile />} />
+            <Route path="/student/test/result" element={<TestResult />} />
             <Route path="/student/test/diagnostic" element={<TestAttempt />} />
             <Route path="/student/test/custom" element={<CustomTestBuilder />} />
             <Route path="/student/test/:testId" element={<TestAttempt />} />
@@ -47,6 +50,7 @@ function App() {
             <Route path="/admin/questions/add" element={<AddQuestion />} />
             <Route path="/admin/questions/edit/:id" element={<EditQuestion />} />
             <Route path="/admin/users" element={<UserManagement />} />
+            <Route path="/admin/documentation" element={<AdminDocumentation />} />
           </Route>
         </Routes>
       </Router>

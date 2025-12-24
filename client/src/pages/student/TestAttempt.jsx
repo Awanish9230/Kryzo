@@ -82,7 +82,7 @@ const TestAttempt = () => {
                 })
             };
             await api.post('/student/test/submit', submission);
-            navigate('/student/dashboard');
+            navigate('/student/test/result');
         } catch (err) {
             console.error(err);
             alert('Failed to submit test');
@@ -113,6 +113,7 @@ const TestAttempt = () => {
                             {formatTime(timeLeft)}
                         </span>
                     </div>
+                    {/* Explicitly show finish button */}
                     <button
                         onClick={handleSubmit}
                         className="px-4 py-1.5 bg-blue-600 text-white text-xs font-bold rounded-full hover:bg-blue-500 transition-all shadow-lg shadow-blue-500/20"
@@ -133,10 +134,10 @@ const TestAttempt = () => {
                                 key={q._id}
                                 onClick={() => setCurrentIdx(idx)}
                                 className={`w-10 h-10 md:w-full md:h-auto md:px-4 md:py-3 rounded-xl flex items-center justify-center md:justify-start gap-3 transition-all shrink-0 ${currentIdx === idx
-                                        ? 'bg-white text-black font-bold'
-                                        : answers[q._id] !== undefined
-                                            ? 'bg-zinc-800/50 text-white'
-                                            : 'text-zinc-600 hover:text-zinc-300'
+                                    ? 'bg-white text-black font-bold'
+                                    : answers[q._id] !== undefined
+                                        ? 'bg-zinc-800/50 text-white'
+                                        : 'text-zinc-600 hover:text-zinc-300'
                                     }`}
                             >
                                 <span className="text-sm">{idx + 1}</span>
@@ -182,8 +183,8 @@ const TestAttempt = () => {
                                                 key={idx}
                                                 onClick={() => handleAnswer(currentQuestion._id, idx)}
                                                 className={`group p-5 rounded-2xl border text-left transition-all flex items-center gap-4 ${answers[currentQuestion._id] === idx
-                                                        ? 'bg-white border-white text-black'
-                                                        : 'bg-zinc-900/50 border-white/5 text-zinc-400 hover:border-white/20'
+                                                    ? 'bg-white border-white text-black'
+                                                    : 'bg-zinc-900/50 border-white/5 text-zinc-400 hover:border-white/20'
                                                     }`}
                                             >
                                                 <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center text-[10px] font-bold ${answers[currentQuestion._id] === idx ? 'bg-black border-black text-white' : 'border-zinc-700'

@@ -10,7 +10,7 @@
 
 @layer base {
     body {
-        @apply bg-brand-bg text-brand-text antialiased;
+        @apply bg-brand-bg text-brand-text antialiased overflow-y-scroll;
         font-family: 'Inter', system-ui, sans-serif;
     }
 }

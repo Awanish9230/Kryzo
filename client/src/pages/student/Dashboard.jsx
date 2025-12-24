@@ -99,8 +99,11 @@ const StudentDashboard = () => {
                                     className="p-6 md:p-8 hover:bg-white/[0.02] flex items-center justify-between group transition-colors"
                                 >
                                     <div className="flex items-center gap-6">
-                                        <div className="w-14 h-14 flex items-center justify-center bg-white/5 border border-white/10 rounded-2xl text-white font-bold text-lg group-hover:bg-white group-hover:text-black transition-all shadow-inner">
-                                            {task.day}
+                                        <div className="flex flex-col items-center gap-2">
+                                            <div className="w-14 h-14 flex items-center justify-center bg-white/5 border border-white/10 rounded-2xl text-white font-bold text-xl group-hover:bg-white group-hover:text-black transition-all shadow-inner">
+                                                {task.dayNumber || idx + 1}
+                                            </div>
+                                            <span className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest">{task.dayName}</span>
                                         </div>
                                         <div>
                                             <p className="text-lg font-bold text-white mb-1">{task.description}</p>

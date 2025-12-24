@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import TOPICS_DATA from '../../utils/topicsData';
 import api from '../../utils/api';
 import { motion } from 'framer-motion';
 import {
@@ -17,30 +18,48 @@ const CustomTestBuilder = () => {
     const [topics, setTopics] = useState([]);
     const [selectedTopics, setSelectedTopics] = useState([]);
     const [config, setConfig] = useState({
-        numQuestions: 10,
-        duration: 30,
-        difficulty: 'medium'
+        numQuestions: 5,
+        duration: 30, // Estimated duration, will be recalculated by backend
+        difficulty: 'medium',
+        type: 'mixed' // mcq, coding, mixed
     });
     const [loading, setLoading] = useState(true);
 
+    // Dynamic Options based on Type
+    const getQuestionOptions = () => {
+        switch (config.type) {
+            case 'mcq': return [5, 10, 20];
+            case 'coding': return [2, 3, 5];
+            case 'mixed': return [10, 20, 30];
+            default: return [5, 10, 20];
+        }
+    };
+
     useEffect(() => {
-        const fetchTopics = async () => {
-            try {
-                const { data } = await api.get('/student/topics');
-                setTopics(data);
-                setLoading(false);
-            } catch (err) {
-                console.error(err);
-                setLoading(false);
-            }
-        };
-        fetchTopics();
+        // Load topics from static data directly
+        setTopics(Object.keys(TOPICS_DATA));
+        setLoading(false);
     }, []);
 
-    const toggleTopic = (topic) => {
+    // Reset numQuestions when type changes to ensure valid selection
+    useEffect(() => {
+        const options = getQuestionOptions();
+        if (!options.includes(config.numQuestions)) {
+            setConfig(prev => ({ ...prev, numQuestions: options[0] }));
+        }
+    }, [config.type]);
+
+    const toggleTopic = (e) => {
+        const value = e.target.value;
+        if (!value) return;
         setSelectedTopics(prev =>
-            prev.includes(topic) ? prev.filter(t => t !== topic) : [...prev, topic]
+            prev.includes(value) ? prev.filter(t => t !== value) : [...prev, value]
         );
+        e.target.value = ""; // Reset selector
+    };
+
+    const removeTopic = (topic) => {
+        setSelectedTopics(prev => prev.filter(t => t !== topic));
     };
 
     const handleCreate = async () => {
@@ -55,6 +74,7 @@ const CustomTestBuilder = () => {
             });
             navigate(`/student/test/${data._id}`);
         } catch (err) {
+            console.error(err);
             alert('Failed to generate test. Make sure enough questions exist for selected topics.');
         }
     };
@@ -75,7 +95,7 @@ const CustomTestBuilder = () => {
                         </div>
                         <h1 className="text-4xl font-bold tracking-tight">Custom Challenge</h1>
                     </div>
-                    <p className="text-zinc-500 text-lg">Taylor your practice session by selecting specific topics and difficulty.</p>
+                    <p className="text-zinc-500 text-lg">Taylor your practice session by selecting specific topics, difficulty, and question type.</p>
                 </header>
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -86,20 +106,43 @@ const CustomTestBuilder = () => {
                                 <Zap className="text-yellow-500" size={20} />
                                 Select Topics
                             </h2>
-                            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                                {topics.map(topic => (
-                                    <button
-                                        key={topic}
-                                        onClick={() => toggleTopic(topic)}
-                                        className={`p-4 rounded-2xl border text-sm font-bold transition-all text-left flex items-center justify-between group ${selectedTopics.includes(topic)
-                                                ? 'bg-white border-white text-black'
-                                                : 'bg-zinc-950 border-white/5 text-zinc-500 hover:border-white/20'
-                                            }`}
-                                    >
-                                        <span className="truncate">{topic}</span>
-                                        {selectedTopics.includes(topic) && <CheckCircle2 size={16} />}
-                                    </button>
-                                ))}
+
+                            {/* Topic Dropdown */}
+                            <div className="mb-6 relative">
+                                <select
+                                    onChange={toggleTopic}
+                                    className="w-full bg-black border border-white/10 rounded-xl py-4 px-4 text-white appearance-none cursor-pointer focus:border-blue-500 transition-colors"
+                                >
+                                    <option value="">Select a topic to add...</option>
+                                    {topics.map(topic => (
+                                        <option key={topic} value={topic} disabled={selectedTopics.includes(topic)}>
+                                            {topic}
+                                        </option>
+                                    ))}
+                                </select>
+                                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-zinc-500">
+                                    ▼
+                                </div>
+                            </div>
+
+                            {/* Selected Tags */}
+                            <div className="flex flex-wrap gap-2 min-h-[100px] content-start">
+                                {selectedTopics.length > 0 ? (
+                                    selectedTopics.map(topic => (
+                                        <button
+                                            key={topic}
+                                            onClick={() => removeTopic(topic)}
+                                            className="px-4 py-2 rounded-full bg-white text-black font-bold text-sm flex items-center gap-2 hover:bg-zinc-200 transition-colors group"
+                                        >
+                                            {topic}
+                                            <div className="bg-black/10 rounded-full p-0.5 group-hover:bg-black/20">
+                                                <Zap size={10} className="rotate-45" />
+                                            </div>
+                                        </button>
+                                    ))
+                                ) : (
+                                    <p className="text-zinc-600 italic">No topics selected yet.</p>
+                                )}
                             </div>
                         </section>
                     </div>
@@ -113,10 +156,26 @@ const CustomTestBuilder = () => {
                             </h2>
 
                             <div className="space-y-8">
+                                {/* Question Type */}
+                                <div className="space-y-4">
+                                    <label className="text-xs font-bold text-zinc-600 uppercase tracking-widest px-1">Type</label>
+                                    <div className="flex gap-2">
+                                        {['mcq', 'coding', 'mixed'].map(type => (
+                                            <button
+                                                key={type}
+                                                onClick={() => setConfig({ ...config, type })}
+                                                className={`flex-1 py-3 rounded-xl border text-sm font-bold uppercase transition-all ${config.type === type ? 'bg-white border-white text-black' : 'bg-zinc-950 border-white/5 text-zinc-500 hover:text-white'}`}
+                                            >
+                                                {type}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
                                 <div className="space-y-4">
                                     <label className="text-xs font-bold text-zinc-600 uppercase tracking-widest px-1">Questions</label>
                                     <div className="flex gap-2">
-                                        {[5, 10, 20].map(n => (
+                                        {getQuestionOptions().map(n => (
                                             <button
                                                 key={n}
                                                 onClick={() => setConfig({ ...config, numQuestions: n })}

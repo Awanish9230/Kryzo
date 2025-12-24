@@ -2,45 +2,69 @@ const asyncHandler = require('express-async-handler');
 const Question = require('../models/Question');
 const Test = require('../models/Test');
 const UserAttempt = require('../models/UserAttempt');
+const Documentation = require('../models/Documentation');
 
 // @desc    Generate Diagnostic Test
 // @route   GET /api/student/test/diagnostic
 // @access  Private/Student
 const generateDiagnosticTest = asyncHandler(async (req, res) => {
-    // 1. Check if user already has a pending diagnostic test? (Optional optimization)
+    // 1. Get all distinct topics available in the system
+    const topics = await Question.distinct('topics', { status: 'published' });
+    const cleanTopics = topics.filter(t => t); // Remove nulls
 
-    // 2. Fetch random questions (e.g., 5 MCQ, 2 Coding)
-    // Using simple aggregation $sample
-    const mcqQuestions = await Question.aggregate([
-        { $match: { status: 'published', type: 'MCQ' } },
-        { $sample: { size: 5 } }
-    ]);
-    const codingQuestions = await Question.aggregate([
-        { $match: { status: 'published', type: 'CODING' } },
-        { $sample: { size: 2 } }
-    ]);
+    let selectedQuestions = [];
+    const questionIds = new Set(); // To avoid duplicates
 
-    const questions = [...mcqQuestions, ...codingQuestions];
+    // 2. Attempt to pick 1 Medium question from EACH topic
+    for (const topic of cleanTopics) {
+        // Try to find a 'medium' question first for better assessment
+        let questions = await Question.aggregate([
+            { $match: { status: 'published', topics: topic, difficulty: 'medium' } },
+            { $sample: { size: 1 } }
+        ]);
 
-    if (questions.length === 0) {
-        res.status(404);
-        throw new Error('Not enough questions to generate test');
+        if (questions.length === 0) {
+            // Fallback to any difficulty if medium not found
+            questions = await Question.aggregate([
+                { $match: { status: 'published', topics: topic } },
+                { $sample: { size: 1 } }
+            ]);
+        }
+
+        if (questions.length > 0) {
+            const q = questions[0];
+            if (!questionIds.has(q._id.toString())) {
+                selectedQuestions.push(q);
+                questionIds.add(q._id.toString());
+            }
+        }
     }
 
-    // 3. Create Test Record
+    // 3. If test is too short (< 10 questions), fill with random mixed questions
+    if (selectedQuestions.length < 10) {
+        const remainingNeeded = 10 - selectedQuestions.length;
+        const extraQuestions = await Question.aggregate([
+            {
+                $match: {
+                    status: 'published',
+                    _id: { $nin: Array.from(questionIds).map(id => new mongoose.Types.ObjectId(id)) }
+                }
+            },
+            { $sample: { size: remainingNeeded } }
+        ]);
+        selectedQuestions = [...selectedQuestions, ...extraQuestions];
+    }
+
+    // 4. Create Test Record (Fixed 1 Hour Duration)
     const test = await Test.create({
         type: 'DIAGNOSTIC',
-        duration: 60, // 60 mins default
-        questions: questions.map(q => q._id),
-        createdBy: req.user.id // Generated for this user
+        duration: 60, // 1 Hour fixed
+        questions: selectedQuestions.map(q => q._id),
+        createdBy: req.user.id
     });
 
-    // Populate question details for response
-    // We already have question objects, but to be consistent/clean, we can refetch or just send formatted
-    // But Test model stores IDs.
-
-    // Return full test with populated questions
-    const populatedTest = await Test.findById(test._id).populate('questions', '-options.isCorrect -testCases.output -testCases.isHidden');
+    const populatedTest = await Test.findById(test._id)
+        .populate('questions', '-options.isCorrect -testCases.output -testCases.isHidden');
 
     res.status(201).json(populatedTest);
 });
@@ -50,7 +74,7 @@ const generateDiagnosticTest = asyncHandler(async (req, res) => {
 // @access  Private/Student
 const submitTest = asyncHandler(async (req, res) => {
     const { testId, answers } = req.body;
-    // answers: [{ questionId, userAnswer, timeTaken }]
+    // answers: [{ questionId, userAnswer, timeTaken, selectedOption, code }]
 
     const test = await Test.findById(testId).populate('questions');
     if (!test) {
@@ -59,36 +83,46 @@ const submitTest = asyncHandler(async (req, res) => {
     }
 
     let score = 0;
+    let maxPossibleScore = 0;
     const gradedAnswers = [];
 
     for (const ans of answers) {
         const question = test.questions.find(q => q._id.toString() === ans.questionId);
         let isCorrect = false;
+        let points = 0;
 
         if (question) {
             if (question.type === 'MCQ') {
-                // Find correct option
+                points = 10;
+                maxPossibleScore += 10;
                 const correctOption = question.options.find(opt => opt.isCorrect);
-                // Compare IDs or Text? Frontend should send Option ID if possible, or Text.
-                // Assuming userAnswer is the option _id or text.
-                // Let's assume userAnswer is the Option ID string.
-                if (correctOption && ans.userAnswer === correctOption._id.toString()) {
-                    isCorrect = true;
-                    score += 10; // 10 points per MCQ
+                // Compare index (sent as selectedOption) or text
+                // Assuming frontend sends index in `selectedOption` or text in `userAnswer`
+                // Let's handle index (0, 1, 2...)
+                if (correctOption && ans.selectedOption !== undefined) {
+                    const selectedIdx = ans.selectedOption;
+                    // Find index of correct option
+                    const correctIdx = question.options.findIndex(opt => opt.isCorrect);
+                    if (Number(selectedIdx) === correctIdx) {
+                        isCorrect = true;
+                        score += 10;
+                    }
                 }
             } else if (question.type === 'CODING') {
-                // Placeholder Logic: If code length > 20, mark correct.
-                // In real app, send to Judge0.
-                if (ans.userAnswer && ans.userAnswer.length > 20) {
-                    isCorrect = true;
-                    score += 20; // 20 points per Coding
+                points = 20;
+                maxPossibleScore += 20;
+                // Basic validation: Check if code is not empty
+                // In a real scenario, this would go to a code execution engine
+                if (ans.code && ans.code.trim().length > 10) {
+                    isCorrect = true; // Auto-pass for demo purposes if code is written
+                    score += 20;
                 }
             }
         }
 
         gradedAnswers.push({
             questionId: ans.questionId,
-            userAnswer: ans.userAnswer,
+            userAnswer: ans.userAnswer || ans.code || ans.selectedOption,
             isCorrect,
             timeTaken: ans.timeTaken
         });
@@ -115,7 +149,7 @@ const getImprovementPlan = asyncHandler(async (req, res) => {
         .sort({ createdAt: -1 })
         .populate({
             path: 'answers.questionId',
-            select: 'topics difficulty' // Populate topics to analyze
+            select: 'topics difficulty title'
         });
 
     if (!lastAttempt) {
@@ -123,63 +157,106 @@ const getImprovementPlan = asyncHandler(async (req, res) => {
         throw new Error('No attempts found');
     }
 
-    // Analyze topics
+    // 1. Analyze Performance
     const topicStats = {}; // { 'Arrays': { correct: 2, total: 3 } }
+    let totalCorrect = 0;
+    let totalQuestions = 0;
 
     lastAttempt.answers.forEach(ans => {
         const question = ans.questionId;
-        if (question && question.topics) {
-            question.topics.forEach(topic => {
-                if (!topicStats[topic]) {
-                    topicStats[topic] = { correct: 0, total: 0 };
-                }
-                topicStats[topic].total += 1;
-                if (ans.isCorrect) {
-                    topicStats[topic].correct += 1;
-                }
-            });
+        if (question) {
+            totalQuestions++;
+            if (ans.isCorrect) totalCorrect++;
+
+            if (question.topics) {
+                question.topics.forEach(topic => {
+                    if (!topicStats[topic]) topicStats[topic] = { correct: 0, total: 0 };
+                    topicStats[topic].total += 1;
+                    if (ans.isCorrect) topicStats[topic].correct += 1;
+                });
+            }
         }
     });
 
+    const percentage = totalQuestions > 0 ? (totalCorrect / totalQuestions) * 100 : 0;
+
+    // 2. Identify Weak Areas
     const weakTopics = [];
     const strongTopics = [];
-    const averageTopics = [];
 
     for (const [topic, stats] of Object.entries(topicStats)) {
         const accuracy = (stats.correct / stats.total) * 100;
         if (accuracy < 60) weakTopics.push(topic);
-        else if (accuracy > 80) strongTopics.push(topic);
-        else averageTopics.push(topic);
+        else strongTopics.push(topic);
     }
 
-    // Generate Plan Tasks
-    // 3-5 questions for weak topics
+    // 3. Generate Motivational Message and Plan
+    let motivation = '';
     const dailyTasks = [];
-    if (weakTopics.length > 0) {
-        dailyTasks.push({
-            day: 1,
-            description: `Review concepts for: ${weakTopics.join(', ')}`,
-            action: 'READ_DOCS'
-        });
-        dailyTasks.push({
-            day: 2,
-            description: `Solve 3 easy problems on ${weakTopics[0]}`,
-            action: 'PRACTICE'
-        });
+    const today = new Date();
+
+    if (percentage < 40) {
+        motivation = "Don't be discouraged! Every expert was once a beginner. Your score indicates there are fundamental concepts to revisit. We have a solid plan to get you back on track.";
+    } else if (percentage < 70) {
+        motivation = "Good effort! You have a grasp of the basics, but some advanced topics need polishing. Consistent practice this week will push you to the next level.";
     } else {
-        dailyTasks.push({
-            day: 1,
-            description: 'Good job! Maintain your streak with a mix of problems.',
-            action: 'PRACTICE'
-        });
+        motivation = "Excellent work! You're performing well. It's time to challenge yourself with harder problems to maintain this momentum.";
+    }
+
+    // 4. Build 7-Day Plan
+    // If no weak topics, pick some random ones or advanced ones
+    const focusTopics = weakTopics.length > 0 ? weakTopics : Object.keys(topicStats).slice(0, 3);
+
+    for (let i = 0; i < 7; i++) {
+        const dayDate = new Date(today);
+        dayDate.setDate(today.getDate() + i + 1);
+        const dayName = dayDate.toLocaleDateString('en-US', { weekday: 'long' });
+
+        let task = {};
+
+        if (i < 2) { // Day 1-2: Learning & Documentation
+            const topic = focusTopics[i % focusTopics.length];
+            // Fetch documentation if exists
+            const doc = await Documentation.findOne({ topic: topic });
+
+            task = {
+                day: `Day ${i + 1} (${dayName})`,
+                topic: topic,
+                action: 'LEARN',
+                description: `Deep dive into ${topic} concepts.`,
+                resource: doc ? { title: doc.title, id: doc._id } : null
+            };
+        } else if (i < 5) { // Day 3-5: Practice
+            const topic = focusTopics[i % focusTopics.length];
+            task = {
+                day: `Day ${i + 1} (${dayName})`,
+                topic: topic,
+                action: 'PRACTICE',
+                description: `Solve 3-5 Medium problems on ${topic}. Focus on accuracy.`,
+                link: `/student/test/custom?topic=${topic}`
+            };
+        } else { // Day 6-7: Review & Test
+            task = {
+                day: `Day ${i + 1} (${dayName})`,
+                topic: 'Mixed',
+                action: 'TEST',
+                description: i === 5 ? 'Review mistakes from previous practice sessions.' : 'Take another Diagnostic Test to measure improvement.',
+                link: i === 6 ? '/student/test/diagnostic' : null
+            };
+        }
+
+        dailyTasks.push(task);
     }
 
     res.json({
         attemptId: lastAttempt._id,
         score: lastAttempt.score,
+        percentage: Math.round(percentage),
+        correctQuestions: totalCorrect,
+        totalQuestions: totalQuestions,
+        motivation,
         analysis: {
             weak: weakTopics,
-            average: averageTopics,
             strong: strongTopics
         },
         plan: dailyTasks
@@ -200,7 +277,6 @@ const createCustomTest = asyncHandler(async (req, res) => {
         matchStage.difficulty = difficulty;
     }
 
-    // Fetch random questions
     const questions = await Question.aggregate([
         { $match: matchStage },
         { $sample: { size: Number(questionCount) } }
@@ -211,9 +287,22 @@ const createCustomTest = asyncHandler(async (req, res) => {
         throw new Error('No questions found matching criteria');
     }
 
+    // Dynamic Duration Calculation
+    let totalDuration = 0;
+    questions.forEach(q => {
+        if (q.type === 'MCQ') {
+            totalDuration += 2; // 2 minutes per MCQ
+        } else if (q.type === 'CODING') {
+            totalDuration += (q.expectedTime || 15); // Use defined time or default 15 mins
+        }
+    });
+
+    // Fallback if mixed/unknown types result in 0 (shouldn't happen but safe)
+    if (totalDuration === 0) totalDuration = questions.length * 5;
+
     const test = await Test.create({
         type: 'CUSTOM',
-        duration: questions.length * 2, // 2 mins per question
+        duration: totalDuration,
         questions: questions.map(q => q._id),
         createdBy: req.user.id
     });
@@ -241,58 +330,49 @@ const getTestById = asyncHandler(async (req, res) => {
 // @access  Private/Student
 const getUserProfile = asyncHandler(async (req, res) => {
     const userId = req.user.id;
-
-    // Get all user attempts
     const attempts = await UserAttempt.find({ userId }).populate('testId');
 
-    if (attempts.length === 0) {
-        return res.json({
-            user: req.user,
-            level: 'Beginner',
-            testsTaken: 0,
-            averageScore: 0,
-            percentile: 0,
-            topicMastery: []
-        });
-    }
-
-    // Calculate stats
+    // Basic Stats
     const testsTaken = attempts.length;
     const totalScore = attempts.reduce((sum, att) => sum + att.score, 0);
-    const averageScore = totalScore / testsTaken;
+    const averageScore = testsTaken > 0 ? totalScore / testsTaken : 0;
 
-    // Determine level
+    // Calculate Level
     let level = 'Beginner';
     if (testsTaken >= 30 && averageScore >= 85) level = 'Expert';
     else if (testsTaken >= 15 && averageScore >= 70) level = 'Advanced';
     else if (testsTaken >= 5 && averageScore >= 50) level = 'Intermediate';
 
-    // Calculate percentile
-    const allUserAttempts = await UserAttempt.aggregate([
-        { $group: { _id: '$userId', avgScore: { $avg: '$score' } } }
-    ]);
-    const usersWithLowerScore = allUserAttempts.filter(u => u.avgScore < averageScore).length;
-    const percentile = allUserAttempts.length > 0
-        ? Math.round((usersWithLowerScore / allUserAttempts.length) * 100)
-        : 0;
+    // Advanced Stats: Topic Mastery & Difficulty Breakdown
+    const topicStats = {}; // { 'Arrays': { easy: {correct, total}, medium: {...}, hard: {...} } }
 
-    // Topic mastery analysis
-    const topicStats = {};
+    // Helper to init stats
+    const initDifficulty = () => ({ correct: 0, total: 0 });
+
     for (const attempt of attempts) {
-        const populatedAttempt = await UserAttempt.findById(attempt._id)
-            .populate('answers.questionId');
-
-        if (populatedAttempt && populatedAttempt.answers) {
-            populatedAttempt.answers.forEach(ans => {
-                const question = ans.questionId;
-                if (question && question.topics) {
-                    question.topics.forEach(topic => {
+        const fullAttempt = await UserAttempt.findById(attempt._id).populate('answers.questionId');
+        if (fullAttempt && fullAttempt.answers) {
+            fullAttempt.answers.forEach(ans => {
+                const q = ans.questionId;
+                if (q && q.topics) {
+                    q.topics.forEach(topic => {
                         if (!topicStats[topic]) {
-                            topicStats[topic] = { correct: 0, total: 0 };
+                            topicStats[topic] = {
+                                easy: initDifficulty(),
+                                medium: initDifficulty(),
+                                hard: initDifficulty(),
+                                totalCorrect: 0,
+                                totalQuestions: 0
+                            };
                         }
-                        topicStats[topic].total += 1;
+
+                        const difficulty = q.difficulty || 'medium'; // Default to medium if missing
+                        topicStats[topic][difficulty].total += 1;
+                        topicStats[topic].totalQuestions += 1;
+
                         if (ans.isCorrect) {
-                            topicStats[topic].correct += 1;
+                            topicStats[topic][difficulty].correct += 1;
+                            topicStats[topic].totalCorrect += 1;
                         }
                     });
                 }
@@ -302,8 +382,13 @@ const getUserProfile = asyncHandler(async (req, res) => {
 
     const topicMastery = Object.entries(topicStats).map(([topic, stats]) => ({
         topic,
-        accuracy: Math.round((stats.correct / stats.total) * 100),
-        questionsAttempted: stats.total
+        accuracy: Math.round((stats.totalCorrect / stats.totalQuestions) * 100),
+        attempted: stats.totalQuestions,
+        breakdown: {
+            easy: { ...stats.easy, accuracy: stats.easy.total > 0 ? Math.round((stats.easy.correct / stats.easy.total) * 100) : 0 },
+            medium: { ...stats.medium, accuracy: stats.medium.total > 0 ? Math.round((stats.medium.correct / stats.medium.total) * 100) : 0 },
+            hard: { ...stats.hard, accuracy: stats.hard.total > 0 ? Math.round((stats.hard.correct / stats.hard.total) * 100) : 0 },
+        }
     })).sort((a, b) => b.accuracy - a.accuracy);
 
     res.json({
@@ -313,15 +398,18 @@ const getUserProfile = asyncHandler(async (req, res) => {
             collegeId: req.user.collegeId,
             role: req.user.role
         },
-        level,
-        testsTaken,
-        averageScore: Math.round(averageScore),
-        percentile,
+        stats: {
+            level,
+            testsTaken,
+            averageScore: Math.round(averageScore),
+            totalQuestionsSolved: attempts.reduce((acc, att) => acc + att.answers.filter(a => a.isCorrect).length, 0),
+            totalQuestionsAttempted: attempts.reduce((acc, att) => acc + att.answers.length, 0)
+        },
         topicMastery,
         recentAttempts: attempts.slice(-5).reverse().map(att => ({
             testId: att.testId,
             score: att.score,
-            completedAt: att.completedAt
+            date: att.completedAt
         }))
     });
 });
@@ -331,7 +419,7 @@ const getUserProfile = asyncHandler(async (req, res) => {
 // @access  Private/Student
 const getTopics = asyncHandler(async (req, res) => {
     const topics = await Question.distinct('topics', { status: 'published' });
-    res.json(topics.filter(t => t)); // Filter out null/undefined
+    res.json(topics.filter(t => t));
 });
 
 module.exports = {

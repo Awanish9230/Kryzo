@@ -112,15 +112,23 @@ const Profile = () => {
                     <StatCard
                         icon={<CheckCircle2 className="text-green-500" />}
                         label="Tests Taken"
-                        value={profile.testsTaken}
+                        value={profile.stats?.testsTaken || profile.testsTaken}
                         delay={0.1}
+                    />
+
+                    {/* Questions Solved - NEW */}
+                    <StatCard
+                        icon={<Target className="text-purple-500" />} // Changed Icon
+                        label="Questions Solved"
+                        value={profile.stats?.totalQuestionsSolved || 0}
+                        delay={0.15}
                     />
 
                     {/* Average Score */}
                     <StatCard
                         icon={<TrendingUp className="text-blue-500" />}
                         label="Avg Score"
-                        value={`${profile.averageScore}%`}
+                        value={`${profile.stats?.averageScore || profile.averageScore}%`}
                         delay={0.2}
                     />
                 </div>
@@ -150,7 +158,7 @@ const Profile = () => {
                 <div className="mb-12">
                     <h2 className="text-2xl font-bold tracking-tight mb-6">Topic Mastery</h2>
                     {profile.topicMastery.length > 0 ? (
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {profile.topicMastery.map((topic, idx) => (
                                 <motion.div
                                     key={topic.topic}
@@ -160,20 +168,37 @@ const Profile = () => {
                                     className="bg-zinc-900/50 border border-white/5 rounded-2xl p-6 backdrop-blur-sm hover:border-white/10 transition-all"
                                 >
                                     <div className="flex items-center justify-between mb-4">
-                                        <h3 className="font-bold text-white">{topic.topic}</h3>
-                                        <span className={`text-sm font-bold ${topic.accuracy >= 80 ? 'text-green-500' : topic.accuracy >= 60 ? 'text-yellow-500' : 'text-red-500'
+                                        <h3 className="font-bold text-white text-lg">{topic.topic}</h3>
+                                        <span className={`text-xl font-bold ${topic.accuracy >= 80 ? 'text-green-500' : topic.accuracy >= 60 ? 'text-yellow-500' : 'text-red-500'
                                             }`}>
                                             {topic.accuracy}%
                                         </span>
                                     </div>
-                                    <div className="w-full bg-zinc-800 rounded-full h-2 mb-2">
+                                    <div className="w-full bg-zinc-800 rounded-full h-2 mb-4">
                                         <div
                                             className={`h-2 rounded-full transition-all ${topic.accuracy >= 80 ? 'bg-green-500' : topic.accuracy >= 60 ? 'bg-yellow-500' : 'bg-red-500'
                                                 }`}
                                             style={{ width: `${topic.accuracy}%` }}
                                         ></div>
                                     </div>
-                                    <p className="text-xs text-zinc-600">{topic.questionsAttempted} questions attempted</p>
+
+                                    {/* Breakdown */}
+                                    {topic.breakdown && (
+                                        <div className="grid grid-cols-3 gap-2 mt-4 pt-4 border-t border-white/5">
+                                            <div className="text-center">
+                                                <p className="text-[10px] uppercase text-zinc-500 font-bold mb-1">Easy</p>
+                                                <p className={`font-bold ${topic.breakdown.easy.accuracy >= 80 ? 'text-green-500' : 'text-zinc-400'}`}>{topic.breakdown.easy.accuracy}%</p>
+                                            </div>
+                                            <div className="text-center border-l border-r border-white/5">
+                                                <p className="text-[10px] uppercase text-zinc-500 font-bold mb-1">Medium</p>
+                                                <p className={`font-bold ${topic.breakdown.medium.accuracy >= 80 ? 'text-yellow-500' : 'text-zinc-400'}`}>{topic.breakdown.medium.accuracy}%</p>
+                                            </div>
+                                            <div className="text-center">
+                                                <p className="text-[10px] uppercase text-zinc-500 font-bold mb-1">Hard</p>
+                                                <p className={`font-bold ${topic.breakdown.hard.accuracy >= 80 ? 'text-red-500' : 'text-zinc-400'}`}>{topic.breakdown.hard.accuracy}%</p>
+                                            </div>
+                                        </div>
+                                    )}
                                 </motion.div>
                             ))}
                         </div>

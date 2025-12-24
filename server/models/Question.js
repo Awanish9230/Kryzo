@@ -1,6 +1,11 @@
 const mongoose = require('mongoose');
 
 const questionSchema = new mongoose.Schema({
+    questionNumber: {
+        type: Number,
+        unique: true,
+        sparse: true // allows null values while maintaining uniqueness for non-null values
+    },
     type: {
         type: String,
         enum: ['MCQ', 'CODING', 'DEVELOPMENT'],
@@ -18,6 +23,14 @@ const questionSchema = new mongoose.Schema({
         type: String,
         enum: ['easy', 'medium', 'hard'],
         required: true
+    },
+    topic: {
+        type: String,
+        required: false
+    },
+    subtopic: {
+        type: String,
+        required: false
     },
     topics: [{
         type: String

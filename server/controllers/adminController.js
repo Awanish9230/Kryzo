@@ -1,8 +1,10 @@
 const asyncHandler = require('express-async-handler');
 const Question = require('../models/Question');
+const Link = require('../models/User'); // Mistake in original file? Original line was `const User = require('../models/User');` but I see `const Link` in diff? No, I should be careful.
 const User = require('../models/User');
 const Test = require('../models/Test');
 const UserAttempt = require('../models/UserAttempt');
+const Documentation = require('../models/Documentation');
 
 // @desc    Get system stats
 // @route   GET /api/admin/stats
@@ -34,6 +36,8 @@ const createQuestion = asyncHandler(async (req, res) => {
         title,
         description,
         difficulty,
+        topic,
+        subtopic,
         topics,
         expectedTime,
         status,
@@ -68,11 +72,18 @@ const createQuestion = asyncHandler(async (req, res) => {
         }
     }
 
+    // Auto-generate question number
+    const lastQuestion = await Question.findOne().sort({ questionNumber: -1 });
+    const questionNumber = lastQuestion && lastQuestion.questionNumber ? lastQuestion.questionNumber + 1 : 1;
+
     const question = await Question.create({
+        questionNumber,
         type,
         title,
         description,
         difficulty,
+        topic,
+        subtopic,
         topics,
         expectedTime,
         status: status || 'draft',
@@ -125,6 +136,8 @@ const updateQuestion = asyncHandler(async (req, res) => {
         question.title = req.body.title || question.title;
         question.description = req.body.description || question.description;
         question.difficulty = req.body.difficulty || question.difficulty;
+        question.topic = req.body.topic !== undefined ? req.body.topic : question.topic;
+        question.subtopic = req.body.subtopic !== undefined ? req.body.subtopic : question.subtopic;
         question.topics = req.body.topics || question.topics;
         question.expectedTime = req.body.expectedTime || question.expectedTime;
         question.status = req.body.status || question.status;
@@ -266,6 +279,59 @@ const getQuestionById = asyncHandler(async (req, res) => {
     }
 });
 
+// @desc    Create/Update Documentation
+// @route   POST /api/admin/documentation
+// @access  Private/Admin
+const createDocumentation = asyncHandler(async (req, res) => {
+    const { topic, title, content, difficulty } = req.body;
+
+    if (!topic || !title || !content) {
+        res.status(400);
+        throw new Error('Please fill all fields');
+    }
+
+    // Check if doc exists for this topic/difficulty
+    let doc = await Documentation.findOne({ topic, difficulty });
+
+    if (doc) {
+        doc.title = title;
+        doc.content = content;
+        await doc.save();
+        res.json(doc);
+    } else {
+        doc = await Documentation.create({
+            topic,
+            title,
+            content,
+            difficulty,
+            createdBy: req.user.id
+        });
+        res.status(201).json(doc);
+    }
+});
+
+// @desc    Get all documentation
+// @route   GET /api/admin/documentation
+// @access  Private/Admin
+const getAllDocumentation = asyncHandler(async (req, res) => {
+    const docs = await Documentation.find({}).sort({ topic: 1 });
+    res.json(docs);
+});
+
+// @desc    Delete documentation
+// @route   DELETE /api/admin/documentation/:id
+// @access  Private/Admin
+const deleteDocumentation = asyncHandler(async (req, res) => {
+    const doc = await Documentation.findById(req.params.id);
+    if (doc) {
+        await doc.deleteOne();
+        res.json({ message: 'Documentation removed' });
+    } else {
+        res.status(404);
+        throw new Error('Documentation not found');
+    }
+});
+
 module.exports = {
     getStats,
     createQuestion,
@@ -275,5 +341,8 @@ module.exports = {
     getAllUsers,
     deleteUser,
     updateUser,
-    getQuestionById
+    getQuestionById,
+    createDocumentation, // New
+    getAllDocumentation, // New
+    deleteDocumentation // New
 };

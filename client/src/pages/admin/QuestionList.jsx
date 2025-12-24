@@ -26,7 +26,7 @@ const QuestionList = () => {
     const fetchQuestions = async () => {
         try {
             const { data } = await api.get('/admin/questions');
-            setQuestions(data);
+            setQuestions(data.questions || []);
             setLoading(false);
         } catch (err) {
             console.error(err);
@@ -47,7 +47,9 @@ const QuestionList = () => {
 
     const filteredQuestions = Array.isArray(questions) ? questions.filter(q =>
         q.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        q.topics.some(t => t.toLowerCase().includes(searchTerm.toLowerCase()))
+        (q.topic && q.topic.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (q.subtopic && q.subtopic.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (q.topics && q.topics.some(t => t.toLowerCase().includes(searchTerm.toLowerCase())))
     ) : [];
 
     if (loading) return (
@@ -95,11 +97,12 @@ const QuestionList = () => {
                         <table className="w-full text-left">
                             <thead className="bg-white/[0.02] text-zinc-500 text-[10px] font-bold uppercase tracking-widest border-b border-white/5">
                                 <tr>
+                                    <th className="px-8 py-4">No.</th>
                                     <th className="px-8 py-4">Status</th>
                                     <th className="px-8 py-4">Question</th>
                                     <th className="px-8 py-4">Type</th>
                                     <th className="px-8 py-4">Difficulty</th>
-                                    <th className="px-8 py-4">Topics</th>
+                                    <th className="px-8 py-4">Topic</th>
                                     <th className="px-8 py-4 text-right">Actions</th>
                                 </tr>
                             </thead>
@@ -112,6 +115,11 @@ const QuestionList = () => {
                                         transition={{ delay: idx * 0.05 }}
                                         className="group hover:bg-white/[0.01] transition-colors"
                                     >
+                                        <td className="px-8 py-6">
+                                            <span className="px-3 py-1.5 bg-white/5 border border-white/10 rounded-lg text-xs font-black text-zinc-400">
+                                                #{q.questionNumber || 'N/A'}
+                                            </span>
+                                        </td>
                                         <td className="px-8 py-6">
                                             <span className={`px-2.5 py-1 text-[10px] font-black uppercase tracking-tighter rounded-full border ${q.status === 'published'
                                                 ? 'bg-green-500/10 text-green-500 border-green-500/20'
@@ -139,12 +147,21 @@ const QuestionList = () => {
                                             </span>
                                         </td>
                                         <td className="px-8 py-6">
-                                            <div className="flex flex-wrap gap-1">
-                                                {q.topics.slice(0, 2).map(t => (
-                                                    <span key={t} className="px-2 py-0.5 bg-white/5 border border-white/10 rounded text-[9px] font-bold text-zinc-500 uppercase">{t}</span>
-                                                ))}
-                                                {q.topics.length > 2 && <span className="text-[9px] text-zinc-700 font-bold">+{q.topics.length - 2}</span>}
-                                            </div>
+                                            {q.topic && q.subtopic ? (
+                                                <div className="flex flex-col gap-1">
+                                                    <span className="text-xs font-bold text-white">{q.topic}</span>
+                                                    <span className="text-[10px] text-zinc-500">→ {q.subtopic}</span>
+                                                </div>
+                                            ) : q.topics && q.topics.length > 0 ? (
+                                                <div className="flex flex-wrap gap-1">
+                                                    {q.topics.slice(0, 2).map(t => (
+                                                        <span key={t} className="px-2 py-0.5 bg-white/5 border border-white/10 rounded text-[9px] font-bold text-zinc-500 uppercase">{t}</span>
+                                                    ))}
+                                                    {q.topics.length > 2 && <span className="text-[9px] text-zinc-700 font-bold">+{q.topics.length - 2}</span>}
+                                                </div>
+                                            ) : (
+                                                <span className="text-xs text-zinc-700">No topic</span>
+                                            )}
                                         </td>
                                         <td className="px-8 py-6 text-right">
                                             <div className="flex items-center justify-end gap-2">

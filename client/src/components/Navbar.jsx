@@ -14,6 +14,14 @@ const Navbar = () => {
         navigate('/login');
     };
 
+    // Hide Navbar on Test Attempt pages (Diagnostic & Specific Test)
+    // We keep it for 'custom' (builder) and 'result' (analytics)
+    const isTestAttempt = location.pathname.startsWith('/student/test/') &&
+        !location.pathname.includes('/custom') &&
+        !location.pathname.includes('/result');
+
+    if (isTestAttempt) return null;
+
     if (!user) return (
         <nav className="fixed top-0 left-0 w-full z-50 border-b border-white/5 bg-black/50 backdrop-blur-xl">
             <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
