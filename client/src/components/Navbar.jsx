@@ -25,7 +25,10 @@ const Navbar = () => {
     if (!user) return (
         <nav className="fixed top-0 left-0 w-full z-50 border-b border-white/5 bg-black/50 backdrop-blur-xl">
             <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-                <Link to="/" className="text-xl font-bold tracking-tighter hover:opacity-80 transition-opacity">KRYZO</Link>
+                <Link to="/" className="hover:opacity-80 transition-opacity flex items-center gap-3">
+                    <img src="/K_logo.png" alt="Kryzo" className="h-10 w-10 object-cover rounded-full bg-white/5 p-1 border border-white/10" />
+                    <span className="text-xl font-bold tracking-tighter">KRYZO</span>
+                </Link>
                 <div className="flex gap-4">
                     <Link to="/login" className="text-sm font-medium text-zinc-400 hover:text-white transition-colors">Sign In</Link>
                     <Link to="/register" className="text-sm font-medium px-4 py-1.5 bg-white text-black rounded-full hover:bg-zinc-200 transition-colors">Get Started</Link>
@@ -40,7 +43,10 @@ const Navbar = () => {
         <nav className="fixed top-0 left-0 w-full z-50 border-b border-white/5 bg-black/50 backdrop-blur-xl">
             <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
                 <div className="flex items-center gap-8">
-                    <Link to="/" className="text-xl font-bold tracking-tighter mr-4">KRYZO</Link>
+                    <Link to="/" className="mr-8 hover:opacity-80 transition-opacity flex items-center gap-3">
+                        <img src="/K_logo.png" alt="Kryzo" className="h-10 w-10 object-cover rounded-full bg-white/5 p-1 border border-white/10" />
+                        <span className="text-xl font-bold tracking-tighter">KRYZO</span>
+                    </Link>
                     <div className="hidden md:flex items-center gap-1">
                         {isAdmin ? (
                             <>

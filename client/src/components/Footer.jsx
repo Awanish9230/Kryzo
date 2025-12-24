@@ -14,10 +14,8 @@ const Footer = () => {
             <div className="max-w-7xl mx-auto px-6">
                 <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-10 mb-20">
                     <div className="col-span-2 lg:col-span-2">
-                        <Link to="/" className="flex items-center gap-2 mb-6">
-                            <div className="p-2 bg-blue-600 rounded-lg">
-                                <Zap className="text-white" size={24} fill="currentColor" />
-                            </div>
+                        <Link to="/" className="flex items-center gap-3 mb-6">
+                            <img src="/K_logo.png" alt="Kryzo" className="h-10 w-10 object-cover rounded-full bg-white/5 p-1 border border-white/10" />
                             <span className="text-2xl font-bold tracking-tighter text-white">Kryzo</span>
                         </Link>
                         <p className="text-zinc-500 mb-8 max-w-sm">
