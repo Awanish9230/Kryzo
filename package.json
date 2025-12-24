@@ -1,0 +1,16 @@
+{
+  "name": "kryzo",
+  "version": "1.0.0",
+  "description": "Kryzo is a comprehensive test-series platform designed for colleges to help students prepare for technical interviews and competitive exams. It features diagnostic tests, adaptive weekly improvement plans, and custom test creation.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "concurrently \"cd server && npm run dev\" \"cd client && npm run dev\""
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "concurrently": "^9.2.1"
+  }
+}

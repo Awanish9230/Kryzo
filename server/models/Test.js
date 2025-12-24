@@ -1,0 +1,26 @@
+const mongoose = require('mongoose');
+
+const testSchema = new mongoose.Schema({
+    type: {
+        type: String,
+        enum: ['DIAGNOSTIC', 'WEEKLY', 'CUSTOM'],
+        required: true
+    },
+    duration: {
+        type: Number, // in minutes
+        required: true
+    },
+    questions: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Question'
+    }],
+    createdBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        required: false // System generated might not have a user, or will be admin
+    }
+}, {
+    timestamps: true
+});
+
+module.exports = mongoose.model('Test', testSchema);
