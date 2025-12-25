@@ -94,11 +94,11 @@ const About = () => {
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
                         {[
-                            { name: "Awanish Kumar Verma", role: "Core Contributor" },
+                            { name: "Awanish Kumar Verma", role: "Question Architect" },
                             { name: "Shantanu Raj", role: "Question Architect" },
-                            { name: "Manikant Verma", role: "Concept Specialist" },
-                            { name: "Avshesh Kushwaha", role: "Content Reviewer" },
-                            { name: "Utkarsh Maheshwari", role: "Technical Expert" }
+                            { name: "Manikant Verma", role: "Question Architect" },
+                            { name: "Avshesh Kushwaha", role: "Question Architect" },
+                            { name: "Utkarsh Maheshwari", role: "Question Architect" }
                         ].map((member, idx) => (
                             <motion.div
                                 key={idx}
