@@ -11,6 +11,7 @@ import QuestionList from './pages/admin/QuestionList';
 import AddQuestion from './pages/admin/AddQuestion';
 import EditQuestion from './pages/admin/EditQuestion';
 import UserManagement from './pages/admin/UserManagement';
+import ReportedQuestions from './pages/admin/ReportedQuestions';
 
 import AdminDocumentation from './pages/admin/AdminDocumentation';
 import AdminProfile from './pages/admin/Profile';
@@ -99,6 +100,7 @@ const Layout = () => {
           <Route path="/admin/documentation" element={<PrivateRoute role="admin"><AdminDocumentation /></PrivateRoute>} />
           <Route path="/admin/questions/bulk" element={<PrivateRoute role="admin"><BulkUpload /></PrivateRoute>} />
           <Route path="/admin/reports" element={<PrivateRoute role="admin"><AdminReports /></PrivateRoute>} />
+          <Route path="/admin/questions/reports" element={<PrivateRoute role="admin"><ReportedQuestions /></PrivateRoute>} />
 
           <Route path="*" element={<NotFound />} />
         </Routes>

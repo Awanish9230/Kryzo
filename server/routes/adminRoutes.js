@@ -16,7 +16,11 @@ const {
     getAllDocumentation,
     deleteDocumentation,
     getAdminQuestionStats,
-    bulkUploadQuestions
+    getAdminQuestionStats,
+    bulkUploadQuestions,
+    getQuestionReports,
+    updateReportStatus,
+    getPainPointAnalytics
 } = require('../controllers/adminController');
 const { protect, admin } = require('../middleware/authMiddleware');
 
@@ -37,6 +41,9 @@ router.route('/questions/:id')
     .put(updateQuestion)
     .delete(deleteQuestion);
 
+router.get('/questions/reports', getQuestionReports);
+router.put('/questions/reports/:id', updateReportStatus);
+
 router.route('/users')
     .get(getAllUsers)
     .post(createUser);
@@ -46,6 +53,7 @@ router.route('/users/:id')
     .delete(deleteUser);
 
 router.get('/my-stats', getAdminQuestionStats);
+router.get('/analytics/pain-points', getPainPointAnalytics);
 
 router.route('/documentation')
     .get(getAllDocumentation)

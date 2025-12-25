@@ -5,6 +5,7 @@ const UserAttempt = require('../models/UserAttempt');
 const Documentation = require('../models/Documentation');
 const User = require('../models/User');
 const UserActivity = require('../models/UserActivity');
+const ReportedQuestion = require('../models/ReportedQuestion');
 
 // @desc    Generate Diagnostic Test
 // @route   GET /api/student/test/diagnostic
@@ -744,6 +745,26 @@ const getActivityLog = asyncHandler(async (req, res) => {
     });
 });
 
+// @desc    Report a Question
+// @route   POST /api/student/question/report
+// @access  Private/Student
+const reportQuestion = asyncHandler(async (req, res) => {
+    const { questionId, reason } = req.body;
+
+    if (!questionId || !reason) {
+        res.status(400);
+        throw new Error('Please provide questionId and reason');
+    }
+
+    const report = await ReportedQuestion.create({
+        questionId,
+        userId: req.user.id,
+        reason
+    });
+
+    res.status(201).json(report);
+});
+
 module.exports = {
     generateDiagnosticTest,
     submitTest,
@@ -755,5 +776,6 @@ module.exports = {
     updateProfile,
     getDocumentationById,
     updateActivityStats,
-    getActivityLog
+    getActivityLog,
+    reportQuestion
 };

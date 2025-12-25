@@ -11,10 +11,12 @@ import {
     Code2,
     Play,
     Check,
-    X,
-    AlertCircle,
-    CheckCircle
+    CheckCircle,
+    Info,
+    AlertTriangle,
+    Flag as FlagIcon
 } from 'lucide-react';
+import Editor from '@monaco-editor/react';
 
 const TestAttempt = () => {
     const { testId } = useParams();
@@ -27,8 +29,11 @@ const TestAttempt = () => {
     const [loading, setLoading] = useState(true);
     const [isRunning, setIsRunning] = useState(false);
     const [runResults, setRunResults] = useState(null);
-    const [selectedLanguage, setSelectedLanguage] = useState('JavaScript');
+    const [selectedLanguage, setSelectedLanguage] = useState('javascript');
     const [showSummaryModal, setShowSummaryModal] = useState(false);
+    const [showReportModal, setShowReportModal] = useState(false);
+    const [reportReason, setReportReason] = useState('');
+    const [isReporting, setIsReporting] = useState(false);
 
     const handleRunCode = async () => {
         const currentQ = test.questions[currentIdx];
@@ -42,7 +47,7 @@ const TestAttempt = () => {
         try {
             const { data } = await api.post('/compiler/run', {
                 code: answers[currentQ._id],
-                language: selectedLanguage,
+                language: selectedLanguage === 'javascript' ? 'JavaScript' : selectedLanguage.charAt(0).toUpperCase() + selectedLanguage.slice(1),
                 questionId: currentQ._id
             });
             setRunResults(data);
@@ -127,6 +132,25 @@ const TestAttempt = () => {
         }
     };
 
+    const handleReport = async () => {
+        if (!reportReason.trim()) return;
+        setIsReporting(true);
+        try {
+            await api.post('/student/question/report', {
+                questionId: currentQuestion._id,
+                reason: reportReason
+            });
+            setShowReportModal(false);
+            setReportReason('');
+            alert('Question reported successfully. Thank you!');
+        } catch (err) {
+            console.error(err);
+            alert('Failed to report question');
+        } finally {
+            setIsReporting(false);
+        }
+    };
+
     if (loading) return (
         <div className="min-h-screen bg-black flex items-center justify-center">
             <div className="w-8 h-8 border-2 border-white/10 border-t-white rounded-full animate-spin"></div>
@@ -181,6 +205,14 @@ const TestAttempt = () => {
                             {formatTime(timeLeft)}
                         </span>
                     </div>
+                    <button
+                        onClick={() => setShowReportModal(true)}
+                        className="p-2 text-zinc-500 hover:text-red-500 transition-colors"
+                        title="Report Question"
+                    >
+                        <FlagIcon size={18} />
+                    </button>
+                    <div className="h-5 w-px bg-white/10" />
                     <button
                         onClick={() => setShowSummaryModal(true)}
                         className="px-5 py-1.5 bg-blue-600 text-white text-[11px] font-black uppercase tracking-widest rounded-full hover:bg-blue-500 transition-all shadow-lg shadow-blue-500/20"
@@ -303,10 +335,10 @@ const TestAttempt = () => {
                                                             value={selectedLanguage}
                                                             onChange={(e) => setSelectedLanguage(e.target.value)}
                                                         >
-                                                            <option value="JavaScript">JavaScript</option>
-                                                            <option value="Python">Python</option>
-                                                            <option value="Java">Java</option>
-                                                            <option value="C++">C++</option>
+                                                            <option value="javascript">JavaScript</option>
+                                                            <option value="python">Python</option>
+                                                            <option value="java">Java</option>
+                                                            <option value="cpp">C++</option>
                                                         </select>
                                                         <button
                                                             onClick={handleRunCode}
@@ -322,13 +354,25 @@ const TestAttempt = () => {
                                                         </button>
                                                     </div>
                                                 </div>
-                                                <textarea
-                                                    className="w-full flex-1 p-8 bg-zinc-950/30 text-zinc-300 font-mono text-sm focus:outline-none resize-none leading-relaxed custom-scrollbar"
-                                                    placeholder="// Write your solution here..."
-                                                    value={answers[currentQuestion._id] || ''}
-                                                    onChange={(e) => handleAnswer(currentQuestion._id, e.target.value)}
-                                                    spellCheck="false"
-                                                />
+                                                <div className="flex-1 min-h-[450px] bg-zinc-950/30">
+                                                    <Editor
+                                                        height="100%"
+                                                        language={selectedLanguage}
+                                                        theme="vs-dark"
+                                                        value={answers[currentQuestion._id] || ''}
+                                                        onChange={(val) => handleAnswer(currentQuestion._id, val)}
+                                                        options={{
+                                                            minimap: { enabled: false },
+                                                            fontSize: 14,
+                                                            lineNumbers: 'on',
+                                                            roundedSelection: false,
+                                                            scrollBeyondLastLine: false,
+                                                            readOnly: false,
+                                                            automaticLayout: true,
+                                                            padding: { top: 20, bottom: 20 }
+                                                        }}
+                                                    />
+                                                </div>
                                             </div>
 
                                             {/* Minimal Console */}
@@ -435,20 +479,24 @@ const TestAttempt = () => {
                                     <div className="text-[10px] font-black text-zinc-600 uppercase tracking-widest">Answered</div>
                                 </div>
                                 <div className="bg-zinc-950 p-6 rounded-3xl border border-white/5 text-center">
-                                    <div className="text-2xl font-black text-zinc-400 mb-1">{stats.visited}</div>
-                                    <div className="text-[10px] font-black text-zinc-600 uppercase tracking-widest">Visited</div>
+                                    <div className="text-2xl font-black text-white mb-1">{stats.attempted}</div>
+                                    <div className="text-[10px] font-black text-zinc-600 uppercase tracking-widest">Answered</div>
                                 </div>
                                 <div className="bg-zinc-950 p-6 rounded-3xl border border-white/5 text-center">
-                                    <div className="text-2xl font-black text-amber-500/80 mb-1">{stats.remaining}</div>
-                                    <div className="text-[10px] font-black text-zinc-600 uppercase tracking-widest">Skipped</div>
+                                    <div className={`text-2xl font-black mb-1 ${stats.remaining > 0 ? 'text-amber-500' : 'text-zinc-400'}`}>{stats.remaining}</div>
+                                    <div className="text-[10px] font-black text-zinc-600 uppercase tracking-widest">Unanswered</div>
+                                </div>
+                                <div className="bg-zinc-950 p-6 rounded-3xl border border-white/5 text-center">
+                                    <div className="text-2xl font-black text-blue-500 mb-1">{((stats.attempted / stats.total) * 100).toFixed(0)}%</div>
+                                    <div className="text-[10px] font-black text-zinc-600 uppercase tracking-widest">Completion</div>
                                 </div>
                             </div>
 
                             {stats.remaining > 0 && (
-                                <div className="mb-10 p-4 bg-amber-500/10 border border-amber-500/20 rounded-2xl flex items-center gap-4">
-                                    <AlertCircle className="text-amber-500 shrink-0" size={20} />
-                                    <p className="text-amber-500/90 text-xs font-bold leading-relaxed">
-                                        You still have {stats.remaining} unanswered questions. Submitting now will finalize your score.
+                                <div className="mb-10 p-5 bg-amber-500/10 border border-amber-500/20 rounded-2xl flex items-center gap-4">
+                                    <AlertCircle size={24} className="text-amber-500 shrink-0" />
+                                    <p className="text-xs font-bold text-amber-500/90 leading-relaxed">
+                                        You have <span className="underline">{stats.remaining}</span> unattempted questions. Are you sure you want to exit?
                                     </p>
                                 </div>
                             )}
@@ -456,15 +504,72 @@ const TestAttempt = () => {
                             <div className="flex flex-col gap-3">
                                 <button
                                     onClick={handleSubmit}
-                                    className="w-full py-4 bg-blue-600 text-white font-black uppercase tracking-[0.2em] rounded-2xl hover:bg-blue-500 transition-all shadow-xl shadow-blue-500/20"
+                                    className="w-full py-5 bg-blue-600 text-white font-black uppercase tracking-[0.2em] rounded-2xl hover:bg-blue-500 transition-all shadow-xl shadow-blue-500/20"
                                 >
                                     Confirm Submission
                                 </button>
                                 <button
                                     onClick={() => setShowSummaryModal(false)}
+                                    className="w-full py-5 bg-zinc-800 text-white font-black uppercase tracking-[0.2em] rounded-2xl hover:bg-zinc-700 transition-all"
+                                >
+                                    Back to Questions
+                                </button>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+
+            {/* Report Modal */}
+            <AnimatePresence>
+                {showReportModal && (
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={() => setShowReportModal(false)}
+                            className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+                        />
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                            className="w-full max-w-md bg-zinc-900 border border-white/10 rounded-[2.5rem] p-8 relative z-10"
+                        >
+                            <div className="mb-6 text-center">
+                                <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-4 border border-red-500/20">
+                                    <AlertTriangle className="text-red-500" size={28} />
+                                </div>
+                                <h2 className="text-2xl font-black text-white mb-2 tracking-tight">Report Issue</h2>
+                                <p className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.2em]">Question ID: {currentQuestion._id}</p>
+                            </div>
+
+                            <div className="space-y-4 mb-8">
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest ml-1">Reason for report</label>
+                                    <textarea
+                                        value={reportReason}
+                                        onChange={(e) => setReportReason(e.target.value)}
+                                        placeholder="Explain the issue (Options incorrect, wrong sample output, vague description...)"
+                                        className="w-full h-32 bg-black border border-white/10 rounded-3xl p-6 text-sm text-zinc-300 focus:outline-none focus:border-red-500/50 transition-all resize-none leading-relaxed"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="flex flex-col gap-3">
+                                <button
+                                    onClick={handleReport}
+                                    disabled={isReporting || !reportReason.trim()}
+                                    className="w-full py-4 bg-red-600 text-white font-black uppercase tracking-[0.2em] rounded-2xl hover:bg-red-500 transition-all shadow-xl shadow-red-500/20 disabled:opacity-50"
+                                >
+                                    {isReporting ? 'Submitting Report...' : 'Submit Report'}
+                                </button>
+                                <button
+                                    onClick={() => setShowReportModal(false)}
                                     className="w-full py-4 bg-zinc-800 text-white font-black uppercase tracking-[0.2em] rounded-2xl hover:bg-zinc-700 transition-all"
                                 >
-                                    Cancel & Go Back
+                                    Cancel
                                 </button>
                             </div>
                         </motion.div>

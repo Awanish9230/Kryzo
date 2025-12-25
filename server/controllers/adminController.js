@@ -1,10 +1,10 @@
 const asyncHandler = require('express-async-handler');
 const Question = require('../models/Question');
-const Link = require('../models/User'); // Mistake in original file? Original line was `const User = require('../models/User');` but I see `const Link` in diff? No, I should be careful.
 const User = require('../models/User');
 const Test = require('../models/Test');
 const UserAttempt = require('../models/UserAttempt');
 const Documentation = require('../models/Documentation');
+const ReportedQuestion = require('../models/ReportedQuestion');
 
 // @desc    Get system stats
 // @route   GET /api/admin/stats
@@ -533,6 +533,115 @@ const getDetailedStats = asyncHandler(async (req, res) => {
     res.json(matrix);
 });
 
+// @desc    Get all question reports
+// @route   GET /api/admin/questions/reports
+// @access  Private/Admin
+const getQuestionReports = asyncHandler(async (req, res) => {
+    const reports = await ReportedQuestion.find({})
+        .populate('userId', 'name email')
+        .populate('questionId', 'title type difficulty')
+        .sort({ createdAt: -1 });
+    res.json(reports);
+});
+
+// @desc    Update report status
+// @route   PUT /api/admin/questions/reports/:id
+// @access  Private/Admin
+const updateReportStatus = asyncHandler(async (req, res) => {
+    const report = await ReportedQuestion.findById(req.params.id);
+    if (!report) {
+        res.status(404);
+        throw new Error('Report not found');
+    }
+    report.status = req.body.status || report.status;
+    await report.save();
+    res.json(report);
+});
+
+// @desc    Get Pain Point Analytics
+// @route   GET /api/admin/analytics/pain-points
+// @access  Private/Admin
+const getPainPointAnalytics = asyncHandler(async (req, res) => {
+    // Analyze question failure rates
+    const analytics = await UserAttempt.aggregate([
+        { $unwind: "$answers" },
+        {
+            $group: {
+                _id: "$answers.questionId",
+                totalAttempts: { $sum: 1 },
+                correctAttempts: { $sum: { $cond: ["$answers.isCorrect", 1, 0] } },
+                skippedCount: { $sum: { $cond: [{ $eq: ["$answers.status", "skipped"] }, 1, 0] } }
+            }
+        },
+        {
+            $lookup: {
+                from: "questions",
+                localField: "_id",
+                foreignField: "_id",
+                as: "questionDetails"
+            }
+        },
+        { $unwind: "$questionDetails" },
+        {
+            $project: {
+                title: "$questionDetails.title",
+                topic: "$questionDetails.topic",
+                topics: "$questionDetails.topics",
+                difficulty: "$questionDetails.difficulty",
+                type: "$questionDetails.type",
+                totalAttempts: 1,
+                correctAttempts: 1,
+                failureRate: {
+                    $multiply: [
+                        { $subtract: [1, { $divide: ["$correctAttempts", "$totalAttempts"] }] },
+                        100
+                    ]
+                }
+            }
+        },
+        { $sort: { failureRate: -1 } },
+        { $limit: 20 }
+    ]);
+
+    // Group by topic to see "Topics Needing Attention"
+    const topicPainPoints = await UserAttempt.aggregate([
+        { $unwind: "$answers" },
+        {
+            $lookup: {
+                from: "questions",
+                localField: "answers.questionId",
+                foreignField: "_id",
+                as: "q"
+            }
+        },
+        { $unwind: "$q" },
+        {
+            $project: {
+                topic: { $ifNull: ["$q.topic", { $arrayElemAt: ["$q.topics", 0] }] },
+                isCorrect: "$answers.isCorrect"
+            }
+        },
+        {
+            $group: {
+                _id: "$topic",
+                total: { $sum: 1 },
+                correct: { $sum: { $cond: ["$isCorrect", 1, 0] } }
+            }
+        },
+        {
+            $project: {
+                topic: "$_id",
+                accuracy: { $multiply: [{ $divide: ["$correct", "$total"] }, 100] },
+                totalQuestions: "$total"
+            }
+        },
+        { $sort: { accuracy: 1 } },
+        { $limit: 10 }
+    ]);
+
+    res.json({ hardestQuestions: analytics, weakTopics: topicPainPoints });
+});
+
 module.exports = {
 
     getStats,
@@ -550,5 +659,8 @@ module.exports = {
     getAllDocumentation, // New
     deleteDocumentation, // New
     getAdminQuestionStats, // New
-    bulkUploadQuestions // New
+    bulkUploadQuestions, // New
+    getQuestionReports,
+    updateReportStatus,
+    getPainPointAnalytics
 };

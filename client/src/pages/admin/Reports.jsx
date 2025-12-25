@@ -8,26 +8,34 @@ import {
     FileText,
     Code,
     Settings,
-    Download
+    Download,
+    AlertCircle,
+    Triangle,
+    Flag
 } from 'lucide-react';
 
 const Reports = () => {
     const navigate = useNavigate();
     const [reportData, setReportData] = useState([]);
+    const [painPoints, setPainPoints] = useState({ hardestQuestions: [], weakTopics: [] });
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const fetchReport = async () => {
+        const fetchData = async () => {
             try {
-                const { data } = await api.get('/admin/detailed-stats');
-                setReportData(data);
+                const [statsRes, analyticsRes] = await Promise.all([
+                    api.get('/admin/detailed-stats'),
+                    api.get('/admin/analytics/pain-points')
+                ]);
+                setReportData(statsRes.data);
+                setPainPoints(analyticsRes.data);
                 setLoading(false);
             } catch (err) {
                 console.error(err);
                 setLoading(false);
             }
         };
-        fetchReport();
+        fetchData();
     }, []);
 
     const getCount = (topicStats, type, difficulty) => {
@@ -127,17 +135,78 @@ const Reports = () => {
                     </div>
                 </div>
 
+                <div className="mt-12 grid grid-cols-1 md:grid-cols-2 gap-8">
+                    {/* Weakest Topics */}
+                    <div className="bg-zinc-900/50 border border-white/5 rounded-[2.5rem] p-8">
+                        <div className="flex items-center gap-4 mb-8">
+                            <div className="p-3 bg-red-500/10 rounded-2xl">
+                                <Triangle size={20} className="text-red-500 rotate-180" />
+                            </div>
+                            <div>
+                                <h3 className="text-xl font-bold text-white">Critical Weak Topics</h3>
+                                <p className="text-zinc-500 text-[10px] font-black uppercase tracking-widest mt-0.5">Lowest Accuracy Rate</p>
+                            </div>
+                        </div>
+
+                        <div className="space-y-4">
+                            {painPoints.weakTopics.map((topic, i) => (
+                                <div key={i} className="flex items-center justify-between p-4 bg-black/40 rounded-2xl border border-white/5 group hover:border-red-500/20 transition-all">
+                                    <div>
+                                        <p className="text-sm font-bold text-zinc-300 group-hover:text-white transition-colors">{topic.topic || 'Uncategorized'}</p>
+                                        <p className="text-[10px] text-zinc-600 font-bold uppercase tracking-widest">{topic.totalQuestions} Questions Analyzed</p>
+                                    </div>
+                                    <div className="text-right">
+                                        <p className="text-sm font-black text-red-500">{topic.accuracy.toFixed(1)}%</p>
+                                        <p className="text-[9px] text-zinc-600 font-black uppercase tracking-widest">Accuracy</p>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Hardest Questions */}
+                    <div className="bg-zinc-900/50 border border-white/5 rounded-[2.5rem] p-8">
+                        <div className="flex items-center gap-4 mb-8">
+                            <div className="p-3 bg-yellow-500/10 rounded-2xl">
+                                <AlertCircle size={20} className="text-yellow-500" />
+                            </div>
+                            <div>
+                                <h3 className="text-xl font-bold text-white">Highest Failure Rate</h3>
+                                <p className="text-zinc-500 text-[10px] font-black uppercase tracking-widest mt-0.5">Most Failed Questions</p>
+                            </div>
+                        </div>
+
+                        <div className="space-y-4">
+                            {painPoints.hardestQuestions.slice(0, 5).map((q, i) => (
+                                <div key={i} className="flex items-center justify-between p-4 bg-black/40 rounded-2xl border border-white/5 group hover:border-yellow-500/20 transition-all">
+                                    <div className="max-w-[70%]">
+                                        <p className="text-sm font-bold text-zinc-300 group-hover:text-white truncate transition-colors">{q.title}</p>
+                                        <p className="text-[10px] text-zinc-600 font-bold uppercase tracking-widest">{q.type} • {q.difficulty}</p>
+                                    </div>
+                                    <div className="text-right">
+                                        <p className="text-sm font-black text-yellow-500">{q.failureRate.toFixed(1)}%</p>
+                                        <p className="text-[9px] text-zinc-600 font-black uppercase tracking-widest">Fail Rate</p>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+
                 <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="p-8 bg-zinc-900 border border-white/5 rounded-[2.5rem] flex items-center justify-between group overflow-hidden relative">
                         <div className="absolute -right-4 -bottom-4 opacity-[0.02] group-hover:opacity-10 transition-opacity">
-                            <Settings size={160} />
+                            <Flag size={160} />
                         </div>
                         <div className="relative z-10">
-                            <h3 className="text-zinc-500 text-xs font-bold uppercase tracking-widest mb-1">Status Summary</h3>
-                            <p className="text-sm text-zinc-400 max-w-xs">View questions pending review or currently in draft status.</p>
+                            <h3 className="text-zinc-500 text-xs font-bold uppercase tracking-widest mb-1">User Feedback</h3>
+                            <p className="text-sm text-zinc-400 max-w-xs">Review questions flagged by students for quality issues.</p>
                         </div>
-                        <button className="relative z-10 p-4 bg-white/5 border border-white/10 rounded-2xl hover:bg-white hover:text-black transition-all">
-                            View Drafts
+                        <button
+                            onClick={() => navigate('/admin/questions/reports')}
+                            className="relative z-10 p-4 bg-blue-600 text-white border border-blue-500/20 rounded-2xl hover:bg-blue-500 transition-all font-black text-[10px] uppercase tracking-widest"
+                        >
+                            View Reports
                         </button>
                     </div>
 
@@ -146,8 +215,8 @@ const Reports = () => {
                             <BarChart3 size={160} />
                         </div>
                         <div className="relative z-10">
-                            <h3 className="text-zinc-500 text-xs font-bold uppercase tracking-widest mb-1">Growth Trends</h3>
-                            <p className="text-sm text-zinc-400 max-w-xs">Analyze the rate of content addition over the past 6 months.</p>
+                            <h3 className="text-zinc-500 text-xs font-bold uppercase tracking-widest mb-1">Content Needs</h3>
+                            <p className="text-sm text-zinc-400 max-w-xs">Analyze topics with low question volume or high demand.</p>
                         </div>
                         <button className="relative z-10 p-4 bg-white/5 border border-white/10 rounded-2xl hover:bg-white hover:text-black transition-all">
                             View Trends
