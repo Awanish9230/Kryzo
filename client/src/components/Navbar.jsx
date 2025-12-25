@@ -52,6 +52,7 @@ const Navbar = () => {
                             <>
                                 <NavLink to="/admin/dashboard" icon={<LayoutDashboard size={18} />} active={location.pathname === '/admin/dashboard'}>Dashboard</NavLink>
                                 <NavLink to="/admin/questions" icon={<BookOpen size={18} />} active={location.pathname === '/admin/questions'}>Questions</NavLink>
+                                <NavLink to="/admin/documentation" icon={<BookOpen size={18} />} active={location.pathname === '/admin/documentation'}>Documentation</NavLink>
                                 <NavLink to="/admin/users" icon={<PlusCircle size={18} />} active={location.pathname === '/admin/users'}>Manage Users</NavLink>
                             </>
                         ) : (
