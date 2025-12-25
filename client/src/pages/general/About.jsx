@@ -84,6 +84,40 @@ const About = () => {
                 </div>
             </div>
 
+            {/* Contributors Section */}
+            <div className="py-32 px-6 border-t border-white/5">
+                <div className="max-w-7xl mx-auto">
+                    <div className="text-center mb-20">
+                        <h2 className="text-3xl md:text-4xl font-bold mb-4">Question Bank Contributors</h2>
+                        <p className="text-zinc-400">The brilliant minds behind our comprehensive assessment library.</p>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
+                        {[
+                            { name: "Awanish Kumar Verma", role: "Core Contributor" },
+                            { name: "Shantanu Raj", role: "Question Architect" },
+                            { name: "Manikant Verma", role: "Concept Specialist" },
+                            { name: "Avshesh Kushwaha", role: "Content Reviewer" },
+                            { name: "Utkarsh Maheshwari", role: "Technical Expert" }
+                        ].map((member, idx) => (
+                            <motion.div
+                                key={idx}
+                                initial={{ opacity: 0, y: 20 }}
+                                whileInView={{ opacity: 1, y: 0 }}
+                                transition={{ delay: idx * 0.1 }}
+                                className="p-6 rounded-2xl bg-zinc-900/20 border border-white/5 text-center group hover:bg-zinc-900/40 transition-colors"
+                            >
+                                <div className="w-16 h-16 bg-blue-500/10 rounded-full flex items-center justify-center text-blue-500 mx-auto mb-4 group-hover:scale-110 transition-transform">
+                                    <Users size={24} />
+                                </div>
+                                <h4 className="font-bold text-white mb-1 text-sm">{member.name}</h4>
+                                <p className="text-zinc-500 text-[10px] uppercase tracking-tighter">{member.role}</p>
+                            </motion.div>
+                        ))}
+                    </div>
+                </div>
+            </div>
+
             {/* Team Section (Placeholder) */}
             <div className="py-20 px-6 border-t border-white/5 bg-zinc-900/20">
                 <div className="max-w-4xl mx-auto text-center">
