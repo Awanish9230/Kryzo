@@ -41,6 +41,20 @@ const AddQuestion = () => {
         expectedDeliverables: ['']
     });
 
+    useEffect(() => {
+        let time = 10;
+        if (type === 'MCQ') {
+            time = 2;
+        } else if (type === 'CODING') {
+            if (formData.difficulty === 'easy') time = 5;
+            else if (formData.difficulty === 'medium') time = 10;
+            else if (formData.difficulty === 'hard') time = 20;
+        } else if (type === 'DEVELOPMENT') {
+            time = 10;
+        }
+        setFormData(prev => ({ ...prev, expectedTime: time }));
+    }, [type, formData.difficulty]);
+
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };

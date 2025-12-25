@@ -83,6 +83,7 @@ const AdminDashboard = () => {
                         <h2 className="text-xl font-bold mb-6">Quick Actions</h2>
                         <div className="space-y-3">
                             <QuickActionLink label="Manage Questions" href="/admin/questions" />
+                            <QuickActionLink label="Documentation" href="/admin/documentation" />
                             <QuickActionLink label="User Management" href="/admin/users" />
                             <QuickActionLink label="Global Reports" href="/admin/reports" />
                             <QuickActionLink label="Platform Settings" href="/admin/settings" />

@@ -17,18 +17,24 @@ import {
 const QuestionList = () => {
     const [questions, setQuestions] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [searchTerm, setSearchTerm] = useState('');
-    const [page, setPage] = useState(1);
-    const [pages, setPages] = useState(1);
+    const [statusFilter, setStatusFilter] = useState('');
+    const [difficultyFilter, setDifficultyFilter] = useState('');
+    const [typeFilter, setTypeFilter] = useState('');
+    const [showFilters, setShowFilters] = useState(false);
 
     useEffect(() => {
         fetchQuestions();
         // eslint-disable-next-line
-    }, [page, searchTerm]); // Fetch when page or searchTerm changes
+    }, [page, searchTerm, statusFilter, difficultyFilter, typeFilter]); // Fetch when params change
 
     const fetchQuestions = async () => {
         try {
-            const { data } = await api.get(`/admin/questions?pageNumber=${page}&keyword=${searchTerm}`);
+            let query = `/admin/questions?pageNumber=${page}&keyword=${searchTerm}`;
+            if (statusFilter) query += `&status=${statusFilter}`;
+            if (difficultyFilter) query += `&difficulty=${difficultyFilter}`;
+            if (typeFilter) query += `&type=${typeFilter}`;
+
+            const { data } = await api.get(query);
             setQuestions(data.questions || []);
             setPages(data.pages || 1);
             setLoading(false);
@@ -72,25 +78,80 @@ const QuestionList = () => {
                     </Link>
                 </header>
 
-                <div className="flex flex-col md:flex-row gap-4 mb-8">
-                    <div className="relative flex-1 group">
-                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-600 group-focus-within:text-white transition-colors" />
-                        <input
-                            type="text"
-                            placeholder="Search by title..."
-                            className="w-full pl-12 pr-4 py-3 bg-zinc-900 border border-white/5 rounded-2xl focus:outline-none focus:border-blue-500 transition-all text-white placeholder:text-zinc-700"
-                            value={searchTerm}
-                            onChange={(e) => {
-                                setSearchTerm(e.target.value);
-                                setPage(1); // Reset to page 1 on search
-                            }}
-                        />
+                <div className="flex flex-col gap-4 mb-8">
+                    <div className="flex gap-4">
+                        <div className="relative flex-1 group">
+                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-600 group-focus-within:text-white transition-colors" />
+                            <input
+                                type="text"
+                                placeholder="Search by title..."
+                                className="w-full pl-12 pr-4 py-3 bg-zinc-900 border border-white/5 rounded-2xl focus:outline-none focus:border-blue-500 transition-all text-white placeholder:text-zinc-700"
+                                value={searchTerm}
+                                onChange={(e) => {
+                                    setSearchTerm(e.target.value);
+                                    setPage(1); // Reset to page 1 on search
+                                }}
+                            />
+                        </div>
+                        <button
+                            onClick={() => setShowFilters(!showFilters)}
+                            className={`px-6 py-3 bg-zinc-900 border border-white/5 rounded-2xl font-medium transition-all flex items-center gap-2 ${showFilters ? 'text-white bg-zinc-800' : 'text-zinc-400 hover:text-white'}`}
+                        >
+                            <Filter size={18} />
+                            Filters
+                        </button>
                     </div>
-                    {/* Filter button can be implemented later or removed if not needed */}
-                    <button className="px-6 py-3 bg-zinc-900 border border-white/5 rounded-2xl text-zinc-400 font-medium hover:text-white transition-all flex items-center gap-2">
-                        <Filter size={18} />
-                        Filters
-                    </button>
+
+                    {showFilters && (
+                        <motion.div
+                            initial={{ opacity: 0, y: -10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="p-4 bg-zinc-900/50 border border-white/5 rounded-2xl flex flex-wrap gap-4"
+                        >
+                            <select
+                                value={statusFilter}
+                                onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
+                                className="px-4 py-2 bg-zinc-900 border border-white/10 rounded-xl text-zinc-400 focus:text-white focus:outline-none focus:border-white/20"
+                            >
+                                <option value="">All Status</option>
+                                <option value="published">Published</option>
+                                <option value="draft">Draft</option>
+                            </select>
+
+                            <select
+                                value={difficultyFilter}
+                                onChange={(e) => { setDifficultyFilter(e.target.value); setPage(1); }}
+                                className="px-4 py-2 bg-zinc-900 border border-white/10 rounded-xl text-zinc-400 focus:text-white focus:outline-none focus:border-white/20"
+                            >
+                                <option value="">All Difficulties</option>
+                                <option value="easy">Easy</option>
+                                <option value="medium">Medium</option>
+                                <option value="hard">Hard</option>
+                            </select>
+
+                            <select
+                                value={typeFilter}
+                                onChange={(e) => { setTypeFilter(e.target.value); setPage(1); }}
+                                className="px-4 py-2 bg-zinc-900 border border-white/10 rounded-xl text-zinc-400 focus:text-white focus:outline-none focus:border-white/20"
+                            >
+                                <option value="">All Types</option>
+                                <option value="MCQ">MCQ</option>
+                                <option value="CODING">Coding</option>
+                            </select>
+
+                            <button
+                                onClick={() => {
+                                    setStatusFilter('');
+                                    setDifficultyFilter('');
+                                    setTypeFilter('');
+                                    setPage(1);
+                                }}
+                                className="px-4 py-2 text-zinc-500 hover:text-white text-sm font-medium transition-colors ml-auto"
+                            >
+                                Reset Filters
+                            </button>
+                        </motion.div>
+                    )}
                 </div>
 
                 <div className="bg-zinc-900/50 border border-white/5 rounded-[2.5rem] overflow-hidden backdrop-blur-sm">

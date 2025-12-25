@@ -45,8 +45,20 @@ const EditQuestion = () => {
     });
 
     useEffect(() => {
-        fetchQuestion();
-    }, [id]);
+        if (loading) return; // Don't trigger while initial loading
+
+        let time = 10;
+        if (formData.type === 'MCQ') {
+            time = 2;
+        } else if (formData.type === 'CODING') {
+            if (formData.difficulty === 'easy') time = 5;
+            else if (formData.difficulty === 'medium') time = 10;
+            else if (formData.difficulty === 'hard') time = 20;
+        } else if (formData.type === 'DEVELOPMENT') {
+            time = 10;
+        }
+        setFormData(prev => ({ ...prev, expectedTime: time }));
+    }, [formData.type, formData.difficulty]);
 
     const fetchQuestion = async () => {
         try {

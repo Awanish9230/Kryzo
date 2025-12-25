@@ -117,9 +117,12 @@ const getQuestions = asyncHandler(async (req, res) => {
 
     const statusFilter = req.query.status ? { status: req.query.status } : {};
     const typeFilter = req.query.type ? { type: req.query.type } : {};
+    const difficultyFilter = req.query.difficulty ? { difficulty: req.query.difficulty } : {};
 
-    const count = await Question.countDocuments({ ...keyword, ...statusFilter, ...typeFilter });
-    const questions = await Question.find({ ...keyword, ...statusFilter, ...typeFilter })
+    const filter = { ...keyword, ...statusFilter, ...typeFilter, ...difficultyFilter };
+
+    const count = await Question.countDocuments(filter);
+    const questions = await Question.find(filter)
         .limit(pageSize)
         .skip(pageSize * (page - 1))
         .sort({ createdAt: -1 });
