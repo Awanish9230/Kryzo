@@ -17,6 +17,9 @@ import {
 const QuestionList = () => {
     const [questions, setQuestions] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [page, setPage] = useState(1);
+    const [pages, setPages] = useState(1);
     const [statusFilter, setStatusFilter] = useState('');
     const [difficultyFilter, setDifficultyFilter] = useState('');
     const [typeFilter, setTypeFilter] = useState('');
