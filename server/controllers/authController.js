@@ -31,7 +31,7 @@ const registerUser = asyncHandler(async (req, res) => {
         name,
         email,
         password: hashedPassword,
-        role: role || 'student',
+        role: 'student', // Always force student role for public registration
         collegeId
     });
 
