@@ -8,57 +8,65 @@ const Documentation = require('../models/Documentation');
 // @route   GET /api/student/test/diagnostic
 // @access  Private/Student
 const generateDiagnosticTest = asyncHandler(async (req, res) => {
-    // 1. Get all distinct topics available in the system
-    const topics = await Question.distinct('topics', { status: 'published' });
-    const cleanTopics = topics.filter(t => t); // Remove nulls
-
+    const mongoose = require('mongoose');
+    const selectedQuestionIds = new Set();
     let selectedQuestions = [];
-    const questionIds = new Set(); // To avoid duplicates
 
-    // 2. Attempt to pick 1 Medium question from EACH topic
-    for (const topic of cleanTopics) {
-        // Try to find a 'medium' question first for better assessment
-        let questions = await Question.aggregate([
-            { $match: { status: 'published', topics: topic, difficulty: 'medium' } },
-            { $sample: { size: 1 } }
+    // Helper to pick random questions
+    const pickQuestions = async (type, difficulty, count) => {
+        const questions = await Question.aggregate([
+            {
+                $match: {
+                    status: 'published',
+                    type: type,
+                    difficulty: difficulty,
+                    _id: { $nin: Array.from(selectedQuestionIds).map(id => new mongoose.Types.ObjectId(id)) }
+                }
+            },
+            { $sample: { size: count } }
         ]);
 
-        if (questions.length === 0) {
-            // Fallback to any difficulty if medium not found
-            questions = await Question.aggregate([
-                { $match: { status: 'published', topics: topic } },
-                { $sample: { size: 1 } }
-            ]);
-        }
+        questions.forEach(q => {
+            selectedQuestions.push(q);
+            selectedQuestionIds.add(q._id.toString());
+        });
 
-        if (questions.length > 0) {
-            const q = questions[0];
-            if (!questionIds.has(q._id.toString())) {
-                selectedQuestions.push(q);
-                questionIds.add(q._id.toString());
-            }
-        }
-    }
+        return questions.length;
+    };
 
-    // 3. If test is too short (< 10 questions), fill with random mixed questions
-    if (selectedQuestions.length < 10) {
-        const remainingNeeded = 10 - selectedQuestions.length;
+    // 1. Pick MCQs: 10 Easy, 5 Medium, 5 Hard (Total 20)
+    await pickQuestions('MCQ', 'easy', 10);
+    await pickQuestions('MCQ', 'medium', 5);
+    await pickQuestions('MCQ', 'hard', 5);
+
+    // 2. Pick Coding: 2 Easy, 1 Medium, 1 Hard (Total 4)
+    await pickQuestions('CODING', 'easy', 2);
+    await pickQuestions('CODING', 'medium', 1);
+    await pickQuestions('CODING', 'hard', 1);
+
+    // 3. Fallback: If total is less than 24, fill with random published questions to reach the target
+    if (selectedQuestions.length < 24) {
+        const needed = 24 - selectedQuestions.length;
         const extraQuestions = await Question.aggregate([
             {
                 $match: {
                     status: 'published',
-                    _id: { $nin: Array.from(questionIds).map(id => new mongoose.Types.ObjectId(id)) }
+                    _id: { $nin: Array.from(selectedQuestionIds).map(id => new mongoose.Types.ObjectId(id)) }
                 }
             },
-            { $sample: { size: remainingNeeded } }
+            { $sample: { size: needed } }
         ]);
-        selectedQuestions = [...selectedQuestions, ...extraQuestions];
+
+        extraQuestions.forEach(q => {
+            selectedQuestions.push(q);
+            selectedQuestionIds.add(q._id.toString());
+        });
     }
 
-    // 4. Create Test Record (Fixed 1 Hour Duration)
+    // 4. Create Test Record (Duration updated to 90 mins for 24 questions)
     const test = await Test.create({
         type: 'DIAGNOSTIC',
-        duration: 60, // 1 Hour fixed
+        duration: 90, // Increased to 90 mins to allow time for 4 coding problems
         questions: selectedQuestions.map(q => q._id),
         createdBy: req.user.id
     });
