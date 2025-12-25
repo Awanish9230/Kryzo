@@ -90,40 +90,66 @@ const submitTest = asyncHandler(async (req, res) => {
         throw new Error('Test not found');
     }
 
+    const gradedAnswers = [];
     let score = 0;
     let maxPossibleScore = 0;
-    const gradedAnswers = [];
+
+    const axios = require('axios');
 
     for (const ans of answers) {
         const question = test.questions.find(q => q._id.toString() === ans.questionId);
         let isCorrect = false;
-        let points = 0;
+        let executionResults = [];
 
         if (question) {
             if (question.type === 'MCQ') {
-                points = 10;
                 maxPossibleScore += 10;
-                const correctOption = question.options.find(opt => opt.isCorrect);
-                // Compare index (sent as selectedOption) or text
-                // Assuming frontend sends index in `selectedOption` or text in `userAnswer`
-                // Let's handle index (0, 1, 2...)
-                if (correctOption && ans.selectedOption !== undefined) {
-                    const selectedIdx = ans.selectedOption;
-                    // Find index of correct option
-                    const correctIdx = question.options.findIndex(opt => opt.isCorrect);
-                    if (Number(selectedIdx) === correctIdx) {
-                        isCorrect = true;
-                        score += 10;
-                    }
+                const correctIdx = question.options.findIndex(opt => opt.isCorrect);
+                if (correctIdx !== -1 && Number(ans.selectedOption) === correctIdx) {
+                    isCorrect = true;
+                    score += 10;
                 }
             } else if (question.type === 'CODING') {
-                points = 20;
                 maxPossibleScore += 20;
-                // Basic validation: Check if code is not empty
-                // In a real scenario, this would go to a code execution engine
-                if (ans.code && ans.code.trim().length > 10) {
-                    isCorrect = true; // Auto-pass for demo purposes if code is written
-                    score += 20;
+
+                if (ans.code && question.testCases && question.testCases.length > 0) {
+                    let passedCount = 0;
+                    for (const tc of question.testCases) {
+                        try {
+                            const response = await axios.post('https://judge0-ce.p.rapidapi.com/submissions?base64_encoded=false&wait=true', {
+                                source_code: ans.code,
+                                language_id: ans.languageId || 63,
+                                stdin: tc.input || '',
+                                expected_output: tc.output || ''
+                            }, {
+                                headers: {
+                                    'x-rapidapi-key': process.env.JUDGE0_KEY || 'free_tier_key',
+                                    'x-rapidapi-host': 'judge0-ce.p.rapidapi.com',
+                                    'Content-Type': 'application/json'
+                                }
+                            });
+
+                            const result = response.data;
+                            const isPassing = result.status.id === 3;
+                            if (isPassing) passedCount++;
+
+                            executionResults.push({
+                                input: tc.input,
+                                expected: tc.output,
+                                actual: result.stdout,
+                                status: result.status.description,
+                                passed: isPassing
+                            });
+                        } catch (err) {
+                            console.error('Judge0 Error:', err.message);
+                            executionResults.push({ status: 'Platform Error', passed: false });
+                        }
+                    }
+
+                    if (passedCount === question.testCases.length) {
+                        isCorrect = true;
+                        score += 20;
+                    }
                 }
             }
         }
@@ -132,7 +158,8 @@ const submitTest = asyncHandler(async (req, res) => {
             questionId: ans.questionId,
             userAnswer: ans.userAnswer || ans.code || ans.selectedOption,
             isCorrect,
-            timeTaken: ans.timeTaken
+            timeTaken: ans.timeTaken,
+            executionResults
         });
     }
 
@@ -399,10 +426,16 @@ const getUserProfile = asyncHandler(async (req, res) => {
         }
     })).sort((a, b) => b.accuracy - a.accuracy);
 
+    const scoreTrend = attempts.slice(-10).map(att => ({
+        date: new Date(att.completedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+        score: att.score
+    }));
+
+    const totalUsersInPlatform = await require('../models/User').countDocuments({ role: 'student' });
+
     res.json({
         user: {
             name: req.user.name,
-            email: req.user.email,
             email: req.user.email,
             collegeId: req.user.collegeId,
             college: req.user.college,
@@ -416,9 +449,11 @@ const getUserProfile = asyncHandler(async (req, res) => {
             testsTaken,
             averageScore: Math.round(averageScore),
             totalQuestionsSolved: attempts.reduce((acc, att) => acc + att.answers.filter(a => a.isCorrect).length, 0),
-            totalQuestionsAttempted: attempts.reduce((acc, att) => acc + att.answers.length, 0)
+            totalQuestionsAttempted: attempts.reduce((acc, att) => acc + att.answers.length, 0),
+            totalUsersInPlatform
         },
         topicMastery,
+        scoreTrend,
         recentAttempts: attempts.slice(-5).reverse().map(att => ({
             testId: att.testId,
             score: att.score,

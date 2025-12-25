@@ -14,6 +14,7 @@ import UserManagement from './pages/admin/UserManagement';
 
 import AdminDocumentation from './pages/admin/AdminDocumentation';
 import AdminProfile from './pages/admin/Profile';
+import BulkUpload from './pages/admin/BulkUpload';
 
 // Student Components
 import StudentDashboard from './pages/student/Dashboard';
@@ -91,6 +92,7 @@ const Layout = () => {
           <Route path="/admin/questions/edit/:id" element={<PrivateRoute role="admin"><EditQuestion /></PrivateRoute>} />
           <Route path="/admin/users" element={<PrivateRoute role="admin"><UserManagement /></PrivateRoute>} />
           <Route path="/admin/documentation" element={<PrivateRoute role="admin"><AdminDocumentation /></PrivateRoute>} />
+          <Route path="/admin/questions/bulk" element={<PrivateRoute role="admin"><BulkUpload /></PrivateRoute>} />
 
           <Route path="*" element={<NotFound />} />
         </Routes>

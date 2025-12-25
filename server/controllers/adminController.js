@@ -391,7 +391,37 @@ const deleteDocumentation = asyncHandler(async (req, res) => {
     }
 });
 
+// @desc    Bulk upload questions
+// @route   POST /api/admin/questions/bulk
+// @access  Private/Admin
+const bulkUploadQuestions = asyncHandler(async (req, res) => {
+    const questionsData = req.body; // Expecting an array of question objects
+
+    if (!Array.isArray(questionsData) || questionsData.length === 0) {
+        res.status(400);
+        throw new Error('Please provide an array of questions');
+    }
+
+    // Basic validation and formatting
+    const lastQuestion = await Question.findOne().sort({ questionNumber: -1 });
+    let currentNumber = lastQuestion && lastQuestion.questionNumber ? lastQuestion.questionNumber : 0;
+
+    const formattedQuestions = questionsData.map((q) => {
+        currentNumber++;
+        return {
+            ...q,
+            questionNumber: currentNumber,
+            createdBy: req.user.id,
+            status: q.status || 'draft'
+        };
+    });
+
+    const questions = await Question.insertMany(formattedQuestions);
+    res.status(201).json({ message: `${questions.length} questions uploaded successfully`, count: questions.length });
+});
+
 // @desc    Get question stats for current admin
+
 // @route   GET /api/admin/my-stats
 // @access  Private/Admin
 const getAdminQuestionStats = asyncHandler(async (req, res) => {
@@ -440,5 +470,6 @@ module.exports = {
     createDocumentation, // New
     getAllDocumentation, // New
     deleteDocumentation, // New
-    getAdminQuestionStats // New
+    getAdminQuestionStats, // New
+    bulkUploadQuestions // New
 };

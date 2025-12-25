@@ -19,6 +19,20 @@ import {
     GraduationCap,
     Calendar
 } from 'lucide-react';
+import {
+    Radar,
+    RadarChart,
+    PolarGrid,
+    PolarAngleAxis,
+    PolarRadiusAxis,
+    ResponsiveContainer,
+    AreaChart,
+    Area,
+    XAxis,
+    YAxis,
+    CartesianGrid,
+    Tooltip
+} from 'recharts';
 
 const Profile = () => {
     const [profile, setProfile] = useState(null);
@@ -301,16 +315,41 @@ const Profile = () => {
                     transition={{ delay: 0.3 }}
                     className="bg-gradient-to-r from-blue-500/10 to-purple-500/10 border border-blue-500/20 rounded-[2rem] p-8 mb-12"
                 >
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <p className="text-sm font-bold text-zinc-400 uppercase tracking-widest mb-2">Your Ranking</p>
-                            <h3 className="text-2xl font-bold mb-2">
-                                You're performing better than <span className="text-blue-500">{profile.percentile}%</span> of users
-                            </h3>
-                            <p className="text-zinc-500 text-sm">Based on your average score compared to all platform users</p>
+                    <div className="flex flex-col md:flex-row items-center justify-between gap-8">
+                        <div className="flex-1">
+                            <p className="text-sm font-bold text-zinc-400 uppercase tracking-widest mb-2">Performance Trend</p>
+                            <div className="h-64 w-full mt-4">
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <AreaChart data={profile.scoreTrend}>
+                                        <defs>
+                                            <linearGradient id="colorScore" x1="0" y1="0" x2="0" y2="1">
+                                                <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
+                                                <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                                            </linearGradient>
+                                        </defs>
+                                        <CartesianGrid strokeDasharray="3 3" stroke="#27272a" vertical={false} />
+                                        <XAxis dataKey="date" stroke="#71717a" fontSize={10} tickLine={false} axisLine={false} />
+                                        <YAxis stroke="#71717a" fontSize={10} tickLine={false} axisLine={false} />
+                                        <Tooltip
+                                            contentStyle={{ backgroundColor: '#18181b', border: '1px solid #27272a', borderRadius: '12px' }}
+                                            itemStyle={{ color: '#fff' }}
+                                        />
+                                        <Area type="monotone" dataKey="score" stroke="#3b82f6" fillOpacity={1} fill="url(#colorScore)" strokeWidth={3} />
+                                    </AreaChart>
+                                </ResponsiveContainer>
+                            </div>
                         </div>
-                        <div className="hidden md:block p-6 bg-blue-500/10 rounded-2xl">
-                            <Trophy size={48} className="text-blue-500" />
+                        <div className="flex-1 flex flex-col items-center">
+                            <div className="h-64 w-full">
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <RadarChart cx="50%" cy="50%" outerRadius="80%" data={profile.topicMastery.slice(0, 6)}>
+                                        <PolarGrid stroke="#27272a" />
+                                        <PolarAngleAxis dataKey="topic" tick={{ fill: '#71717a', fontSize: 10 }} />
+                                        <Radar name="Accuracy" dataKey="accuracy" stroke="#8b5cf6" fill="#8b5cf6" fillOpacity={0.6} />
+                                    </RadarChart>
+                                </ResponsiveContainer>
+                            </div>
+                            <p className="text-xs font-bold text-zinc-500 uppercase tracking-widest mt-2 text-center">Skill Map (Top Topics)</p>
                         </div>
                     </div>
                 </motion.div>

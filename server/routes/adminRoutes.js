@@ -27,6 +27,8 @@ router.route('/questions')
     .post(createQuestion)
     .get(getQuestions);
 
+router.post('/questions/bulk', bulkUploadQuestions);
+
 router.route('/questions/:id')
     .get(getQuestionById)
     .put(updateQuestion)

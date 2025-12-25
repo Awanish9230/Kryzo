@@ -2,12 +2,12 @@ const asyncHandler = require('express-async-handler');
 const axios = require('axios');
 const Question = require('../models/Question');
 
-// Language Config for Piston
+// Language Config for Judge0
 const LANGUAGE_CONFIG = {
-    'JavaScript': { language: 'javascript', version: '18.15.0' },
-    'Python': { language: 'python', version: '3.10.0' },
-    'Java': { language: 'java', version: '15.0.2' },
-    'C++': { language: 'c++', version: '10.2.0' },
+    'JavaScript': 63,
+    'Python': 71,
+    'Java': 62,
+    'C++': 54,
 };
 
 // @desc    Run Code against Test Cases
@@ -21,76 +21,62 @@ const runCode = asyncHandler(async (req, res) => {
         throw new Error('Code and language are required');
     }
 
-    const config = LANGUAGE_CONFIG[language];
-    if (!config) {
+    const langId = LANGUAGE_CONFIG[language];
+    if (!langId) {
         res.status(400);
         throw new Error('Unsupported language');
     }
 
     let testCases = [];
 
-    // If questionId provided, fetch test cases
     if (questionId) {
         const question = await Question.findById(questionId);
         if (question && question.testCases) {
-            // Only run against public test cases for "Run", or all for "Submit"? 
-            // Usually "Run" runs against sample cases. "Submit" runs against all.
-            // Let's run against ALL for now but mark hidden ones?
-            // User requested "allow compiler... to solve question", generally implies checking logic.
             testCases = question.testCases;
         }
     }
 
-    // If custom input provided (e.g. user wants to test specific case), add it
     if (customInput) {
         testCases = [{ input: customInput, output: 'Custom Run', isHidden: false }];
     }
 
-    // If no test cases (e.g. playground or no question), just run once with empty input
     if (testCases.length === 0) {
         testCases = [{ input: '', output: '', isHidden: false }];
     }
 
-    // Execute logic
     const results = [];
-
-    // Limit to first 3 test cases for "Run" to avoid timeout, unless it's a submission
-    // For now, let's run up to 5
     const casesToRun = testCases.slice(0, 5);
 
     for (const tc of casesToRun) {
         try {
-            const payload = {
-                language: config.language,
-                version: config.version,
-                files: [
-                    {
-                        content: code
-                    }
-                ],
+            const response = await axios.post('https://judge0-ce.p.rapidapi.com/submissions?base64_encoded=false&wait=true', {
+                source_code: code,
+                language_id: langId,
                 stdin: tc.input || '',
-            };
+                expected_output: tc.output || ''
+            }, {
+                headers: {
+                    'x-rapidapi-key': process.env.JUDGE0_KEY || 'free_tier_key',
+                    'x-rapidapi-host': 'judge0-ce.p.rapidapi.com',
+                    'Content-Type': 'application/json'
+                }
+            });
 
-            const response = await axios.post('https://emkc.org/api/v2/piston/execute', payload);
-            const { run } = response.data;
-
-            const actualOutput = run.stdout ? run.stdout.trim() : '';
-            const expectedOutput = tc.output ? tc.output.trim() : '';
-
-            // Basic comparison
-            const passed = actualOutput === expectedOutput;
+            const result = response.data;
+            const actualOutput = result.stdout ? result.stdout.trim() : '';
+            const passed = result.status.id === 3; // Accepted
 
             results.push({
                 input: tc.input,
                 expectedOutput: tc.output,
                 actualOutput: actualOutput,
-                error: run.stderr,
+                error: result.stderr || result.compile_output || (result.status.id !== 3 ? result.status.description : null),
                 passed: passed,
                 isHidden: tc.isHidden
             });
 
         } catch (error) {
-            console.error('Piston Error:', error.message);
+            console.error('Judge0 Error:', error.message);
             results.push({
                 input: tc.input,
                 error: 'Execution failed: ' + error.message,
