@@ -14,8 +14,12 @@ import {
     BookOpen,
     Github,
     Twitter,
-    Linkedin
+    Linkedin,
+    Target,
+    Sparkles,
+    Trophy
 } from 'lucide-react';
+import Footer from '../components/Footer';
 
 
 const Landing = () => {
@@ -136,7 +140,49 @@ const Landing = () => {
                 </div>
             </section>
 
+            {/* Onboarding Flow Section */}
+            <section className="py-32 px-6 bg-black">
+                <div className="max-w-7xl mx-auto">
+                    <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-20 gap-8">
+                        <div>
+                            <span className="text-[10px] font-black text-purple-500 uppercase tracking-[0.4em] mb-4 block">Onboarding Flow</span>
+                            <h2 className="text-5xl md:text-6xl font-black text-white leading-tight">Your Journey to <br /> Mastery.</h2>
+                        </div>
+                        <p className="text-zinc-500 max-w-sm text-lg font-medium leading-relaxed">
+                            From initial scan to final certification, we handle every step of your skill development.
+                        </p>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                        {[
+                            { step: "01", icon: <Target className="text-blue-500" />, title: "Diagnostic Test", desc: "Start with a comprehensive scan of your current coding and aptitude levels." },
+                            { step: "02", icon: <Sparkles className="text-purple-500" />, title: "Personalized Plan", desc: "Get an AI-generated 7-day roadmap tailored to your specific weak areas." },
+                            { step: "03", icon: <Code2 className="text-green-500" />, title: "Adaptive Practice", desc: "Solve problems that evolve with your skill level, ensuring constant growth." },
+                            { step: "04", icon: <Trophy className="text-yellow-500" />, title: "Certification", desc: "Gain industry-recognized badges and proof of proficiency for your resume." }
+                        ].map((item, idx) => (
+                            <motion.div
+                                key={idx}
+                                initial={{ opacity: 0, y: 20 }}
+                                whileInView={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.5, delay: idx * 0.1 }}
+                                className="relative bg-zinc-900/40 border border-white/5 p-8 rounded-[2rem] hover:bg-zinc-900/60 transition-all group"
+                            >
+                                <span className="absolute top-8 right-8 text-3xl font-black text-zinc-800 group-hover:text-zinc-700 transition-colors">{item.step}</span>
+                                <div className="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center mb-8">
+                                    {item.icon}
+                                </div>
+                                <h4 className="text-xl font-bold text-white mb-4">{item.title}</h4>
+                                <p className="text-zinc-500 text-sm leading-relaxed">
+                                    {item.desc}
+                                </p>
+                            </motion.div>
+                        ))}
+                    </div>
+                </div>
+            </section>
+
             {/* Footer handled globally in App.jsx */}
+            <Footer />
         </div>
     );
 };
