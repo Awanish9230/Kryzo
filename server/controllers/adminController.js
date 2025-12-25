@@ -107,10 +107,12 @@ const getQuestions = asyncHandler(async (req, res) => {
 
     // Filters
     const keyword = req.query.keyword ? {
-        title: {
-            $regex: req.query.keyword,
-            $options: 'i',
-        },
+        $or: [
+            { title: { $regex: req.query.keyword, $options: 'i' } },
+            { topic: { $regex: req.query.keyword, $options: 'i' } },
+            { subtopic: { $regex: req.query.keyword, $options: 'i' } },
+            { topics: { $regex: req.query.keyword, $options: 'i' } }
+        ]
     } : {};
 
     const statusFilter = req.query.status ? { status: req.query.status } : {};

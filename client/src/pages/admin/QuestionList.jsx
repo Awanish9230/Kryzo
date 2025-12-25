@@ -18,15 +18,19 @@ const QuestionList = () => {
     const [questions, setQuestions] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
+    const [page, setPage] = useState(1);
+    const [pages, setPages] = useState(1);
 
     useEffect(() => {
         fetchQuestions();
-    }, []);
+        // eslint-disable-next-line
+    }, [page, searchTerm]); // Fetch when page or searchTerm changes
 
     const fetchQuestions = async () => {
         try {
-            const { data } = await api.get('/admin/questions');
+            const { data } = await api.get(`/admin/questions?pageNumber=${page}&keyword=${searchTerm}`);
             setQuestions(data.questions || []);
+            setPages(data.pages || 1);
             setLoading(false);
         } catch (err) {
             console.error(err);
@@ -44,13 +48,6 @@ const QuestionList = () => {
             }
         }
     };
-
-    const filteredQuestions = Array.isArray(questions) ? questions.filter(q =>
-        q.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (q.topic && q.topic.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        (q.subtopic && q.subtopic.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        (q.topics && q.topics.some(t => t.toLowerCase().includes(searchTerm.toLowerCase())))
-    ) : [];
 
     if (loading) return (
         <div className="min-h-screen bg-black flex items-center justify-center">
@@ -80,12 +77,16 @@ const QuestionList = () => {
                         <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-600 group-focus-within:text-white transition-colors" />
                         <input
                             type="text"
-                            placeholder="Search by title, topic..."
+                            placeholder="Search by title..."
                             className="w-full pl-12 pr-4 py-3 bg-zinc-900 border border-white/5 rounded-2xl focus:outline-none focus:border-blue-500 transition-all text-white placeholder:text-zinc-700"
                             value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
+                            onChange={(e) => {
+                                setSearchTerm(e.target.value);
+                                setPage(1); // Reset to page 1 on search
+                            }}
                         />
                     </div>
+                    {/* Filter button can be implemented later or removed if not needed */}
                     <button className="px-6 py-3 bg-zinc-900 border border-white/5 rounded-2xl text-zinc-400 font-medium hover:text-white transition-all flex items-center gap-2">
                         <Filter size={18} />
                         Filters
@@ -107,7 +108,7 @@ const QuestionList = () => {
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-white/5">
-                                {filteredQuestions.map((q, idx) => (
+                                {questions.map((q, idx) => (
                                     <motion.tr
                                         key={q._id}
                                         initial={{ opacity: 0, y: 10 }}
@@ -178,6 +179,28 @@ const QuestionList = () => {
                             </tbody>
                         </table>
                     </div>
+                    {/* Pagination Controls */}
+                    {pages > 1 && (
+                        <div className="px-8 py-6 border-t border-white/5 flex items-center justify-between">
+                            <button
+                                onClick={() => setPage(p => Math.max(1, p - 1))}
+                                disabled={page === 1}
+                                className="px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-xs font-bold text-zinc-400 hover:text-white hover:bg-white/10 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                Previous
+                            </button>
+                            <span className="text-xs font-bold text-zinc-500">
+                                Page {page} of {pages}
+                            </span>
+                            <button
+                                onClick={() => setPage(p => Math.min(pages, p + 1))}
+                                disabled={page === pages}
+                                className="px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-xs font-bold text-zinc-400 hover:text-white hover:bg-white/10 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                Next
+                            </button>
+                        </div>
+                    )}
                 </div>
             </div>
         </div>
