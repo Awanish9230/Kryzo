@@ -121,18 +121,7 @@ const Register = () => {
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium text-zinc-400 ml-1">Role</label>
-                                <select
-                                    name="role"
-                                    className="w-full px-4 py-3 bg-zinc-950 border border-white/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all text-white"
-                                    value={formData.role}
-                                    onChange={handleChange}
-                                >
-                                    <option value="student">Student</option>
-                                    <option value="admin">Admin</option>
-                                </select>
-                            </div>
+                            {/* Role selection removed - defaulting to student */}
 
                             <div className="space-y-2">
                                 <label className="text-sm font-medium text-zinc-400 ml-1">College/ID</label>

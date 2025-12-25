@@ -1,44 +1,49 @@
 import { motion } from 'framer-motion';
 
 const Loader = ({ size = 'medium', fullScreen = false }) => {
-    const getSize = () => {
-        switch (size) {
-            case 'small': return 'w-5 h-5 border-2';
-            case 'large': return 'w-12 h-12 border-4';
-            default: return 'w-8 h-8 border-2';
-        }
-    };
+
+    // Ticks for the spinner
+    const ticks = Array.from({ length: 12 });
 
     const loaderContent = (
-        <div className="flex flex-col items-center gap-6">
-            <div className="relative">
-                <motion.div
-                    animate={{
-                        scale: [1, 1.2, 1],
-                        rotate: [0, 180, 360],
-                        borderRadius: ["20%", "50%", "20%"]
-                    }}
-                    transition={{
-                        duration: 2,
-                        repeat: Infinity,
-                        ease: "easeInOut"
-                    }}
-                    className={`bg-gradient-to-tr from-blue-500 via-indigo-500 to-purple-500 blur-md opacity-50 absolute inset-0 ${getSize()}`}
-                />
-                <motion.div
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
-                    className={`relative rounded-xl border-t-2 border-r-2 border-b-2 border-transparent border-t-white border-r-blue-400 ${getSize()}`}
-                />
+        <div className="flex flex-col items-center gap-4">
+            {/* Tick Spinner */}
+            <div className="relative w-12 h-12">
+                {ticks.map((_, i) => (
+                    <motion.div
+                        key={i}
+                        className="absolute left-1/2 top-0 w-1 h-3 bg-white rounded-full origin-[50%_24px]"
+                        style={{
+                            rotate: i * 30,
+                            translateX: '-50%',
+                        }}
+                        animate={{ opacity: [0.2, 1, 0.2] }}
+                        transition={{
+                            duration: 1,
+                            repeat: Infinity,
+                            delay: i * 0.083, // 1/12
+                            ease: "easeInOut"
+                        }}
+                    />
+                ))}
             </div>
-            <motion.p
-                initial={{ opacity: 0.5 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.8, repeat: Infinity, repeatType: "reverse" }}
-                className="text-zinc-500 text-sm font-medium tracking-widest uppercase"
-            >
-                Loading
-            </motion.p>
+
+            {/* Loading Text with Animated Dots */}
+            <div className="flex items-center text-zinc-400 font-medium tracking-wide">
+                <span>Loading</span>
+                <motion.span
+                    animate={{ opacity: [0, 1, 0] }}
+                    transition={{ duration: 1.5, repeat: Infinity, times: [0, 0.5, 1], delay: 0 }}
+                >.</motion.span>
+                <motion.span
+                    animate={{ opacity: [0, 1, 0] }}
+                    transition={{ duration: 1.5, repeat: Infinity, times: [0, 0.5, 1], delay: 0.2 }}
+                >.</motion.span>
+                <motion.span
+                    animate={{ opacity: [0, 1, 0] }}
+                    transition={{ duration: 1.5, repeat: Infinity, times: [0, 0.5, 1], delay: 0.4 }}
+                >.</motion.span>
+            </div>
         </div>
     );
 
