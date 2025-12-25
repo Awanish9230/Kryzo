@@ -16,7 +16,7 @@ import {
     Twitter,
     Linkedin
 } from 'lucide-react';
-import Footer from '../components/Footer';
+
 
 const Landing = () => {
     const { user } = useContext(AuthContext);
@@ -136,8 +136,7 @@ const Landing = () => {
                 </div>
             </section>
 
-            {/* Enhanced Footer */}
-            <Footer />
+            {/* Footer handled globally in App.jsx */}
         </div>
     );
 };

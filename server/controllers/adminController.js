@@ -265,6 +265,60 @@ const updateUser = asyncHandler(async (req, res) => {
     }
 });
 
+// @desc    Create a new user (admin or student)
+// @route   POST /api/admin/users
+// @access  Private/Admin
+const createUser = asyncHandler(async (req, res) => {
+    const { name, email, password, role, collegeId } = req.body;
+
+    if (!name || !email || !password) {
+        res.status(400);
+        throw new Error('Please provide name, email, and password');
+    }
+
+    const userExists = await User.findOne({ email });
+
+    if (userExists) {
+        res.status(400);
+        throw new Error('User already exists');
+    }
+
+    // We rely on the User model pre-save hook to hash the password if it exists there, 
+    // BUT looking at authController, it hashes manually. Let's check User model or just hash here to be safe/consistent.
+    // authController uses: const salt = await bcrypt.genSalt(10); const hashedPassword = await bcrypt.hash(password, salt);
+    // I should require bcrypt if not imported, or check if I can just use User.create if model handles it.
+    // `authController` line 27 implies manual hashing. I'll do the same to be safe.
+    // I need to import bcrypt. It's not imported in adminController.
+    // Wait, let me check provided file content for adminController. It does NOT import bcrypt.
+    // I will use a separate replacement to add the import first.
+
+    // placeholder implementation relying on subsequent import addition
+    const bcrypt = require('bcryptjs');
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    const user = await User.create({
+        name,
+        email,
+        password: hashedPassword,
+        role: role || 'student',
+        collegeId
+    });
+
+    if (user) {
+        res.status(201).json({
+            _id: user._id,
+            name: user.name,
+            email: user.email,
+            role: user.role,
+            collegeId: user.collegeId
+        });
+    } else {
+        res.status(400);
+        throw new Error('Invalid user data');
+    }
+});
+
 // @desc    Get question by ID
 // @route   GET /api/admin/questions/:id
 // @access  Private/Admin
@@ -341,6 +395,7 @@ module.exports = {
     getAllUsers,
     deleteUser,
     updateUser,
+    createUser, // New
     getQuestionById,
     createDocumentation, // New
     getAllDocumentation, // New

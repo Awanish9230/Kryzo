@@ -9,6 +9,7 @@ const {
     getAllUsers,
     deleteUser,
     updateUser,
+    createUser,
     getQuestionById
 } = require('../controllers/adminController');
 const { protect, admin } = require('../middleware/authMiddleware');
@@ -28,7 +29,8 @@ router.route('/questions/:id')
     .delete(deleteQuestion);
 
 router.route('/users')
-    .get(getAllUsers);
+    .get(getAllUsers)
+    .post(createUser);
 
 router.route('/users/:id')
     .put(updateUser)

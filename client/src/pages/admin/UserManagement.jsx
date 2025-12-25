@@ -75,6 +75,32 @@ const UserManagement = () => {
         (u.collegeId && u.collegeId.toLowerCase().includes(searchTerm.toLowerCase()))
     );
 
+    const [showAddModal, setShowAddModal] = useState(false);
+    const [newUser, setNewUser] = useState({
+        name: '',
+        email: '',
+        password: '',
+        role: 'student',
+        collegeId: ''
+    });
+
+    const handleAddUser = async () => {
+        try {
+            const { data } = await api.post('/admin/users', newUser);
+            setUsers([data, ...users]);
+            setShowAddModal(false);
+            setNewUser({
+                name: '',
+                email: '',
+                password: '',
+                role: 'student',
+                collegeId: ''
+            });
+        } catch (err) {
+            alert(err.response?.data?.message || 'Failed to create user');
+        }
+    };
+
     if (loading) return (
         <div className="min-h-screen bg-black flex items-center justify-center">
             <div className="w-8 h-8 border-2 border-white/10 border-t-white rounded-full animate-spin"></div>
@@ -84,8 +110,8 @@ const UserManagement = () => {
     return (
         <div className="min-h-screen bg-black pt-28 pb-20 px-6">
             <div className="max-w-7xl mx-auto">
-                <header className="mb-12">
-                    <div className="flex items-center gap-4 mb-4">
+                <header className="mb-12 flex flex-col md:flex-row md:items-center justify-between gap-6">
+                    <div className="flex items-center gap-4">
                         <div className="p-3 bg-purple-500/10 rounded-2xl text-purple-500">
                             <Users size={32} />
                         </div>
@@ -94,6 +120,13 @@ const UserManagement = () => {
                             <p className="text-zinc-500">Manage platform users and their permissions</p>
                         </div>
                     </div>
+                    <button
+                        onClick={() => setShowAddModal(true)}
+                        className="px-6 py-3 bg-white text-black font-bold rounded-2xl hover:bg-zinc-200 transition-all flex items-center gap-2"
+                    >
+                        <Users size={20} />
+                        Add New User
+                    </button>
                 </header>
 
                 {/* Search & Filter */}
@@ -281,6 +314,97 @@ const UserManagement = () => {
                                 >
                                     <Save size={18} />
                                     Save Changes
+                                </button>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+
+                {/* Add User Modal */}
+                {showAddModal && (
+                    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-6">
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            className="bg-zinc-900 border border-white/10 rounded-3xl p-8 max-w-md w-full"
+                        >
+                            <div className="flex items-center justify-between mb-6">
+                                <h2 className="text-2xl font-bold">Add New User</h2>
+                                <button
+                                    onClick={() => setShowAddModal(false)}
+                                    className="p-2 hover:bg-white/5 rounded-lg transition-all"
+                                >
+                                    <X size={20} />
+                                </button>
+                            </div>
+
+                            <div className="space-y-4">
+                                <div>
+                                    <label className="text-sm font-medium text-zinc-400 ml-1 mb-2 block">Name</label>
+                                    <input
+                                        type="text"
+                                        className="w-full px-4 py-3 bg-zinc-950 border border-white/10 rounded-xl text-white focus:outline-none focus:border-blue-500 transition-all"
+                                        placeholder="John Doe"
+                                        value={newUser.name}
+                                        onChange={(e) => setNewUser({ ...newUser, name: e.target.value })}
+                                    />
+                                </div>
+                                <div>
+                                    <label className="text-sm font-medium text-zinc-400 ml-1 mb-2 block">Email</label>
+                                    <input
+                                        type="email"
+                                        className="w-full px-4 py-3 bg-zinc-950 border border-white/10 rounded-xl text-white focus:outline-none focus:border-blue-500 transition-all"
+                                        placeholder="john@example.com"
+                                        value={newUser.email}
+                                        onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
+                                    />
+                                </div>
+                                <div>
+                                    <label className="text-sm font-medium text-zinc-400 ml-1 mb-2 block">Password</label>
+                                    <input
+                                        type="password"
+                                        className="w-full px-4 py-3 bg-zinc-950 border border-white/10 rounded-xl text-white focus:outline-none focus:border-blue-500 transition-all"
+                                        placeholder="••••••••"
+                                        value={newUser.password}
+                                        onChange={(e) => setNewUser({ ...newUser, password: e.target.value })}
+                                    />
+                                </div>
+                                <div>
+                                    <label className="text-sm font-medium text-zinc-400 ml-1 mb-2 block">Role</label>
+                                    <select
+                                        className="w-full px-4 py-3 bg-zinc-950 border border-white/10 rounded-xl text-white focus:outline-none focus:border-blue-500 transition-all appearance-none cursor-pointer"
+                                        value={newUser.role}
+                                        onChange={(e) => setNewUser({ ...newUser, role: e.target.value })}
+                                    >
+                                        <option value="student">Student</option>
+                                        <option value="admin">Admin</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="text-sm font-medium text-zinc-400 ml-1 mb-2 block">College ID</label>
+                                    <input
+                                        type="text"
+                                        className="w-full px-4 py-3 bg-zinc-950 border border-white/10 rounded-xl text-white focus:outline-none focus:border-blue-500 transition-all"
+                                        placeholder="Optional"
+                                        value={newUser.collegeId}
+                                        onChange={(e) => setNewUser({ ...newUser, collegeId: e.target.value })}
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="flex gap-3 mt-8">
+                                <button
+                                    onClick={() => setShowAddModal(false)}
+                                    className="flex-1 px-4 py-3 bg-zinc-800 border border-white/5 rounded-xl font-bold hover:bg-zinc-700 transition-all"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={handleAddUser}
+                                    className="flex-1 px-4 py-3 bg-white text-black rounded-xl font-bold hover:bg-zinc-200 transition-all flex items-center justify-center gap-2"
+                                >
+                                    <Users size={18} />
+                                    Create User
                                 </button>
                             </div>
                         </motion.div>
