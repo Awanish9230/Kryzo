@@ -44,7 +44,7 @@ const Landing = () => {
                         transition={{ duration: 0.6 }}
                     >
                         <span className="inline-block px-4 py-1.5 mb-6 text-sm font-medium border border-white/10 rounded-full bg-white/5 backdrop-blur-sm text-blue-400">
-                            Now in Public Beta
+                            Next-Gen Assessment Platform
                         </span>
                         <h1 className="text-5xl md:text-7xl font-bold tracking-tight mb-8 leading-[1.1]">
                             Better assessments for <br />

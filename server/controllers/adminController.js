@@ -17,13 +17,48 @@ const getStats = asyncHandler(async (req, res) => {
     const totalUsers = await User.countDocuments({ role: 'student' });
     const totalAttempts = await UserAttempt.countDocuments();
 
+    // Stats by Type
+    const typeStats = await Question.aggregate([
+        { $group: { _id: "$type", count: { $sum: 1 } } }
+    ]);
+
+    // Stats by Difficulty
+    const difficultyStats = await Question.aggregate([
+        { $group: { _id: "$difficulty", count: { $sum: 1 } } }
+    ]);
+
+    // Stats by Topic
+    // Note: Since we have both 'topic' (string) and 'topics' (array), 
+    // we'll prioritize 'topic' but handle 'topics' if 'topic' is missing.
+    const topicStats = await Question.aggregate([
+        {
+            $project: {
+                effectiveTopic: {
+                    $cond: {
+                        if: { $ne: ["$topic", null] },
+                        then: "$topic",
+                        else: { $arrayElemAt: ["$topics", 0] }
+                    }
+                }
+            }
+        },
+        { $group: { _id: "$effectiveTopic", count: { $sum: 1 } } },
+        { $sort: { count: -1 } },
+        { $limit: 10 } // Show top 10 topics
+    ]);
+
     res.json({
         totalQuestions,
         publishedQuestions,
         draftQuestions,
         totalTests,
         totalUsers,
-        totalAttempts
+        totalAttempts,
+        breakdown: {
+            type: typeStats.reduce((acc, curr) => ({ ...acc, [curr._id]: curr.count }), {}),
+            difficulty: difficultyStats.reduce((acc, curr) => ({ ...acc, [curr._id]: curr.count }), {}),
+            topics: topicStats.map(t => ({ name: t._id || 'Unset', count: t.count }))
+        }
     });
 });
 
@@ -455,9 +490,53 @@ const getAdminQuestionStats = asyncHandler(async (req, res) => {
     });
 });
 
+// @desc    Get detailed question breakdown matrix
+// @route   GET /api/admin/detailed-stats
+// @access  Private/Admin
+const getDetailedStats = asyncHandler(async (req, res) => {
+    const matrix = await Question.aggregate([
+        {
+            $project: {
+                topic: {
+                    $cond: {
+                        if: { $ne: ["$topic", null] },
+                        then: "$topic",
+                        else: { $ifNull: [{ $arrayElemAt: ["$topics", 0] }, "Uncategorized"] }
+                    }
+                },
+                type: 1,
+                difficulty: 1
+            }
+        },
+        {
+            $group: {
+                _id: { topic: "$topic", type: "$type", difficulty: "$difficulty" },
+                count: { $sum: 1 }
+            }
+        },
+        {
+            $group: {
+                _id: "$_id.topic",
+                stats: {
+                    $push: {
+                        type: "$_id.type",
+                        difficulty: "$_id.difficulty",
+                        count: "$count"
+                    }
+                },
+                total: { $sum: "$count" }
+            }
+        },
+        { $sort: { total: -1 } }
+    ]);
+
+    res.json(matrix);
+});
+
 module.exports = {
 
     getStats,
+    getDetailedStats, // New
     createQuestion,
     getQuestions,
     updateQuestion,

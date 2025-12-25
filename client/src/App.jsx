@@ -15,6 +15,7 @@ import UserManagement from './pages/admin/UserManagement';
 import AdminDocumentation from './pages/admin/AdminDocumentation';
 import AdminProfile from './pages/admin/Profile';
 import BulkUpload from './pages/admin/BulkUpload';
+import AdminReports from './pages/admin/Reports';
 
 // Student Components
 import StudentDashboard from './pages/student/Dashboard';
@@ -22,6 +23,7 @@ import TestAttempt from './pages/student/TestAttempt';
 import TestResult from './pages/student/TestResult';
 import CustomTestBuilder from './pages/student/CustomTestBuilder';
 import Profile from './pages/student/Profile';
+import StudyDocumentation from './pages/student/StudyDocumentation';
 
 import Landing from './pages/Landing';
 
@@ -82,6 +84,7 @@ const Layout = () => {
           <Route path="/student/test/custom" element={<PrivateRoute role="student"><CustomTestBuilder /></PrivateRoute>} />
           <Route path="/student/test/:testId" element={<PrivateRoute role="student"><TestAttempt /></PrivateRoute>} />
           <Route path="/student/test/result" element={<PrivateRoute role="student"><TestResult /></PrivateRoute>} />
+          <Route path="/student/study/:id" element={<PrivateRoute role="student"><StudyDocumentation /></PrivateRoute>} />
 
           {/* Admin Routes */}
           <Route path="/admin" element={<PrivateRoute role="admin"><AdminDashboard /></PrivateRoute>} />
@@ -93,6 +96,7 @@ const Layout = () => {
           <Route path="/admin/users" element={<PrivateRoute role="admin"><UserManagement /></PrivateRoute>} />
           <Route path="/admin/documentation" element={<PrivateRoute role="admin"><AdminDocumentation /></PrivateRoute>} />
           <Route path="/admin/questions/bulk" element={<PrivateRoute role="admin"><BulkUpload /></PrivateRoute>} />
+          <Route path="/admin/reports" element={<PrivateRoute role="admin"><AdminReports /></PrivateRoute>} />
 
           <Route path="*" element={<NotFound />} />
         </Routes>

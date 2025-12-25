@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const {
     getStats,
+    getDetailedStats, // New
     createQuestion,
     getQuestions,
     updateQuestion,
@@ -23,6 +24,7 @@ router.use(protect);
 router.use(admin);
 
 router.get('/stats', getStats);
+router.get('/detailed-stats', getDetailedStats); // New
 
 router.route('/questions')
     .post(createQuestion)

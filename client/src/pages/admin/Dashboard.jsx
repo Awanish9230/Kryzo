@@ -60,26 +60,104 @@ const AdminDashboard = () => {
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <div className="lg:col-span-2 bg-zinc-900/50 border border-white/5 rounded-[2.5rem] p-8 backdrop-blur-sm">
-                        <div className="flex items-center justify-between mb-8">
-                            <h2 className="text-xl font-bold flex items-center gap-3">
-                                <TrendingUp className="text-blue-500" />
-                                Growth Analytics
-                            </h2>
-                            <select className="bg-white/5 border border-white/10 rounded-lg text-xs font-bold p-2 text-zinc-400 focus:outline-none">
-                                <option>Last 30 Days</option>
-                                <option>Last 7 Days</option>
-                            </select>
+                    <div className="lg:col-span-2 space-y-6">
+                        {/* Question Distribution */}
+                        <div className="bg-zinc-900/50 border border-white/5 rounded-[2.5rem] p-8 backdrop-blur-sm">
+                            <div className="flex items-center gap-3 mb-8">
+                                <div className="p-3 bg-purple-500/10 rounded-2xl text-purple-500">
+                                    <BarChart2 size={24} />
+                                </div>
+                                <h2 className="text-xl font-bold tracking-tight">Question Bank Distribution</h2>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+                                {/* Type & Difficulty */}
+                                <div className="space-y-8">
+                                    <div>
+                                        <h3 className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-4">By Type</h3>
+                                        <div className="space-y-4">
+                                            {Object.entries(stats?.breakdown?.type || {}).map(([type, count]) => (
+                                                <div key={type} className="space-y-2">
+                                                    <div className="flex justify-between text-sm font-medium">
+                                                        <span className="text-zinc-400">{type}</span>
+                                                        <span className="text-white">{count}</span>
+                                                    </div>
+                                                    <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
+                                                        <motion.div
+                                                            initial={{ width: 0 }}
+                                                            animate={{ width: stats.totalQuestions > 0 ? `${(count / stats.totalQuestions) * 100}%` : '0%' }}
+                                                            className={`h-full ${type === 'CODING' ? 'bg-blue-500' : type === 'MCQ' ? 'bg-purple-500' : 'bg-green-500'}`}
+                                                        />
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <h3 className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-4">By Difficulty</h3>
+                                        <div className="flex gap-2">
+                                            {['easy', 'medium', 'hard'].map((diff) => {
+                                                const count = stats?.breakdown?.difficulty[diff] || 0;
+                                                const percentage = stats?.totalQuestions ? (count / stats.totalQuestions) * 100 : 0;
+                                                return (
+                                                    <div key={diff} className="flex-1 p-4 bg-white/5 border border-white/5 rounded-2xl text-center">
+                                                        <p className={`text-[10px] font-bold uppercase mb-1 ${diff === 'easy' ? 'text-green-500' : diff === 'medium' ? 'text-yellow-500' : 'text-red-500'}`}>{diff}</p>
+                                                        <p className="text-2xl font-bold">{count}</p>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Top Topics */}
+                                <div>
+                                    <h3 className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-4">Top Topics</h3>
+                                    <div className="space-y-3">
+                                        {stats?.breakdown?.topics?.map((topic, idx) => (
+                                            <div key={idx} className="flex items-center justify-between p-3.5 bg-white/5 border border-white/5 rounded-2xl group hover:bg-white/10 transition-all">
+                                                <div className="flex items-center gap-3">
+                                                    <span className="w-8 h-8 flex items-center justify-center bg-zinc-950 border border-white/10 rounded-lg text-xs font-bold text-zinc-500 group-hover:text-white transition-colors">
+                                                        {idx + 1}
+                                                    </span>
+                                                    <span className="text-sm font-semibold text-zinc-300 group-hover:text-white transition-colors">{topic.name}</span>
+                                                </div>
+                                                <span className="px-3 py-1 bg-zinc-900 border border-white/5 rounded-full text-[10px] font-bold text-zinc-500 group-hover:text-white transition-all">
+                                                    {topic.count} qns
+                                                </span>
+                                            </div>
+                                        ))}
+                                        {(!stats?.breakdown?.topics || stats?.breakdown?.topics.length === 0) && (
+                                            <p className="text-zinc-600 text-sm text-center py-8">No topics added yet.</p>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        <div className="h-64 w-full bg-gradient-to-t from-blue-500/5 to-transparent border border-white/5 rounded-2xl flex items-center justify-center relative overflow-hidden">
-                            <BarChart2 className="w-20 h-20 text-blue-500 opacity-10" />
-                            <div className="absolute inset-0 flex items-center justify-center">
-                                <span className="text-zinc-600 font-medium text-sm">Analytics engine loading...</span>
+
+                        {/* Recent Activity / Growth */}
+                        <div className="bg-zinc-900/50 border border-white/5 rounded-[2.5rem] p-8 backdrop-blur-sm">
+                            <div className="flex items-center justify-between mb-8">
+                                <h2 className="text-xl font-bold flex items-center gap-3">
+                                    <TrendingUp className="text-blue-500" />
+                                    Growth Analytics
+                                </h2>
+                                <select className="bg-white/5 border border-white/10 rounded-lg text-xs font-bold p-2 text-zinc-400 focus:outline-none">
+                                    <option>Last 30 Days</option>
+                                    <option>Last 7 Days</option>
+                                </select>
+                            </div>
+                            <div className="h-48 w-full bg-gradient-to-t from-blue-500/5 to-transparent border border-white/5 rounded-2xl flex items-center justify-center relative overflow-hidden">
+                                <BarChart2 className="w-20 h-20 text-blue-500 opacity-10" />
+                                <div className="absolute inset-0 flex items-center justify-center">
+                                    <span className="text-zinc-600 font-medium text-sm">Real-time tracking enabled</span>
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    <div className="bg-zinc-900/50 border border-white/5 rounded-[2.5rem] p-8 backdrop-blur-sm">
+                    <div className="bg-zinc-900/50 border border-white/5 rounded-[2.5rem] p-8 backdrop-blur-sm self-start">
                         <h2 className="text-xl font-bold mb-6">Quick Actions</h2>
                         <div className="space-y-3">
                             <QuickActionLink label="Manage Questions" href="/admin/questions" />
@@ -87,7 +165,7 @@ const AdminDashboard = () => {
                             <QuickActionLink label="Documentation" href="/admin/documentation" />
                             <QuickActionLink label="User Management" href="/admin/users" />
                             <QuickActionLink label="Global Reports" href="/admin/reports" />
-                            <QuickActionLink label="Platform Settings" href="/admin/settings" />
+                            <QuickActionLink label="Settings" href="/admin/settings" />
                         </div>
                     </div>
                 </div>

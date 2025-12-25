@@ -162,23 +162,23 @@ const TestResult = () => {
                                                 <td className="p-6 font-medium text-white">{q.title}</td>
                                                 <td className="p-6">
                                                     <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest border ${q.type === 'CODING'
-                                                            ? 'bg-purple-500/10 text-purple-400 border-purple-500/20'
-                                                            : 'bg-blue-500/10 text-blue-400 border-blue-500/20'
+                                                        ? 'bg-purple-500/10 text-purple-400 border-purple-500/20'
+                                                        : 'bg-blue-500/10 text-blue-400 border-blue-500/20'
                                                         }`}>
                                                         {q.type}
                                                     </span>
                                                 </td>
                                                 <td className="p-6">
                                                     <span className={`text-xs font-bold uppercase ${q.difficulty === 'hard' ? 'text-red-500' :
-                                                            q.difficulty === 'medium' ? 'text-yellow-500' : 'text-green-500'
+                                                        q.difficulty === 'medium' ? 'text-yellow-500' : 'text-green-500'
                                                         }`}>
                                                         {q.difficulty}
                                                     </span>
                                                 </td>
                                                 <td className="p-6 text-right">
                                                     <span className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest border ${q.status === 'solved' ? 'bg-green-500/10 text-green-400 border-green-500/20' :
-                                                            q.status === 'attempted' ? 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20' :
-                                                                'bg-red-500/10 text-red-400 border-red-500/20'
+                                                        q.status === 'attempted' ? 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20' :
+                                                            'bg-red-500/10 text-red-400 border-red-500/20'
                                                         }`}>
                                                         {q.status === 'solved' && <CheckCircle2 size={14} />}
                                                         {q.status === 'attempted' && <Target size={14} />}
@@ -205,39 +205,42 @@ const TestResult = () => {
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: 0.3 + idx * 0.1 }}
-                                className="group bg-zinc-900/50 border border-white/5 rounded-2xl p-6 hover:border-white/20 transition-all"
+                                className="group bg-zinc-900/50 border border-white/5 rounded-[2rem] p-8 hover:border-white/10 transition-all"
                             >
-                                <div className="flex flex-col md:flex-row md:items-center gap-6">
-                                    <div className="shrink-0 flex items-center gap-4">
-                                        <div className="w-12 h-12 bg-white/5 rounded-xl flex items-center justify-center font-bold text-zinc-500 group-hover:bg-white group-hover:text-black transition-colors">
+                                <div className="flex flex-col md:flex-row gap-8">
+                                    <div className="shrink-0 flex flex-col items-center justify-center min-w-[80px]">
+                                        <div className="w-12 h-12 bg-white/5 border border-white/10 rounded-xl flex items-center justify-center font-black text-zinc-500 group-hover:bg-white group-hover:text-black transition-all mb-2">
                                             {idx + 1}
                                         </div>
-                                        <div>
-                                            <p className="text-xs font-bold text-zinc-500 uppercase tracking-widest">{day.day}</p>
-                                            <p className="font-bold text-white text-lg">{day.action}</p>
+                                        <p className="text-[10px] font-black text-zinc-600 uppercase tracking-widest">{day.dayName}</p>
+                                    </div>
+
+                                    <div className="flex-grow space-y-3">
+                                        <div className="mb-4">
+                                            <h3 className="text-xl font-bold text-white mb-1">Focus: {day.topic}</h3>
+                                            <p className="text-xs text-zinc-500 font-medium">Daily tasks designed to improve your understanding.</p>
                                         </div>
-                                    </div>
-
-                                    <div className="flex-1 border-l border-white/5 pl-6 md:pl-6 border-t md:border-t-0 pt-4 md:pt-0">
-                                        <p className="text-zinc-400 mb-2">{day.description}</p>
-
-                                        {day.resource && (
-                                            <div className="flex items-center gap-2 text-blue-400 bg-blue-400/10 px-3 py-1.5 rounded-lg w-fit text-sm font-bold">
-                                                <BookOpen size={14} />
-                                                <span>Recommended: {day.resource.title}</span>
+                                        {day.tasks.map((task, tIdx) => (
+                                            <div key={tIdx} className="flex items-center gap-4 p-3 bg-white/[0.02] border border-white/5 rounded-xl">
+                                                <div className="p-1.5 bg-zinc-800 rounded-lg text-zinc-400">
+                                                    {task.type === 'READ' ? <BookOpen size={14} /> :
+                                                        task.type === 'PRACTICE_MCQ' ? <Zap size={14} /> :
+                                                            <Trophy size={14} />}
+                                                </div>
+                                                <span className="text-sm font-medium text-zinc-300">{task.description}</span>
                                             </div>
-                                        )}
+                                        ))}
                                     </div>
 
-                                    {day.link && (
+                                    <div className="flex items-center justify-center">
                                         <button
                                             onClick={() => navigate(day.link)}
-                                            className="shrink-0 px-6 py-3 bg-white text-black font-bold rounded-xl hover:bg-zinc-200 transition-all flex items-center gap-2 justify-center"
+                                            className="px-8 py-3 bg-white text-black font-black rounded-xl hover:bg-zinc-200 transition-all flex items-center gap-2"
                                         >
                                             Start
-                                            <ArrowRight size={16} />
+                                            <ArrowRight size={18} />
                                         </button>
-                                    )}
+                                    </div>
                                 </div>
                             </motion.div>
                         ))}

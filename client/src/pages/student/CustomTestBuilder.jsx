@@ -75,7 +75,8 @@ const CustomTestBuilder = () => {
             navigate(`/student/test/${data._id}`);
         } catch (err) {
             console.error(err);
-            alert('Failed to generate test. Make sure enough questions exist for selected topics.');
+            const message = err.response?.data?.message || 'Failed to generate test. Make sure enough questions exist for selected topics.';
+            alert(message);
         }
     };
 

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import api from '../../utils/api';
 import { motion } from 'framer-motion';
-import { BookOpen, ArrowRight, Zap, History } from 'lucide-react';
+import { BookOpen, ArrowRight, Zap, History, Code, FileText } from 'lucide-react';
 
 const StudentDashboard = () => {
     const navigate = useNavigate();
@@ -90,33 +90,68 @@ const StudentDashboard = () => {
 
                     <div className="bg-zinc-900/50 border border-white/5 rounded-[2.5rem] overflow-hidden backdrop-blur-sm">
                         <div className="divide-y divide-white/5">
-                            {plan.plan.map((task, idx) => (
+                            {plan.plan.map((day, idx) => (
                                 <motion.div
                                     key={idx}
                                     initial={{ opacity: 0, x: -10 }}
                                     animate={{ opacity: 1, x: 0 }}
                                     transition={{ delay: idx * 0.1 }}
-                                    className="p-6 md:p-8 hover:bg-white/[0.02] flex items-center justify-between group transition-colors"
+                                    className="p-8 hover:bg-white/[0.01] transition-colors"
                                 >
-                                    <div className="flex items-center gap-6">
-                                        <div className="flex flex-col items-center gap-2">
-                                            <div className="w-14 h-14 flex items-center justify-center bg-white/5 border border-white/10 rounded-2xl text-white font-bold text-xl group-hover:bg-white group-hover:text-black transition-all shadow-inner">
-                                                {task.dayNumber || idx + 1}
+                                    <div className="flex flex-col md:flex-row gap-8">
+                                        {/* Left Side: Date/Day Indicator */}
+                                        <div className="flex flex-col items-center justify-center min-w-[100px] border-r border-white/5 pr-8">
+                                            <div className="w-14 h-14 flex items-center justify-center bg-white/5 border border-white/10 rounded-2xl text-white font-black text-xl mb-2 shadow-inner group-hover:bg-white group-hover:text-black transition-all">
+                                                {idx + 1}
                                             </div>
-                                            <span className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest">{task.dayName}</span>
+                                            <span className="text-[10px] font-black text-white uppercase tracking-widest">{day.dayName}</span>
+                                            <span className="text-[10px] font-bold text-zinc-600 mt-1 uppercase tracking-tighter">Topic focus</span>
+                                            <span className="text-xs font-bold text-blue-500 text-center mt-1 truncate max-w-[100px]">{day.topic}</span>
                                         </div>
-                                        <div>
-                                            <p className="text-lg font-bold text-white mb-1">{task.description}</p>
-                                            <div className="flex items-center gap-2 text-zinc-500 text-sm">
-                                                <Zap size={14} className="text-yellow-500" />
-                                                <span>{task.action}</span>
-                                            </div>
+
+                                        {/* Middle: Detailed Tasks */}
+                                        <div className="flex-grow space-y-4">
+                                            {day.tasks.map((task, tIdx) => (
+                                                <div key={tIdx} className="flex items-start gap-4 p-4 bg-white/[0.02] border border-white/5 rounded-2xl">
+                                                    <div className={`mt-1 p-2 rounded-lg ${task.type === 'READ' ? 'bg-blue-500/10 text-blue-500' :
+                                                        task.type === 'PRACTICE_MCQ' ? 'bg-purple-500/10 text-purple-500' :
+                                                            'bg-green-500/10 text-green-500'
+                                                        }`}>
+                                                        {task.type === 'READ' ? <BookOpen size={16} /> :
+                                                            task.type === 'PRACTICE_MCQ' ? <Zap size={16} /> :
+                                                                <Code size={16} />}
+                                                    </div>
+                                                    <div className="flex-grow">
+                                                        <h4 className="text-sm font-bold text-white mb-0.5">{task.description}</h4>
+                                                        {task.resource ? (
+                                                            <Link to={`/student/study/${task.resource.id}`} className="text-[10px] font-bold text-zinc-500 hover:text-white flex items-center gap-1 transition-colors mt-1">
+                                                                <FileText size={10} />
+                                                                Study: {task.resource.title}
+                                                            </Link>
+                                                        ) : (
+                                                            <span className="text-[10px] font-bold text-zinc-600 uppercase tracking-tighter">Self-paced study recommended</span>
+                                                        )}
+                                                    </div>
+                                                    {task.target && (
+                                                        <span className="px-3 py-1 bg-white/5 border border-white/10 rounded-full text-[10px] font-black text-zinc-500">
+                                                            {task.target}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            ))}
+                                        </div>
+
+                                        {/* Right: Action */}
+                                        <div className="flex items-center justify-center min-w-[120px]">
+                                            <Link
+                                                to={day.link}
+                                                className="w-full flex items-center justify-center gap-2 px-6 py-4 bg-white text-black font-black rounded-2xl hover:bg-zinc-200 transition-all text-sm group"
+                                            >
+                                                Start
+                                                <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+                                            </Link>
                                         </div>
                                     </div>
-                                    <button className="flex items-center gap-2 px-6 py-2.5 bg-zinc-800 border border-white/5 rounded-xl text-sm font-bold text-white hover:bg-zinc-700 transition-all opacity-0 group-hover:opacity-100">
-                                        Launch
-                                        <ArrowRight size={16} />
-                                    </button>
                                 </motion.div>
                             ))}
                         </div>
