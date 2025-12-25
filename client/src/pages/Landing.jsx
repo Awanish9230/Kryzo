@@ -32,38 +32,38 @@ const Landing = () => {
     ];
 
     return (
-        <div className="min-h-screen bg-black overflow-hidden font-sans">
+        <div className="min-h-screen bg-black text-white selection:bg-blue-500/30">
             {/* Hero Section */}
-            <section className="relative pt-40 pb-20 px-6 overflow-hidden">
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-full pointer-events-none">
-                    <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-500/10 blur-[120px] rounded-full"></div>
-                    <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-indigo-500/10 blur-[120px] rounded-full"></div>
+            <section className="relative min-h-screen flex items-center justify-center pt-20 px-6 overflow-hidden mesh-gradient">
+                <div className="absolute inset-0 pointer-events-none">
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-blue-600/10 blur-[160px] rounded-full opacity-50"></div>
                 </div>
 
                 <div className="max-w-7xl mx-auto text-center relative z-10">
                     <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.6 }}
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
                     >
-                        <div className="inline-flex items-center gap-2 px-4 py-1.5 mb-8 text-sm font-bold border border-white/10 rounded-full bg-white/5 backdrop-blur-md text-blue-400">
-                            <Zap size={14} className="fill-blue-400" />
-                            Next-Gen Assessment Platform
+                        <div className="inline-flex items-center gap-2 px-6 py-2 mb-10 text-xs font-black border border-white/5 rounded-full bg-white/5 backdrop-blur-3xl text-blue-400 uppercase tracking-[0.3em] shadow-2xl">
+                            <Zap size={12} className="fill-blue-400" />
+                            Next-Gen Assessment Engine
                         </div>
-                        <h1 className="text-6xl md:text-8xl font-black tracking-tight mb-8 leading-[1]">
-                            Precision-Engineered <br />
-                            <span className="bg-gradient-to-r from-blue-400 via-indigo-400 to-purple-500 bg-clip-text text-transparent">
-                                Engineering Tests.
-                            </span>
+
+                        <h1 className="text-7xl md:text-[120px] font-black tracking-[-0.05em] mb-10 leading-[0.85]">
+                            Engineering <br />
+                            <span className="text-gradient">Benchmark.</span>
                         </h1>
-                        <p className="text-xl text-zinc-500 max-w-2xl mx-auto mb-12 font-medium">
-                            Kryzo is the advanced diagnostic layer for modern developers. Benchmarking, training, and scaling technical talent with deep analytics.
+
+                        <p className="text-xl md:text-2xl text-zinc-400 max-w-3xl mx-auto mb-16 font-semibold leading-relaxed">
+                            Kryzo benchmarks engineering excellence through deep-trace diagnostics and adaptive skill-mapping. Optimized for the class of 2025.
                         </p>
-                        <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
+
+                        <div className="flex flex-col sm:flex-row items-center justify-center gap-8">
                             {user ? (
                                 <Link
                                     to={isAdmin ? "/admin/dashboard" : "/student/dashboard"}
-                                    className="px-10 py-4 bg-white text-black font-black uppercase tracking-widest rounded-2xl hover:bg-zinc-200 transition-all flex items-center group shadow-2xl shadow-white/5"
+                                    className="px-12 py-5 bg-white text-black font-black uppercase tracking-widest rounded-[2rem] hover:scale-105 transition-all flex items-center group shadow-[0_0_40px_rgba(255,255,255,0.15)]"
                                 >
                                     <LayoutDashboard className="mr-3 w-5 h-5" />
                                     Access Console
@@ -73,14 +73,14 @@ const Landing = () => {
                                 <>
                                     <Link
                                         to="/register"
-                                        className="px-10 py-4 bg-white text-black font-black uppercase tracking-widest rounded-2xl hover:bg-zinc-200 transition-all flex items-center group shadow-2xl shadow-white/5"
+                                        className="px-12 py-5 bg-white text-black font-black uppercase tracking-widest rounded-[2rem] hover:scale-105 transition-all flex items-center group shadow-[0_0_40px_rgba(255,255,255,0.15)]"
                                     >
-                                        Initiate Setup
+                                        Get Started
                                         <ChevronRight className="ml-3 w-5 h-5 group-hover:translate-x-1 transition-transform" />
                                     </Link>
                                     <Link
                                         to="/login"
-                                        className="px-10 py-4 bg-zinc-900 border border-white/10 text-white font-black uppercase tracking-widest rounded-2xl hover:bg-zinc-800 transition-all"
+                                        className="px-12 py-5 bg-zinc-900/50 border border-white/10 text-white font-black uppercase tracking-widest rounded-[2rem] hover:bg-zinc-900 transition-all backdrop-blur-xl"
                                     >
                                         Log In
                                     </Link>
@@ -89,6 +89,17 @@ const Landing = () => {
                         </div>
                     </motion.div>
                 </div>
+
+                {/* Bottom Scroll Indicator */}
+                <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 1.5 }}
+                    className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 opacity-30"
+                >
+                    <span className="text-[10px] font-black uppercase tracking-[0.4em]">Explore Platform</span>
+                    <div className="w-px h-12 bg-gradient-to-b from-white to-transparent"></div>
+                </motion.div>
             </section>
 
             {/* Stats Section */}
@@ -120,47 +131,41 @@ const Landing = () => {
                 <div className="max-w-7xl mx-auto">
                     <div className="text-center mb-24">
                         <span className="text-[10px] font-black text-blue-500 uppercase tracking-[0.5em] mb-4 block">Core Capabilities</span>
-                        <h2 className="text-4xl md:text-5xl font-black mb-6">Built for Technical Excellence.</h2>
-                        <p className="text-zinc-500 max-w-xl mx-auto font-medium">Everything you need to run high-stakes assessment platforms at any scale.</p>
+                        <h2 className="text-5xl md:text-6xl font-black mb-6 tracking-tight">Built for Technical Excellence.</h2>
+                        <p className="text-zinc-500 max-w-xl mx-auto font-semibold">Everything you need to run high-stakes assessment platforms at any scale.</p>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-6 gap-6">
-                        <div className="md:col-span-4 bg-zinc-950 border border-white/5 rounded-[3rem] p-12 hover:border-white/10 transition-all group relative overflow-hidden">
+                        <div className="md:col-span-4 glass rounded-[3rem] p-12 hover:border-white/20 transition-all group relative overflow-hidden">
                             <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/5 blur-[80px] group-hover:bg-blue-500/10 transition-colors" />
                             <ShieldCheck className="w-16 h-16 text-blue-500 mb-8" />
                             <h3 className="text-3xl font-black mb-4">AI-Powered Diagnostics</h3>
-                            <p className="text-zinc-500 text-lg font-medium max-w-md leading-relaxed">Our adaptive engine analyzes student performance across 20+ parameters to build a unique learning path from day one.</p>
+                            <p className="text-zinc-400 text-lg font-semibold max-w-md leading-relaxed">Our adaptive engine analyzes student performance across 20+ parameters to build a unique learning path from day one.</p>
                         </div>
 
-                        <div className="md:col-span-2 bg-zinc-950 border border-white/5 rounded-[3rem] p-10 hover:border-white/10 transition-all flex flex-col justify-between">
-                            <Zap className="w-12 h-12 text-yellow-500 mb-8" />
+                        <div className="md:col-span-2 glass rounded-[3rem] p-10 hover:border-white/20 transition-all flex flex-col justify-between group">
+                            <Zap className="w-12 h-12 text-yellow-500 mb-8 group-hover:scale-110 transition-transform" />
                             <div>
                                 <h3 className="text-x font-black mb-2 uppercase tracking-tighter">Instant Feedback</h3>
-                                <p className="text-zinc-600 text-sm font-medium">Real-time code evaluation with detailed edge-case breakdowns.</p>
+                                <p className="text-zinc-500 text-sm font-semibold">Real-time code evaluation with detailed edge-case breakdowns.</p>
                             </div>
                         </div>
 
-                        <div className="md:col-span-3 bg-zinc-950 border border-white/5 rounded-[3rem] p-10 hover:border-white/10 transition-all group overflow-hidden">
-                            <div className="h-48 w-full bg-zinc-900/50 rounded-2xl mb-8 flex items-center justify-center border border-white/5 relative">
+                        <div className="md:col-span-3 glass rounded-[3rem] p-10 hover:border-white/20 transition-all group overflow-hidden">
+                            <div className="h-48 w-full bg-black/40 rounded-2xl mb-8 flex items-center justify-center border border-white/5 relative">
                                 <Code2 className="w-24 h-24 text-purple-500 opacity-20 group-hover:opacity-40 transition-opacity" />
                                 <div className="absolute bottom-4 left-4 flex gap-2">
-                                    <div className="px-3 py-1 bg-black border border-white/10 rounded-full text-[8px] font-bold text-zinc-400 uppercase tracking-widest">Compiler v2.1</div>
+                                    <div className="px-3 py-1 bg-black border border-white/10 rounded-full text-[8px] font-black text-zinc-400 uppercase tracking-widest">Compiler v2.1</div>
                                 </div>
                             </div>
-                            <h3 className="text-2xl font-black mb-3">Multi-Language Ecosystem</h3>
-                            <p className="text-zinc-600 font-medium leading-relaxed">Native support for C++, Java, and Python with industry-standard test environments.</p>
+                            <h3 className="text-2xl font-black mb-3 text-gradient">Multi-Language Ecosystem</h3>
+                            <p className="text-zinc-500 font-semibold leading-relaxed">Native support for C++, Java, and Python with industry-standard test environments.</p>
                         </div>
 
-                        <div className="md:col-span-3 bg-zinc-950 border border-white/5 rounded-[3rem] p-10 hover:border-white/10 transition-all">
-                            <BarChart3 className="w-12 h-12 text-green-500 mb-8" />
+                        <div className="md:col-span-3 glass rounded-[3rem] p-10 hover:border-white/20 transition-all group">
+                            <BarChart3 className="w-12 h-12 text-green-500 mb-8 group-hover:rotate-12 transition-transform" />
                             <h3 className="text-2xl font-black mb-3">Deep Visual Analytics</h3>
-                            <p className="text-zinc-600 font-medium leading-relaxed">Track progress with immersive radar charts and historical data points to measure growth over time.</p>
-                            <div className="mt-8 flex gap-3">
-                                <div className="w-10 h-1.5 bg-green-500/20 rounded-full overflow-hidden">
-                                    <div className="w-2/3 h-full bg-green-500" />
-                                </div>
-                                <div className="w-10 h-1.5 bg-zinc-800 rounded-full" />
-                            </div>
+                            <p className="text-zinc-500 font-semibold leading-relaxed">Track progress with immersive radar charts and historical data points to measure growth over time.</p>
                         </div>
                     </div>
                 </div>

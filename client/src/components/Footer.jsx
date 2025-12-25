@@ -10,13 +10,13 @@ import {
 
 const Footer = () => {
     return (
-        <footer className="border-t border-white/5 bg-black pt-20 pb-10">
+        <footer className="border-t border-white/5 bg-zinc-950/50 pt-32 pb-16">
             <div className="max-w-7xl mx-auto px-6">
-                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-10 mb-20">
+                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-16 mb-24">
                     <div className="col-span-2 lg:col-span-2">
-                        <Link to="/" className="flex items-center gap-3 mb-6">
-                            <img src="/K_logo.png" alt="Kryzo" className="h-10 w-10 object-cover rounded-full bg-white/5 p-1 border border-white/10" />
-                            <span className="text-2xl font-bold tracking-tighter text-white">Kryzo</span>
+                        <Link to="/" className="flex items-center gap-2 mb-8 group">
+                            <img src="/K_logo.png" alt="Kryzo" className="h-8 w-8 object-cover rounded-full group-hover:rotate-[360deg] transition-transform duration-1000" />
+                            <span className="text-xl font-black tracking-tighter text-white">KRYZO</span>
                         </Link>
                         <p className="text-zinc-500 mb-8 max-w-sm">
                             Master your coding interview with our advanced diagnostic tests and adaptive learning paths. Built for students, by developers.
