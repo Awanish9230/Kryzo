@@ -17,8 +17,10 @@ import {
     Camera,
     MapPin,
     GraduationCap,
-    Calendar
+    Calendar,
+    Activity
 } from 'lucide-react';
+import ActivityCalendar from '../../components/ActivityCalendar';
 import {
     Radar,
     RadarChart,
@@ -263,6 +265,15 @@ const Profile = () => {
                     </div>
                 </div>
 
+                {/* Activity Tracker Section */}
+                <div className="mb-12">
+                    <div className="flex items-center gap-3 mb-8">
+                        <Activity className="text-orange-500" size={24} />
+                        <h2 className="text-2xl font-bold tracking-tight">Daily Activity Tracker</h2>
+                    </div>
+                    <ActivityCalendar />
+                </div>
+
                 {/* Level Badge & Stats Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
                     {/* Level Badge */}
@@ -410,46 +421,48 @@ const Profile = () => {
                 </div>
 
                 {/* Recent Activity */}
-                {profile.recentAttempts && profile.recentAttempts.length > 0 && (
-                    <div>
-                        <h2 className="text-2xl font-bold tracking-tight mb-6">Recent Activity</h2>
-                        <div className="bg-zinc-900/50 border border-white/5 rounded-[2rem] overflow-hidden backdrop-blur-sm">
-                            <div className="divide-y divide-white/5">
-                                {profile.recentAttempts.map((attempt, idx) => (
-                                    <motion.div
-                                        key={idx}
-                                        initial={{ opacity: 0, x: -10 }}
-                                        animate={{ opacity: 1, x: 0 }}
-                                        transition={{ delay: 0.5 + idx * 0.1 }}
-                                        className="p-6 hover:bg-white/[0.02] transition-colors flex items-center justify-between"
-                                    >
-                                        <div className="flex items-center gap-4">
-                                            <div className="p-3 bg-white/5 rounded-xl">
-                                                <Clock size={20} className="text-zinc-500" />
+                {
+                    profile.recentAttempts && profile.recentAttempts.length > 0 && (
+                        <div>
+                            <h2 className="text-2xl font-bold tracking-tight mb-6">Recent Activity</h2>
+                            <div className="bg-zinc-900/50 border border-white/5 rounded-[2rem] overflow-hidden backdrop-blur-sm">
+                                <div className="divide-y divide-white/5">
+                                    {profile.recentAttempts.map((attempt, idx) => (
+                                        <motion.div
+                                            key={idx}
+                                            initial={{ opacity: 0, x: -10 }}
+                                            animate={{ opacity: 1, x: 0 }}
+                                            transition={{ delay: 0.5 + idx * 0.1 }}
+                                            className="p-6 hover:bg-white/[0.02] transition-colors flex items-center justify-between"
+                                        >
+                                            <div className="flex items-center gap-4">
+                                                <div className="p-3 bg-white/5 rounded-xl">
+                                                    <Clock size={20} className="text-zinc-500" />
+                                                </div>
+                                                <div>
+                                                    <p className="font-bold text-white">Test Completed</p>
+                                                    <p className="text-xs text-zinc-600">
+                                                        {new Date(attempt.completedAt).toLocaleDateString('en-US', {
+                                                            month: 'short',
+                                                            day: 'numeric',
+                                                            year: 'numeric'
+                                                        })}
+                                                    </p>
+                                                </div>
                                             </div>
-                                            <div>
-                                                <p className="font-bold text-white">Test Completed</p>
-                                                <p className="text-xs text-zinc-600">
-                                                    {new Date(attempt.completedAt).toLocaleDateString('en-US', {
-                                                        month: 'short',
-                                                        day: 'numeric',
-                                                        year: 'numeric'
-                                                    })}
-                                                </p>
+                                            <div className="text-right">
+                                                <p className="text-2xl font-bold">{attempt.score}</p>
+                                                <p className="text-xs text-zinc-600">Score</p>
                                             </div>
-                                        </div>
-                                        <div className="text-right">
-                                            <p className="text-2xl font-bold">{attempt.score}</p>
-                                            <p className="text-xs text-zinc-600">Score</p>
-                                        </div>
-                                    </motion.div>
-                                ))}
+                                        </motion.div>
+                                    ))}
+                                </div>
                             </div>
                         </div>
-                    </div>
-                )}
-            </div>
-        </div>
+                    )
+                }
+            </div >
+        </div >
     );
 };
 

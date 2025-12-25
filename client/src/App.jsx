@@ -37,6 +37,7 @@ import PrivacyPolicy from './pages/general/PrivacyPolicy';
 import TermsOfService from './pages/general/TermsOfService';
 import { Integrations, Changelog, HelpCenter, Documentation } from './pages/general/MiscPages';
 import NotFound from './pages/NotFound';
+import SessionTracker from './components/SessionTracker';
 
 import ErrorBoundary from './components/ErrorBoundary';
 
@@ -56,6 +57,7 @@ const Layout = () => {
   return (
     <div className="min-h-screen bg-black text-white flex flex-col">
       <Navbar />
+      <SessionTracker />
       <div className="flex-grow">
         <Routes>
           {/* Public Routes */}

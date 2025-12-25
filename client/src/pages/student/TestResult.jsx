@@ -10,7 +10,10 @@ import {
     Target,
     Calendar,
     Trophy,
-    TrendingUp
+    TrendingUp,
+    Zap,
+    Code,
+    FileText
 } from 'lucide-react';
 
 const TestResult = () => {
@@ -225,7 +228,7 @@ const TestResult = () => {
                                                 <div className="p-1.5 bg-zinc-800 rounded-lg text-zinc-400">
                                                     {task.type === 'READ' ? <BookOpen size={14} /> :
                                                         task.type === 'PRACTICE_MCQ' ? <Zap size={14} /> :
-                                                            <Trophy size={14} />}
+                                                            <Code size={14} />}
                                                 </div>
                                                 <span className="text-sm font-medium text-zinc-300">{task.description}</span>
                                             </div>

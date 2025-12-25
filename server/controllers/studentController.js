@@ -3,6 +3,8 @@ const Question = require('../models/Question');
 const Test = require('../models/Test');
 const UserAttempt = require('../models/UserAttempt');
 const Documentation = require('../models/Documentation');
+const User = require('../models/User');
+const UserActivity = require('../models/UserActivity');
 
 // @desc    Generate Diagnostic Test
 // @route   GET /api/student/test/diagnostic
@@ -192,6 +194,37 @@ const submitTest = asyncHandler(async (req, res) => {
         });
     }
 
+    // Update Activity Logic
+    const todayStr = new Date().toISOString().split('T')[0];
+    let dailyActivity = await UserActivity.findOne({ userId: req.user.id, date: todayStr });
+    if (!dailyActivity) dailyActivity = new UserActivity({ userId: req.user.id, date: todayStr });
+
+    const solvedCount = gradedAnswers.filter(a => a.isCorrect).length;
+    dailyActivity.questionsSolved += solvedCount;
+
+    if (!dailyActivity.isCompleted && (dailyActivity.timeSpent >= 1800 || dailyActivity.questionsSolved >= 2)) {
+        dailyActivity.isCompleted = true;
+
+        // Update User Streak
+        const userObj = await User.findById(req.user.id);
+        if (userObj.lastActivityDate !== todayStr) {
+            const yest = new Date();
+            yest.setDate(yest.getDate() - 1);
+            const yestStr = yest.toISOString().split('T')[0];
+
+            if (userObj.lastActivityDate === yestStr) {
+                userObj.currentStreak += 1;
+            } else {
+                userObj.currentStreak = 1;
+            }
+
+            if (userObj.currentStreak > userObj.longestStreak) userObj.longestStreak = userObj.currentStreak;
+            userObj.lastActivityDate = todayStr;
+            await userObj.save();
+        }
+    }
+    await dailyActivity.save();
+
     const attempt = await UserAttempt.create({
         userId: req.user.id,
         testId,
@@ -352,7 +385,23 @@ const getImprovementPlan = asyncHandler(async (req, res) => {
             weak: weakTopics,
             strong: strongTopics
         },
-        plan: dailyTasks
+        plan: dailyTasks,
+        questions: lastAttempt.answers.map(ans => {
+            let status = 'skipped';
+            if (ans.isCorrect) status = 'solved';
+            else if (ans.userAnswer !== undefined && ans.userAnswer !== null && ans.userAnswer !== '') status = 'attempted';
+
+            return {
+                _id: ans.questionId?._id || Math.random().toString(),
+                title: ans.questionId?.title || 'Question',
+                type: ans.questionId?.type || 'MCQ',
+                difficulty: ans.questionId?.difficulty || 'medium',
+                status: status,
+                score: ans.score,
+                maxScore: ans.maxScore,
+                timeTaken: ans.timeTaken
+            };
+        })
     });
 });
 
@@ -631,6 +680,70 @@ const getDocumentationById = asyncHandler(async (req, res) => {
     res.json(doc);
 });
 
+// @desc    Update Daily Activity (Time Spent)
+// @route   POST /api/student/activity/update
+// @access  Private/Student
+const updateActivityStats = asyncHandler(async (req, res) => {
+    const { timeSpent = 0 } = req.body;
+    const today = new Date().toISOString().split('T')[0];
+    const userId = req.user.id;
+
+    let activity = await UserActivity.findOne({ userId, date: today });
+    if (!activity) {
+        activity = new UserActivity({ userId, date: today });
+    }
+
+    // Convert seconds to Number
+    activity.timeSpent += Number(timeSpent);
+
+    // Check completion (30 min = 1800 sec, or 2 questions)
+    if (!activity.isCompleted && (activity.timeSpent >= 1800 || activity.questionsSolved >= 2)) {
+        activity.isCompleted = true;
+
+        // Update User Streak
+        const user = await User.findById(userId);
+        if (user.lastActivityDate !== today) {
+            const yesterday = new Date();
+            yesterday.setDate(yesterday.getDate() - 1);
+            const yesterdayStr = yesterday.toISOString().split('T')[0];
+
+            if (user.lastActivityDate === yesterdayStr) {
+                user.currentStreak += 1;
+            } else {
+                user.currentStreak = 1;
+            }
+
+            if (user.currentStreak > user.longestStreak) {
+                user.longestStreak = user.currentStreak;
+            }
+            user.lastActivityDate = today;
+            await user.save();
+        }
+    }
+
+    await activity.save();
+    res.json(activity);
+});
+
+// @desc    Get Activity Log
+// @route   GET /api/student/activity/log
+// @access  Private/Student
+const getActivityLog = asyncHandler(async (req, res) => {
+    const userId = req.user.id;
+    // Get last 30 activities
+    const activities = await UserActivity.find({ userId }).sort({ date: -1 }).limit(35);
+    const user = await User.findById(userId).select('currentStreak longestStreak lastActivityDate');
+
+    res.json({
+        activities,
+        streak: {
+            current: user.currentStreak,
+            longest: user.longestStreak,
+            lastActivity: user.lastActivityDate
+        }
+    });
+});
+
 module.exports = {
     generateDiagnosticTest,
     submitTest,
@@ -640,5 +753,7 @@ module.exports = {
     getUserProfile,
     getTopics,
     updateProfile,
-    getDocumentationById
+    getDocumentationById,
+    updateActivityStats,
+    getActivityLog
 };

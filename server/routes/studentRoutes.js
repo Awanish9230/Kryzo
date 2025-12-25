@@ -22,6 +22,8 @@ router.get('/test/:id', getTestById);
 router.post('/test/submit', submitTest);
 router.get('/plan', getImprovementPlan);
 router.get('/documentation/:id', require('../controllers/studentController').getDocumentationById);
+router.post('/activity/update', require('../controllers/studentController').updateActivityStats);
+router.get('/activity/log', require('../controllers/studentController').getActivityLog);
 router.put('/profile', updateProfile);
 
 module.exports = router;
