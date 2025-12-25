@@ -16,7 +16,6 @@ const {
     getAllDocumentation,
     deleteDocumentation,
     getAdminQuestionStats,
-    getAdminQuestionStats,
     bulkUploadQuestions,
     getQuestionReports,
     updateReportStatus,
