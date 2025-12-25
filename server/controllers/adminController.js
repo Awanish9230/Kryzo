@@ -391,7 +391,42 @@ const deleteDocumentation = asyncHandler(async (req, res) => {
     }
 });
 
+// @desc    Get question stats for current admin
+// @route   GET /api/admin/my-stats
+// @access  Private/Admin
+const getAdminQuestionStats = asyncHandler(async (req, res) => {
+    const adminId = req.user._id;
+
+    const totalQuestions = await Question.countDocuments({ createdBy: adminId });
+
+    // Stats by type
+    const mcqCount = await Question.countDocuments({ createdBy: adminId, type: 'MCQ' });
+    const codingCount = await Question.countDocuments({ createdBy: adminId, type: 'CODING' });
+    const devCount = await Question.countDocuments({ createdBy: adminId, type: 'DEVELOPMENT' });
+
+    // Stats by topic
+    const topicStats = await Question.aggregate([
+        { $match: { createdBy: adminId } },
+        { $group: { _id: "$topic", count: { $sum: 1 } } },
+        { $sort: { count: -1 } }
+    ]);
+
+    res.json({
+        totalQuestions,
+        typeStats: {
+            MCQ: mcqCount,
+            CODING: codingCount,
+            DEVELOPMENT: devCount
+        },
+        topicStats: topicStats.map(stat => ({
+            topic: stat._id || 'Unknown',
+            count: stat.count
+        }))
+    });
+});
+
 module.exports = {
+
     getStats,
     createQuestion,
     getQuestions,
@@ -404,5 +439,6 @@ module.exports = {
     getQuestionById,
     createDocumentation, // New
     getAllDocumentation, // New
-    deleteDocumentation // New
+    deleteDocumentation, // New
+    getAdminQuestionStats // New
 };

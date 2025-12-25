@@ -10,7 +10,11 @@ const {
     deleteUser,
     updateUser,
     createUser,
-    getQuestionById
+    getQuestionById,
+    createDocumentation,
+    getAllDocumentation,
+    deleteDocumentation,
+    getAdminQuestionStats
 } = require('../controllers/adminController');
 const { protect, admin } = require('../middleware/authMiddleware');
 
@@ -35,5 +39,13 @@ router.route('/users')
 router.route('/users/:id')
     .put(updateUser)
     .delete(deleteUser);
+
+router.get('/my-stats', getAdminQuestionStats);
+
+router.route('/documentation')
+    .get(getAllDocumentation)
+    .post(createDocumentation);
+
+router.delete('/documentation/:id', deleteDocumentation);
 
 module.exports = router;
