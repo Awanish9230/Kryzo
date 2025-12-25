@@ -72,7 +72,7 @@ const Footer = () => {
 
                 <div className="pt-8 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-4">
                     <p className="text-zinc-600 text-sm">
-                        © 2024 Kryzo Inc. All rights reserved.
+                        © 2025 Kryzo Inc. All rights reserved.
                     </p>
                     <div className="flex items-center gap-2 text-zinc-600 text-sm">
                         <span>Made with</span>

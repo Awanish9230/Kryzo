@@ -246,15 +246,15 @@ const Profile = () => {
                                     <div className="flex flex-wrap gap-3 justify-center md:justify-start">
                                         <div className="px-4 py-2 bg-white/5 border border-white/10 rounded-xl flex items-center gap-2 text-sm text-zinc-300">
                                             <GraduationCap size={16} className="text-blue-500" />
-                                            {profile.user.college || 'Full Stack University'}
+                                            {profile.user.college || 'Kryzo'}
                                         </div>
                                         <div className="px-4 py-2 bg-white/5 border border-white/10 rounded-xl flex items-center gap-2 text-sm text-zinc-300">
                                             <Calendar size={16} className="text-purple-500" />
-                                            Class of {profile.user.passingYear || '2026'}
+                                            Class of {profile.user.passingYear || '2025'}
                                         </div>
                                         <div className="px-4 py-2 bg-white/5 border border-white/10 rounded-xl flex items-center gap-2 text-sm text-zinc-300">
                                             <MapPin size={16} className="text-red-500" />
-                                            {profile.user.state || 'Global'}
+                                            {profile.user.state || 'India'}
                                         </div>
                                     </div>
                                 </>

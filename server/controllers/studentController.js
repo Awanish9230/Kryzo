@@ -304,22 +304,38 @@ const getImprovementPlan = asyncHandler(async (req, res) => {
 const createCustomTest = asyncHandler(async (req, res) => {
     const { topics, difficulty, questionCount = 10 } = req.body;
 
-    const matchStage = { status: 'published' };
-    if (topics && topics.length > 0) {
-        matchStage.topics = { $in: topics };
-    }
-    if (difficulty) {
-        matchStage.difficulty = difficulty;
-    }
+    // Phase 1: Try exact match (Topics + Difficulty)
+    const exactMatch = { status: 'published' };
+    if (topics && topics.length > 0) exactMatch.topics = { $in: topics };
+    if (difficulty) exactMatch.difficulty = difficulty;
 
-    const questions = await Question.aggregate([
-        { $match: matchStage },
+    let questions = await Question.aggregate([
+        { $match: exactMatch },
         { $sample: { size: Number(questionCount) } }
     ]);
 
+    // Phase 2: Fallback - if count is less than requested, fill with any difficulty from SAME topics
+    if (questions.length < Number(questionCount) && topics && topics.length > 0) {
+        const existingIds = questions.map(q => q._id);
+        const needed = Number(questionCount) - questions.length;
+
+        const fallbackQuestions = await Question.aggregate([
+            {
+                $match: {
+                    status: 'published',
+                    topics: { $in: topics },
+                    _id: { $nin: existingIds }
+                }
+            },
+            { $sample: { size: needed } }
+        ]);
+
+        questions = [...questions, ...fallbackQuestions];
+    }
+
     if (questions.length === 0) {
         res.status(404);
-        throw new Error('No questions found matching criteria');
+        throw new Error('No questions available for the selected topic(s)');
     }
 
     // Dynamic Duration Calculation
@@ -332,7 +348,6 @@ const createCustomTest = asyncHandler(async (req, res) => {
         }
     });
 
-    // Fallback if mixed/unknown types result in 0 (shouldn't happen but safe)
     if (totalDuration === 0) totalDuration = questions.length * 5;
 
     const test = await Test.create({
