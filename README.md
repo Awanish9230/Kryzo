@@ -38,10 +38,10 @@
 ### Key Highlights
 
 - 🤖 **AI-Powered Diagnostics** - Adaptive engine analyzing 20+ performance parameters
-- 📊 **Real-time Analytics** - Track progress with beautiful charts and insights
-- 🎯 **Personalized Learning** - Custom improvement plans based on performance
-- 💻 **Multi-format Questions** - MCQ, Coding, and Development project assessments
-- 🏆 **Gamification** - Level system (Beginner → Expert) with percentile rankings
+- 💻 **Monaco Editor** - Professional-grade code editor integration (VS-Code engine)
+- 📊 **Pain Point Analytics** - Data-driven insights to identify weak topics and hard questions
+- 🎯 **Activity Streaks** - Gamified engagement tracking with daily session goals
+- 🚩 **Question Reporting** - Student-driven quality control for the test bank
 - 🎨 **Premium UI** - BetterStack-inspired dark mode with glassmorphism
 
 ---
@@ -55,6 +55,9 @@
 - **Performance Dashboard** - View detailed analytics, topic mastery, and progress
 - **User Profile** - Track level progression, percentile ranking, and achievements
 - **Improvement Plans** - Daily tasks and recommendations based on weak areas
+- **Activity Tracker** - Monitor study time and question solving streaks
+- **Question Reporting** - Flag problematic questions for admin review
+- **Monaco Code Editor** - Multi-language support (JS, Python, Java, C++)
 - **Test History** - Review past attempts with detailed breakdowns
 
 ### For Admins
@@ -63,6 +66,8 @@
 - **User Management** - View, edit, and manage student accounts
 - **Analytics Dashboard** - Platform-wide statistics and growth metrics
 - **Question Bank** - Organize questions by topic, difficulty, and status
+- **Report Management** - Review and resolve student-flagged question issues
+- **Pain Point Analytics** - Visualize topic accuracy and highest failure rates
 - **Bulk Operations** - Search, filter, and manage questions efficiently
 
 ### Question Types
@@ -81,6 +86,7 @@
 - **Tailwind CSS v4** - Utility-first CSS framework
 - **Framer Motion** - Animation library
 - **Lucide React** - Icon library
+- **Monaco Editor** - Professional code editor engine
 - **React Router DOM** - Client-side routing
 
 ### Backend
@@ -233,7 +239,8 @@ Kryzo/
 │   │   │   │   ├── QuestionList.jsx
 │   │   │   │   ├── AddQuestion.jsx
 │   │   │   │   ├── EditQuestion.jsx
-│   │   │   │   └── UserManagement.jsx
+│   │   │   │   ├── UserManagement.jsx
+│   │   │   │   └── ReportedQuestions.jsx # [NEW] Report management
 │   │   │   ├── student/   # Student pages
 │   │   │   │   ├── Dashboard.jsx
 │   │   │   │   ├── Profile.jsx
@@ -265,7 +272,9 @@ Kryzo/
 │   │   ├── User.js
 │   │   ├── Question.js
 │   │   ├── Test.js
-│   │   └── UserAttempt.js
+│   │   ├── UserAttempt.js
+│   │   ├── UserActivity.js # [NEW] Activity/Streak tracking
+│   │   └── ReportedQuestion.js # [NEW] Student flags
 │   ├── routes/           # API routes
 │   │   ├── authRoutes.js
 │   │   ├── adminRoutes.js
@@ -302,6 +311,9 @@ Kryzo/
 | GET | `/api/student/test/:id` | Get test by ID | Private |
 | POST | `/api/student/test/submit` | Submit test attempt | Private |
 | GET | `/api/student/plan` | Get improvement plan | Private |
+| POST | `/api/student/question/report` | Report a question issue | Private |
+| POST | `/api/student/activity/update` | Update daily activity stats | Private |
+| GET | `/api/student/activity/log` | Get activity heatmap data | Private |
 
 ### Admin Endpoints
 
@@ -316,6 +328,9 @@ Kryzo/
 | GET | `/api/admin/users` | Get all users | Admin |
 | PUT | `/api/admin/users/:id` | Update user | Admin |
 | DELETE | `/api/admin/users/:id` | Delete user | Admin |
+| GET | `/api/admin/questions/reports` | Get all reported questions | Admin |
+| PUT | `/api/admin/questions/reports/:id` | Resolve/Update report | Admin |
+| GET | `/api/admin/analytics/pain-points` | Get highest failure rates | Admin |
 
 ---
 
