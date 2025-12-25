@@ -14,7 +14,8 @@ const {
     createDocumentation,
     getAllDocumentation,
     deleteDocumentation,
-    getAdminQuestionStats
+    getAdminQuestionStats,
+    bulkUploadQuestions
 } = require('../controllers/adminController');
 const { protect, admin } = require('../middleware/authMiddleware');
 
