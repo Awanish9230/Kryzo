@@ -55,6 +55,8 @@ const AddQuestion = () => {
             else if (formData.difficulty === 'hard') time = 20;
         } else if (type === 'DEVELOPMENT') {
             time = 10;
+        } else if (type === 'CODE_SNIPPET') {
+            time = 5;
         }
         setFormData(prev => ({ ...prev, expectedTime: time }));
     }, [type, formData.difficulty]);
@@ -136,7 +138,7 @@ const AddQuestion = () => {
                         <ArrowLeft size={20} />
                     </button>
                     <div className="flex gap-2 p-1 bg-zinc-900 border border-white/5 rounded-2xl">
-                        {['MCQ', 'CODING', 'DEVELOPMENT'].map(t => (
+                        {['MCQ', 'CODING', 'DEVELOPMENT', 'CODE_SNIPPET'].map(t => (
                             <button
                                 key={t}
                                 type="button"
@@ -144,7 +146,7 @@ const AddQuestion = () => {
                                 className={`px-6 py-2 rounded-xl text-sm font-bold transition-all ${type === t ? 'bg-white text-black' : 'text-zinc-500 hover:text-white'
                                     }`}
                             >
-                                {t}
+                                {t === 'CODE_SNIPPET' ? 'Code Snippet' : t}
                             </button>
                         ))}
                     </div>
@@ -415,53 +417,85 @@ const AddQuestion = () => {
                         </div>
                     )}
 
-                    {/* Code Snippet Section - Separate for all question types */}
-                    <div className="bg-zinc-900/50 border border-white/5 rounded-[2.5rem] p-8 md:p-10 backdrop-blur-sm">
-                        <div className="flex items-center gap-3 mb-8">
-                            <div className="p-3 bg-blue-500/10 rounded-2xl text-blue-500">
-                                <Code size={20} />
+                    {type === 'CODE_SNIPPET' && (
+                        <div className="bg-zinc-900/50 border border-white/5 rounded-[2.5rem] p-8 md:p-10 backdrop-blur-sm">
+                            <div className="flex items-center gap-3 mb-8">
+                                <div className="p-3 bg-green-500/10 rounded-2xl text-green-500">
+                                    <Code size={20} />
+                                </div>
+                                <h2 className="text-xl font-bold tracking-tight">Code Snippet Details</h2>
                             </div>
-                            <h2 className="text-xl font-bold tracking-tight">Code Snippet (Optional)</h2>
-                        </div>
 
-                        <div className="space-y-4">
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium text-zinc-400 ml-1">Programming Language</label>
-                                <select
-                                    name="codeLanguage"
-                                    className="w-full px-5 py-4 bg-zinc-950 border border-white/10 rounded-2xl text-white focus:outline-none"
-                                    value={formData.codeLanguage}
-                                    onChange={handleChange}
-                                >
-                                    <option value="javascript">JavaScript</option>
-                                    <option value="python">Python</option>
-                                    <option value="java">Java</option>
-                                    <option value="cpp">C++</option>
-                                    <option value="c">C</option>
-                                    <option value="html">HTML</option>
-                                    <option value="css">CSS</option>
-                                    <option value="sql">SQL</option>
-                                    <option value="typescript">TypeScript</option>
-                                    <option value="go">Go</option>
-                                    <option value="rust">Rust</option>
-                                </select>
-                            </div>
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium text-zinc-400 ml-1">
-                                    Code
-                                    <span className="text-zinc-600 ml-2">Will be displayed with syntax highlighting</span>
-                                </label>
-                                <textarea
-                                    name="codeSnippet"
-                                    rows={10}
-                                    placeholder="Paste your code snippet here..."
-                                    className="w-full px-5 py-4 bg-zinc-950 border border-white/10 rounded-2xl text-white focus:outline-none focus:border-blue-500 transition-all resize-none font-mono text-sm"
-                                    value={formData.codeSnippet}
-                                    onChange={handleChange}
-                                />
+                            <div className="space-y-6">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-medium text-zinc-400 ml-1">Programming Language</label>
+                                        <select
+                                            name="codeLanguage"
+                                            className="w-full px-5 py-4 bg-zinc-950 border border-white/10 rounded-2xl text-white focus:outline-none"
+                                            value={formData.codeLanguage}
+                                            onChange={handleChange}
+                                        >
+                                            <option value="javascript">JavaScript</option>
+                                            <option value="python">Python</option>
+                                            <option value="java">Java</option>
+                                            <option value="cpp">C++</option>
+                                            <option value="c">C</option>
+                                            <option value="html">HTML</option>
+                                            <option value="css">CSS</option>
+                                            <option value="sql">SQL</option>
+                                            <option value="typescript">TypeScript</option>
+                                            <option value="go">Go</option>
+                                            <option value="rust">Rust</option>
+                                        </select>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-medium text-zinc-400 ml-1">Snippet Category</label>
+                                        <select
+                                            className="w-full px-5 py-4 bg-zinc-950 border border-white/10 rounded-2xl text-white focus:outline-none"
+                                            value={selectedSubtopic}
+                                            onChange={(e) => setSelectedSubtopic(e.target.value)}
+                                        >
+                                            <option value="">Select Category (Optional)</option>
+                                            {selectedTopic && TOPICS_DATA[selectedTopic]?.map(subtopic => (
+                                                <option key={subtopic} value={subtopic}>{subtopic}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium text-zinc-400 ml-1">
+                                        Code
+                                        <span className="text-zinc-600 ml-2">Will be displayed with syntax highlighting</span>
+                                    </label>
+                                    <textarea
+                                        name="codeSnippet"
+                                        rows={15}
+                                        placeholder="Paste your code snippet here..."
+                                        className="w-full px-5 py-4 bg-zinc-950 border border-white/10 rounded-2xl text-white focus:outline-none focus:border-blue-500 transition-all resize-none font-mono text-sm"
+                                        value={formData.codeSnippet}
+                                        onChange={handleChange}
+                                    />
+                                </div>
+
+                                {/* Explanation for Code Snippet */}
+                                <div className="space-y-2 pt-6 border-t border-white/5">
+                                    <label className="text-sm font-medium text-zinc-400 ml-1">
+                                        Explanation (Optional)
+                                        <span className="text-zinc-600 ml-2">Explain what this code does</span>
+                                    </label>
+                                    <textarea
+                                        name="explanation"
+                                        rows={4}
+                                        placeholder="Explain what this code snippet demonstrates..."
+                                        className="w-full px-5 py-4 bg-zinc-950 border border-white/10 rounded-2xl text-white focus:outline-none focus:border-blue-500 transition-all resize-none"
+                                        value={formData.explanation}
+                                        onChange={handleChange}
+                                    />
+                                </div>
                             </div>
                         </div>
-                    </div>
+                    )}
 
                     <div className="flex justify-end pt-8 border-t border-white/5">
                         <button type="submit" className="px-10 py-4 bg-white text-black font-bold rounded-2xl hover:bg-zinc-200 transition-all flex items-center gap-3">
