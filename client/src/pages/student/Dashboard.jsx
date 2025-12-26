@@ -93,73 +93,87 @@ const StudentDashboard = () => {
                             {plan.plan.map((day, idx) => (
                                 <motion.div
                                     key={idx}
-                                    initial={{ opacity: 0, x: -10 }}
-                                    animate={{ opacity: 1, x: 0 }}
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
                                     transition={{ delay: idx * 0.1 }}
-                                    className="p-8 hover:bg-white/[0.01] transition-colors"
+                                    className="p-8 group"
                                 >
-                                    <div className="flex flex-col md:flex-row gap-8">
-                                        {/* Left Side: Date/Day Indicator */}
-                                        <div className="flex flex-col items-center justify-center min-w-[100px] border-r border-white/5 pr-8">
-                                            <div className="w-14 h-14 flex items-center justify-center bg-white/5 border border-white/10 rounded-2xl text-white font-black text-xl mb-2 shadow-inner group-hover:bg-white group-hover:text-black transition-all">
+                                    <div className="flex flex-col lg:flex-row gap-10">
+                                        {/* Day Indicator - Modern Timeline Style */}
+                                        <div className="flex lg:flex-col items-center lg:items-start gap-4 lg:gap-2 shrink-0 lg:w-28">
+                                            <div className="w-12 h-12 flex items-center justify-center bg-blue-500/10 border border-blue-500/20 rounded-2xl text-blue-500 font-black text-xl shadow-[0_0_20px_rgba(59,130,246,0.1)] group-hover:bg-blue-500 group-hover:text-white transition-all duration-500">
                                                 {idx + 1}
                                             </div>
-                                            <span className="text-[10px] font-black text-white uppercase tracking-widest">{day.dayName}</span>
-                                            <span className="text-[10px] font-bold text-zinc-600 mt-1 uppercase tracking-tighter">Topic focus</span>
-                                            <span className="text-xs font-bold text-blue-500 text-center mt-1 truncate max-w-[100px]">{day.topic}</span>
+                                            <div>
+                                                <p className="text-[10px] font-black text-white uppercase tracking-[0.2em]">{day.dayName}</p>
+                                                <div className="flex items-center gap-1.5 mt-1">
+                                                    <div className="w-1 h-1 rounded-full bg-blue-500"></div>
+                                                    <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-tighter truncate max-w-[80px]">
+                                                        {day.topic}
+                                                    </p>
+                                                </div>
+                                            </div>
                                         </div>
 
-                                        {/* Middle: Detailed Tasks */}
-                                        <div className="flex-grow space-y-4">
+                                        {/* Task Cards - Compact & Clean */}
+                                        <div className="flex-grow grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                                             {day.tasks.map((task, tIdx) => (
-                                                <div key={tIdx} className="flex items-start gap-4 p-4 bg-white/[0.02] border border-white/5 rounded-2xl">
-                                                    <div className={`mt-1 p-2 rounded-lg ${task.type === 'READ' ? 'bg-blue-500/10 text-blue-500' :
-                                                        task.type === 'PRACTICE_MCQ' ? 'bg-purple-500/10 text-purple-500' :
-                                                            'bg-green-500/10 text-green-500'
-                                                        }`}>
-                                                        {task.type === 'READ' ? <BookOpen size={16} /> :
-                                                            task.type === 'PRACTICE_MCQ' ? <Zap size={16} /> :
-                                                                <Code size={16} />}
-                                                    </div>
-                                                    <div className="flex-grow">
-                                                        <h4 className="text-sm font-bold text-white mb-0.5">{task.description}</h4>
-                                                        {task.resource ? (
-                                                            <Link to={`/student/study/${task.resource.id}`} className="text-[10px] font-bold text-zinc-500 hover:text-white flex items-center gap-1 transition-colors mt-1">
-                                                                <FileText size={10} />
-                                                                Study: {task.resource.title}
-                                                            </Link>
-                                                        ) : task.availableCount === 0 && task.type !== 'READ' ? (
-                                                            <span className="text-[10px] font-bold text-red-500 uppercase tracking-tighter">No questions available - Check documentation</span>
-                                                        ) : task.type === 'READ' ? (
-                                                            <span className="text-[10px] font-bold text-zinc-600 uppercase tracking-tighter">Self-paced study recommended</span>
-                                                        ) : null}
-                                                    </div>
-                                                    {task.target && (
-                                                        <span className={`px-3 py-1 border rounded-full text-[10px] font-black ${task.availableCount === 0 ? 'bg-red-500/5 border-red-500/20 text-red-500' : 'bg-white/5 border-white/10 text-zinc-500'
+                                                <div key={tIdx} className="relative group/task p-5 bg-white/[0.03] border border-white/5 rounded-3xl hover:bg-white/[0.05] hover:border-white/10 transition-all duration-300 overflow-hidden">
+                                                    <div className={`absolute top-0 left-0 w-1 h-full ${task.type === 'READ' ? 'bg-blue-500' :
+                                                        task.type === 'PRACTICE_MCQ' ? 'bg-purple-500' :
+                                                            'bg-green-500'
+                                                        } opacity-50 group-hover/task:opacity-100 transition-opacity`}></div>
+
+                                                    <div className="flex items-start gap-4">
+                                                        <div className={`p-2 rounded-xl shrink-0 ${task.type === 'READ' ? 'bg-blue-500/10 text-blue-500' :
+                                                            task.type === 'PRACTICE_MCQ' ? 'bg-purple-500/10 text-purple-500' :
+                                                                'bg-green-500/10 text-green-500'
                                                             }`}>
-                                                            {task.target}
-                                                        </span>
-                                                    )}
+                                                            {task.type === 'READ' ? <BookOpen size={16} /> :
+                                                                task.type === 'PRACTICE_MCQ' ? <Zap size={16} /> :
+                                                                    <Code size={16} />}
+                                                        </div>
+                                                        <div className="min-w-0">
+                                                            <h4 className="text-sm font-bold text-zinc-200 mb-2 leading-tight group-hover/task:text-white transition-colors">
+                                                                {task.description}
+                                                            </h4>
+                                                            {task.resource ? (
+                                                                <Link to={`/student/study/${task.resource.id}`} className="inline-flex items-center gap-2 px-3 py-1 bg-blue-500/10 border border-blue-500/20 rounded-full text-[9px] font-black text-blue-400 hover:bg-blue-500 hover:text-white transition-all uppercase tracking-widest">
+                                                                    <FileText size={10} />
+                                                                    Read Guide
+                                                                </Link>
+                                                            ) : task.availableCount === 0 && task.type !== 'READ' ? (
+                                                                <span className="text-[9px] font-black text-red-500/70 uppercase tracking-tighter">Coming Soon</span>
+                                                            ) : (
+                                                                <div className="flex items-center gap-2">
+                                                                    <div className="w-1 h-1 rounded-full bg-zinc-700"></div>
+                                                                    <span className="text-[9px] font-black text-zinc-600 uppercase tracking-widest">
+                                                                        {task.type === 'READ' ? 'Learning Mode' : `${task.target || 'N/A'}`}
+                                                                    </span>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             ))}
                                         </div>
 
-                                        {/* Right: Action */}
-                                        <div className="flex flex-col w-full gap-2">
+                                        {/* Actions - Unified & Elegant */}
+                                        <div className="lg:w-48 shrink-0 flex flex-col gap-3 justify-center">
                                             <Link
                                                 to={day.link}
-                                                className="w-full flex items-center justify-center gap-2 px-6 py-4 bg-white text-black font-black rounded-2xl hover:bg-zinc-200 transition-all text-sm group"
+                                                className="w-full flex items-center justify-between px-6 py-4 bg-white text-black font-black rounded-2xl hover:bg-zinc-200 transition-all text-[11px] uppercase tracking-widest group/btn shadow-[0_10px_20px_rgba(255,255,255,0.05)]"
                                             >
-                                                Start Test
-                                                <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+                                                Start Session
+                                                <ArrowRight size={14} className="group-hover/btn:translate-x-1 transition-transform" />
                                             </Link>
                                             {day.tasks.some(t => t.type === 'PRACTICE_CODING') && (
                                                 <Link
                                                     to={`/student/practice/coding?topic=${day.topic}`}
-                                                    className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-zinc-800 text-white font-bold rounded-2xl hover:bg-zinc-700 transition-all text-xs group border border-white/5"
+                                                    className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-zinc-800/50 text-zinc-400 font-black rounded-2xl hover:bg-zinc-800 hover:text-white transition-all text-[10px] uppercase tracking-widest border border-white/5 group/pbtn"
                                                 >
-                                                    Practice Coding
-                                                    <Code size={14} className="ml-1" />
+                                                    <Code size={14} className="opacity-50 group-hover/pbtn:opacity-100" />
+                                                    Code Lab
                                                 </Link>
                                             )}
                                         </div>

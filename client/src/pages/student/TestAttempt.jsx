@@ -297,53 +297,65 @@ const TestAttempt = () => {
 
                 <div className="flex-1 flex flex-col relative bg-zinc-950/20 overflow-hidden">
                     {currentQuestion.type === 'MCQ' ? (
-                        <div className="flex-1 overflow-y-auto w-full custom-scrollbar">
-                            <AnimatePresence mode="wait">
-                                <motion.div
-                                    key={currentIdx}
-                                    initial={{ opacity: 0, y: 10 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    exit={{ opacity: 0, y: -10 }}
-                                    className="p-10 max-w-5xl mx-auto w-full pb-32"
-                                >
-                                    <header className="mb-12">
-                                        <div className="flex items-center gap-2 mb-6">
-                                            <span className="px-3 py-1 bg-white/5 border border-white/10 rounded-lg text-[9px] font-black text-zinc-400 uppercase tracking-[0.2em]">Question {currentIdx + 1}</span>
-                                            <span className={`px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-[0.2em] ${currentQuestion.difficulty === 'hard' ? 'bg-red-500/10 text-red-500 border border-red-500/20' : currentQuestion.difficulty === 'medium' ? 'bg-yellow-500/10 text-yellow-500 border border-yellow-500/20' : 'bg-green-500/10 text-green-500 border border-green-500/20'
-                                                }`}>
-                                                {currentQuestion.difficulty}
-                                            </span>
+                        <div className="flex-1 flex overflow-hidden">
+                            <AnimatePresence initial={false}>
+                                {showQuestionPanel && (
+                                    <motion.div
+                                        initial={{ width: 0, opacity: 0 }}
+                                        animate={{ width: '40%', opacity: 1 }}
+                                        exit={{ width: 0, opacity: 0 }}
+                                        className="h-full border-r border-white/5 bg-zinc-950/30 overflow-y-auto custom-scrollbar"
+                                    >
+                                        <div className="p-8">
+                                            <div className="flex items-center gap-2 mb-6">
+                                                <span className="px-3 py-1 bg-white/5 border border-white/10 rounded-lg text-[9px] font-black text-zinc-400 uppercase tracking-[0.2em]">Question {currentIdx + 1}</span>
+                                                <span className={`px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-[0.2em] ${currentQuestion.difficulty === 'hard' ? 'bg-red-500/10 text-red-500 border border-red-500/20' : currentQuestion.difficulty === 'medium' ? 'bg-yellow-500/10 text-yellow-500 border border-yellow-500/20' : 'bg-green-500/10 text-green-500 border border-green-500/20'
+                                                    }`}>
+                                                    {currentQuestion.difficulty}
+                                                </span>
+                                            </div>
+                                            <h1 className="text-2xl font-black tracking-tight text-white mb-6 leading-tight">
+                                                {currentQuestion.title}
+                                            </h1>
+                                            <div className="text-zinc-400 text-sm leading-relaxed whitespace-pre-wrap prose prose-invert max-w-none">
+                                                {currentQuestion.description}
+                                            </div>
                                         </div>
-                                        <h1 className="text-3xl font-black tracking-tight text-white mb-6 leading-tight">
-                                            {currentQuestion.title}
-                                        </h1>
-                                        <div className="text-zinc-400 text-lg leading-relaxed whitespace-pre-wrap prose prose-invert max-w-none">
-                                            {currentQuestion.description}
-                                        </div>
-                                    </header>
-
-                                    <div className="border-t border-white/5 pt-12">
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                            {currentQuestion.options.map((opt, idx) => (
-                                                <button
-                                                    key={idx}
-                                                    onClick={() => handleAnswer(currentQuestion._id, idx)}
-                                                    className={`group p-6 rounded-3xl border text-left transition-all flex items-center gap-5 ${answers[currentQuestion._id] === idx
-                                                        ? 'bg-white border-white text-black shadow-2xl shadow-white/10'
-                                                        : 'bg-zinc-900/30 border-white/5 text-zinc-400 hover:border-white/20 hover:bg-zinc-900/50'
-                                                        }`}
-                                                >
-                                                    <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center text-xs font-black transition-colors ${answers[currentQuestion._id] === idx ? 'bg-black border-black text-white' : 'border-zinc-700 text-zinc-600 group-hover:border-zinc-500'
-                                                        }`}>
-                                                        {String.fromCharCode(65 + idx)}
-                                                    </div>
-                                                    <span className="font-bold text-base">{opt.text}</span>
-                                                </button>
-                                            ))}
-                                        </div>
-                                    </div>
-                                </motion.div>
+                                    </motion.div>
+                                )}
                             </AnimatePresence>
+
+                            <div className="flex-1 overflow-y-auto w-full custom-scrollbar bg-black/20">
+                                <div className="p-4 border-b border-white/5 flex items-center justify-between bg-zinc-950/50 backdrop-blur-md sticky top-0 z-10">
+                                    <button
+                                        onClick={() => setShowQuestionPanel(!showQuestionPanel)}
+                                        className="p-1.5 bg-white/5 border border-white/10 rounded-lg text-zinc-500 hover:text-white transition-all"
+                                    >
+                                        {showQuestionPanel ? <PanelRightClose size={14} /> : <PanelRightOpen size={14} />}
+                                    </button>
+                                    <span className="text-[10px] font-black text-zinc-600 uppercase tracking-widest">Select Answer</span>
+                                </div>
+                                <div className="p-10 max-w-3xl mx-auto w-full pb-32">
+                                    <div className="grid grid-cols-1 gap-4">
+                                        {currentQuestion.options.map((opt, idx) => (
+                                            <button
+                                                key={idx}
+                                                onClick={() => handleAnswer(currentQuestion._id, idx)}
+                                                className={`group p-6 rounded-3xl border text-left transition-all flex items-center gap-5 ${answers[currentQuestion._id] === idx
+                                                    ? 'bg-white border-white text-black shadow-2xl shadow-white/10'
+                                                    : 'bg-zinc-900/30 border-white/5 text-zinc-400 hover:border-white/20 hover:bg-zinc-900/50'
+                                                    }`}
+                                            >
+                                                <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center text-xs font-black transition-colors ${answers[currentQuestion._id] === idx ? 'bg-black border-black text-white' : 'border-zinc-700 text-zinc-600 group-hover:border-zinc-500'
+                                                    }`}>
+                                                    {String.fromCharCode(65 + idx)}
+                                                </div>
+                                                <span className="font-bold text-base">{opt.text}</span>
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     ) : (
                         <div className="flex-1 flex overflow-hidden">
@@ -483,7 +495,6 @@ const TestAttempt = () => {
                             </div>
                         </div>
                     )}
-
                     <footer className="h-20 border-t border-white/5 bg-zinc-950/80 backdrop-blur-md px-10 flex items-center justify-between shrink-0 absolute bottom-0 left-0 right-0">
                         <button
                             type="button"
@@ -517,7 +528,7 @@ const TestAttempt = () => {
                         </button>
                     </footer>
                 </div>
-            </main>
+            </main >
 
             <AnimatePresence>
                 {showSummaryModal && (
@@ -641,7 +652,7 @@ const TestAttempt = () => {
                 .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.05); border-radius: 10px; }
                 .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.1); }
             `}</style>
-        </div>
+        </div >
     );
 };
 

@@ -33,6 +33,7 @@ const CodingPractice = () => {
     const [submitting, setSubmitting] = useState(false);
     const [consoleOutput, setConsoleOutput] = useState('');
     const [activeTab, setActiveTab] = useState('description'); // 'description' or 'testcases'
+    const [selectedLanguage, setSelectedLanguage] = useState('javascript');
 
     useEffect(() => {
         fetchQuestions();
@@ -53,6 +54,9 @@ const CodingPractice = () => {
                 initialCodes[idx] = q.codeSnippet || '// Write your code here...';
             });
             setCodes(initialCodes);
+            if (data.questions.length > 0) {
+                setSelectedLanguage(data.questions[0].codeLanguage?.toLowerCase() || 'javascript');
+            }
             setLoading(false);
         } catch (err) {
             console.error(err);
@@ -76,7 +80,7 @@ const CodingPractice = () => {
             const question = test.questions[currentQuestionIdx];
             const { data } = await api.post('/compiler/run', {
                 code: codes[currentQuestionIdx],
-                language: question.codeLanguage || 'JavaScript',
+                language: selectedLanguage.charAt(0).toUpperCase() + selectedLanguage.slice(1),
                 questionId: question._id
             });
             setResults(prev => ({ ...prev, [currentQuestionIdx]: data.results }));
@@ -125,8 +129,8 @@ const CodingPractice = () => {
                             key={idx}
                             onClick={() => setCurrentQuestionIdx(idx)}
                             className={`w-8 h-8 rounded-lg text-xs font-bold transition-all ${currentQuestionIdx === idx
-                                    ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/20'
-                                    : 'bg-white/5 text-zinc-500 hover:bg-white/10 hover:text-zinc-300'
+                                ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/20'
+                                : 'bg-white/5 text-zinc-500 hover:bg-white/10 hover:text-zinc-300'
                                 }`}
                         >
                             {idx + 1}
@@ -135,6 +139,18 @@ const CodingPractice = () => {
                 </div>
 
                 <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2 mr-2">
+                        <select
+                            value={selectedLanguage}
+                            onChange={(e) => setSelectedLanguage(e.target.value)}
+                            className="bg-black/40 border border-white/10 text-[10px] font-black text-zinc-400 rounded-xl px-4 py-1.5 focus:outline-none hover:text-white cursor-pointer transition-colors appearance-none uppercase tracking-widest"
+                        >
+                            <option value="javascript">JavaScript</option>
+                            <option value="python">Python</option>
+                            <option value="java">Java</option>
+                            <option value="cpp">C++</option>
+                        </select>
+                    </div>
                     <button
                         onClick={togglePanel}
                         className="p-2 bg-white/5 rounded-lg text-zinc-400 hover:text-white transition-all border border-white/5"
@@ -168,8 +184,8 @@ const CodingPractice = () => {
                             <div className="p-8">
                                 <div className="flex items-center gap-2 mb-6">
                                     <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-widest ${question.difficulty === 'easy' ? 'bg-green-500/10 text-green-500 border border-green-500/20' :
-                                            question.difficulty === 'medium' ? 'bg-yellow-500/10 text-yellow-500 border border-yellow-500/20' :
-                                                'bg-red-500/10 text-red-500 border border-red-500/20'
+                                        question.difficulty === 'medium' ? 'bg-yellow-500/10 text-yellow-500 border border-yellow-500/20' :
+                                            'bg-red-500/10 text-red-500 border border-red-500/20'
                                         }`}>
                                         {question.difficulty}
                                     </span>
