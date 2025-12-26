@@ -242,6 +242,8 @@ const submitTest = asyncHandler(async (req, res) => {
 // @route   GET /api/student/plan
 // @access  Private/Student
 const getImprovementPlan = asyncHandler(async (req, res) => {
+    const mongoose = require('mongoose');
+
     // Get last attempt
     const lastAttempt = await UserAttempt.findOne({ userId: req.user.id })
         .sort({ createdAt: -1 })
@@ -266,8 +268,8 @@ const getImprovementPlan = asyncHandler(async (req, res) => {
     const attemptedQuestionIds = new Set(lastAttempt.answers.map(ans => ans.questionId?._id?.toString()));
     const unattemptedQuestions = lastAttempt.testId?.questions.filter(q => !attemptedQuestionIds.has(q._id.toString())) || [];
 
-    // 2. Analyze Performance
-    const topicStats = {}; // { 'Arrays': { correct: 2, total: 3, unattempted: 1 } }
+    // 2. Analyze Performance with Weakness Score
+    const topicStats = {}; // { 'Arrays': { correct: 2, total: 3, unattempted: 1, weaknessScore: 0.5 } }
     let totalCorrect = 0;
 
     // Process attempted answers
@@ -279,9 +281,13 @@ const getImprovementPlan = asyncHandler(async (req, res) => {
             // Use 'topic' or first element of 'topics'
             const t = question.topic || (question.topics && question.topics[0]);
             if (t) {
-                if (!topicStats[t]) topicStats[t] = { correct: 0, total: 0, unattempted: 0 };
+                if (!topicStats[t]) topicStats[t] = { correct: 0, total: 0, unattempted: 0, incorrect: 0 };
                 topicStats[t].total += 1;
-                if (ans.isCorrect) topicStats[t].correct += 1;
+                if (ans.isCorrect) {
+                    topicStats[t].correct += 1;
+                } else {
+                    topicStats[t].incorrect += 1;
+                }
             }
         }
     });
@@ -290,27 +296,44 @@ const getImprovementPlan = asyncHandler(async (req, res) => {
     unattemptedQuestions.forEach(q => {
         const t = q.topic || (q.topics && q.topics[0]);
         if (t) {
-            if (!topicStats[t]) topicStats[t] = { correct: 0, total: 0, unattempted: 0 };
+            if (!topicStats[t]) topicStats[t] = { correct: 0, total: 0, unattempted: 0, incorrect: 0 };
             topicStats[t].total += 1;
             topicStats[t].unattempted += 1;
         }
     });
 
-    // 3. Identify Weak & Strong Areas
+    // Calculate weakness score for each topic
+    for (const [topic, stats] of Object.entries(topicStats)) {
+        // Weakness score = (incorrect + unattempted) / total
+        stats.weaknessScore = stats.total > 0 ? (stats.incorrect + stats.unattempted) / stats.total : 0;
+        stats.accuracy = stats.total > 0 ? (stats.correct / stats.total) * 100 : 0;
+    }
+
+    // 3. Select Top 2 Weakest Topics for Weekly Focus
+    const sortedByWeakness = Object.entries(topicStats)
+        .sort((a, b) => b[1].weaknessScore - a[1].weaknessScore);
+
+    // Focus on top 2 weakest topics (or 1 if only 1 exists)
+    const focusTopics = sortedByWeakness.slice(0, 2).map(([topic]) => topic);
+
+    // Fallback if no topics found
+    if (focusTopics.length === 0) {
+        focusTopics.push("General Aptitude", "Programming Basics");
+    }
+
+    // 4. Identify Weak & Strong Areas for display
     const weakTopics = [];
     const strongTopics = [];
 
     for (const [topic, stats] of Object.entries(topicStats)) {
-        // If unattempted > 0 or accuracy < 60, it's a weak topic
-        const accuracy = stats.total > 0 ? (stats.correct / stats.total) * 100 : 0;
-        if (stats.unattempted > 0 || accuracy < 60) {
+        if (stats.unattempted > 0 || stats.accuracy < 60) {
             weakTopics.push(topic);
-        } else if (accuracy >= 80) {
+        } else if (stats.accuracy >= 80) {
             strongTopics.push(topic);
         }
     }
 
-    // 4. Generate Motivation
+    // 5. Generate Motivation
     let maxPossibleScore = 0;
     if (lastAttempt.testId && lastAttempt.testId.questions) {
         lastAttempt.testId.questions.forEach(q => {
@@ -325,7 +348,6 @@ const getImprovementPlan = asyncHandler(async (req, res) => {
             }
         });
     } else {
-        // Fallback for custom tests or missing test data
         maxPossibleScore = lastAttempt.answers.reduce((acc, curr) => acc + (curr.maxScore || 0), 0);
     }
 
@@ -341,19 +363,27 @@ const getImprovementPlan = asyncHandler(async (req, res) => {
         motivation = "Excellent performance! Keep challenging yourself with complex problems to stay on top.";
     }
 
-    // 5. Build 7-Day Plan
+    // 6. Build 7-Day Plan with Automatic Question Assignment
     const dailyTasks = [];
     const today = new Date();
 
-    // Select up to 7 topics from weak topics (or repeat if needed)
-    const focusTopics = weakTopics.length > 0 ? weakTopics : ["General Aptitude", "Programming Basics"];
-
+    // Topic distribution: Days 1-3 focus on Topic 1, Days 4-6 on Topic 2, Day 7 review both
     for (let i = 0; i < 7; i++) {
         const dayDate = new Date(today);
         dayDate.setDate(today.getDate() + i + 1);
         const dayName = dayDate.toLocaleDateString('en-US', { weekday: 'long' });
 
-        const topic = focusTopics[i % focusTopics.length];
+        // Determine topic for this day
+        let topic;
+        if (i < 3) {
+            topic = focusTopics[0]; // Days 1-3: First weak topic
+        } else if (i < 6) {
+            topic = focusTopics[1] || focusTopics[0]; // Days 4-6: Second weak topic (or first if only 1)
+        } else {
+            topic = focusTopics[0]; // Day 7: Review first topic
+        }
+
+        // Fetch documentation for this topic
         const doc = await Documentation.findOne({
             $or: [
                 { topic: new RegExp(`^${topic}$`, 'i') },
@@ -361,17 +391,93 @@ const getImprovementPlan = asyncHandler(async (req, res) => {
             ]
         });
 
+        // Fetch MCQ questions for this topic
+        const topicRegex = new RegExp(`^${topic.trim()}$`, 'i');
+        const mcqQuestions = await Question.aggregate([
+            {
+                $match: {
+                    status: 'published',
+                    type: 'MCQ',
+                    $or: [
+                        { topic: topicRegex },
+                        { topics: topicRegex }
+                    ]
+                }
+            },
+            { $sample: { size: 4 } } // Try to get 4 MCQs
+        ]);
+
+        // Fetch coding questions for this topic
+        const codingQuestions = await Question.aggregate([
+            {
+                $match: {
+                    status: 'published',
+                    type: 'CODING',
+                    $or: [
+                        { topic: topicRegex },
+                        { topics: topicRegex }
+                    ]
+                }
+            },
+            { $sample: { size: 1 } } // Get 1 coding question
+        ]);
+
+        // Build tasks with actual question counts
+        const tasks = [
+            {
+                type: 'READ',
+                description: `Study ${topic} documentation and core concepts.`,
+                resource: doc ? { title: doc.title, id: doc._id } : null
+            }
+        ];
+
+        // Add MCQ task if questions available
+        if (mcqQuestions.length > 0) {
+            tasks.push({
+                type: 'PRACTICE_MCQ',
+                description: `Solve ${mcqQuestions.length} MCQ question${mcqQuestions.length > 1 ? 's' : ''} on ${topic}.`,
+                target: `${mcqQuestions.length} MCQ${mcqQuestions.length > 1 ? 's' : ''}`,
+                questionIds: mcqQuestions.map(q => q._id),
+                availableCount: mcqQuestions.length
+            });
+        } else {
+            tasks.push({
+                type: 'PRACTICE_MCQ',
+                description: `No MCQ questions available for ${topic} yet.`,
+                target: "0 MCQs",
+                questionIds: [],
+                availableCount: 0
+            });
+        }
+
+        // Add coding task if questions available
+        if (codingQuestions.length > 0) {
+            tasks.push({
+                type: 'PRACTICE_CODING',
+                description: `Complete ${codingQuestions.length} coding challenge on ${topic}.`,
+                target: `${codingQuestions.length} Coding`,
+                questionIds: codingQuestions.map(q => q._id),
+                availableCount: codingQuestions.length
+            });
+        } else {
+            tasks.push({
+                type: 'PRACTICE_CODING',
+                description: `No coding questions available for ${topic} yet.`,
+                target: "0 Coding",
+                questionIds: [],
+                availableCount: 0
+            });
+        }
+
         dailyTasks.push({
             day: `Day ${i + 1}`,
+            dayNumber: i + 1,
             date: dayDate.toISOString().split('T')[0],
             dayName: dayName,
             topic: topic,
-            tasks: [
-                { type: 'READ', description: `Study ${topic} documentation and core concepts.`, resource: doc ? { title: doc.title, id: doc._id } : null },
-                { type: 'PRACTICE_MCQ', description: `Solve 2-4 MCQ questions on ${topic}.`, target: "2-4 MCQs" },
-                { type: 'PRACTICE_CODING', description: `Complete 1 coding challenge on ${topic}.`, target: "1 Coding" }
-            ],
-            link: `/student/test/custom?topic=${encodeURIComponent(topic)}`
+            tasks: tasks,
+            assignedQuestions: [...mcqQuestions.map(q => q._id), ...codingQuestions.map(q => q._id)],
+            link: `/student/test/daily/${i + 1}`
         });
     }
 
@@ -382,6 +488,7 @@ const getImprovementPlan = asyncHandler(async (req, res) => {
         totalQuestions: totalQuestionsCount,
         correctQuestions: totalCorrect,
         motivation,
+        focusTopics: focusTopics, // NEW: Show which 2 topics we're focusing on
         analysis: {
             weak: weakTopics,
             strong: strongTopics
@@ -765,6 +872,198 @@ const reportQuestion = asyncHandler(async (req, res) => {
     res.status(201).json(report);
 });
 
+// @desc    Get Questions for Specific Day in Plan
+// @route   GET /api/student/plan/day/:dayNumber/questions
+// @access  Private/Student
+const getDayQuestions = asyncHandler(async (req, res) => {
+    const { dayNumber } = req.params;
+    const day = parseInt(dayNumber);
+
+    if (!day || day < 1 || day > 7) {
+        res.status(400);
+        throw new Error('Invalid day number. Must be between 1 and 7.');
+    }
+
+    // Get the user's latest improvement plan
+    const lastAttempt = await UserAttempt.findOne({ userId: req.user.id })
+        .sort({ createdAt: -1 });
+
+    if (!lastAttempt) {
+        res.status(404);
+        throw new Error('No diagnostic test found. Please take a diagnostic test first.');
+    }
+
+    // Regenerate the plan logic to get the specific day's questions
+    // This is a simplified version - in production, you might want to cache the plan
+    const plan = await generatePlanForUser(req.user.id);
+
+    if (!plan || !plan.plan || !plan.plan[day - 1]) {
+        res.status(404);
+        throw new Error('Day not found in plan');
+    }
+
+    const dayPlan = plan.plan[day - 1];
+
+    // Fetch full question details
+    const questionIds = dayPlan.assignedQuestions || [];
+
+    if (questionIds.length === 0) {
+        res.status(404);
+        throw new Error('No questions available for this day');
+    }
+
+    const questions = await Question.find({
+        _id: { $in: questionIds },
+        status: 'published'
+    }).select('-options.isCorrect -testCases.output -testCases.isHidden');
+
+    // Create a test record for tracking
+    const test = await Test.create({
+        type: 'WEEKLY',
+        duration: calculateDuration(questions),
+        questions: questionIds,
+        createdBy: req.user.id
+    });
+
+    const populatedTest = await Test.findById(test._id)
+        .populate('questions', '-options.isCorrect -testCases.output -testCases.isHidden');
+
+    res.json(populatedTest);
+});
+
+// Helper function to generate plan (extracted logic)
+const generatePlanForUser = async (userId) => {
+    const lastAttempt = await UserAttempt.findOne({ userId })
+        .sort({ createdAt: -1 })
+        .populate({
+            path: 'answers.questionId',
+            select: 'topics topic difficulty type title'
+        })
+        .populate({
+            path: 'testId',
+            populate: {
+                path: 'questions',
+                select: 'topic topics difficulty type'
+            }
+        });
+
+    if (!lastAttempt) return null;
+
+    const attemptedQuestionIds = new Set(lastAttempt.answers.map(ans => ans.questionId?._id?.toString()));
+    const unattemptedQuestions = lastAttempt.testId?.questions.filter(q => !attemptedQuestionIds.has(q._id.toString())) || [];
+
+    const topicStats = {};
+    lastAttempt.answers.forEach(ans => {
+        const question = ans.questionId;
+        if (question) {
+            const t = question.topic || (question.topics && question.topics[0]);
+            if (t) {
+                if (!topicStats[t]) topicStats[t] = { correct: 0, total: 0, unattempted: 0, incorrect: 0 };
+                topicStats[t].total += 1;
+                if (ans.isCorrect) {
+                    topicStats[t].correct += 1;
+                } else {
+                    topicStats[t].incorrect += 1;
+                }
+            }
+        }
+    });
+
+    unattemptedQuestions.forEach(q => {
+        const t = q.topic || (q.topics && q.topics[0]);
+        if (t) {
+            if (!topicStats[t]) topicStats[t] = { correct: 0, total: 0, unattempted: 0, incorrect: 0 };
+            topicStats[t].total += 1;
+            topicStats[t].unattempted += 1;
+        }
+    });
+
+    for (const [topic, stats] of Object.entries(topicStats)) {
+        stats.weaknessScore = stats.total > 0 ? (stats.incorrect + stats.unattempted) / stats.total : 0;
+    }
+
+    const sortedByWeakness = Object.entries(topicStats)
+        .sort((a, b) => b[1].weaknessScore - a[1].weaknessScore);
+
+    const focusTopics = sortedByWeakness.slice(0, 2).map(([topic]) => topic);
+    if (focusTopics.length === 0) {
+        focusTopics.push("General Aptitude", "Programming Basics");
+    }
+
+    const dailyTasks = [];
+    const today = new Date();
+
+    for (let i = 0; i < 7; i++) {
+        const dayDate = new Date(today);
+        dayDate.setDate(today.getDate() + i + 1);
+        const dayName = dayDate.toLocaleDateString('en-US', { weekday: 'long' });
+
+        let topic;
+        if (i < 3) {
+            topic = focusTopics[0];
+        } else if (i < 6) {
+            topic = focusTopics[1] || focusTopics[0];
+        } else {
+            topic = focusTopics[0];
+        }
+
+        const topicRegex = new RegExp(`^${topic.trim()}$`, 'i');
+        const mcqQuestions = await Question.aggregate([
+            {
+                $match: {
+                    status: 'published',
+                    type: 'MCQ',
+                    $or: [
+                        { topic: topicRegex },
+                        { topics: topicRegex }
+                    ]
+                }
+            },
+            { $sample: { size: 4 } }
+        ]);
+
+        const codingQuestions = await Question.aggregate([
+            {
+                $match: {
+                    status: 'published',
+                    type: 'CODING',
+                    $or: [
+                        { topic: topicRegex },
+                        { topics: topicRegex }
+                    ]
+                }
+            },
+            { $sample: { size: 1 } }
+        ]);
+
+        dailyTasks.push({
+            day: `Day ${i + 1}`,
+            dayNumber: i + 1,
+            date: dayDate.toISOString().split('T')[0],
+            dayName: dayName,
+            topic: topic,
+            assignedQuestions: [...mcqQuestions.map(q => q._id), ...codingQuestions.map(q => q._id)],
+            link: `/student/test/daily/${i + 1}`
+        });
+    }
+
+    return { plan: dailyTasks, focusTopics };
+};
+
+// Helper to calculate test duration
+const calculateDuration = (questions) => {
+    let totalDuration = 0;
+    questions.forEach(q => {
+        if (q.type === 'MCQ') {
+            totalDuration += 2;
+        } else if (q.type === 'CODING') {
+            totalDuration += (q.expectedTime || 15);
+        }
+    });
+    return totalDuration || questions.length * 5;
+};
+
+
 module.exports = {
     generateDiagnosticTest,
     submitTest,
@@ -777,5 +1076,6 @@ module.exports = {
     getDocumentationById,
     updateActivityStats,
     getActivityLog,
-    reportQuestion
+    reportQuestion,
+    getDayQuestions
 };

@@ -25,6 +25,7 @@ import TestResult from './pages/student/TestResult';
 import CustomTestBuilder from './pages/student/CustomTestBuilder';
 import Profile from './pages/student/Profile';
 import StudyDocumentation from './pages/student/StudyDocumentation';
+import DailyTest from './pages/student/DailyTest';
 
 import Landing from './pages/Landing';
 
@@ -85,6 +86,7 @@ const Layout = () => {
           <Route path="/student/profile" element={<PrivateRoute role="student"><Profile /></PrivateRoute>} />
           <Route path="/student/test/diagnostic" element={<PrivateRoute role="student"><TestAttempt /></PrivateRoute>} />
           <Route path="/student/test/custom" element={<PrivateRoute role="student"><CustomTestBuilder /></PrivateRoute>} />
+          <Route path="/student/test/daily/:dayNumber" element={<PrivateRoute role="student"><DailyTest /></PrivateRoute>} />
           <Route path="/student/test/:testId" element={<PrivateRoute role="student"><TestAttempt /></PrivateRoute>} />
           <Route path="/student/test/result" element={<PrivateRoute role="student"><TestResult /></PrivateRoute>} />
           <Route path="/student/study/:id" element={<PrivateRoute role="student"><StudyDocumentation /></PrivateRoute>} />

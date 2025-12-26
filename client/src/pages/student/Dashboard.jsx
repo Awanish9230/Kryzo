@@ -83,8 +83,8 @@ const StudentDashboard = () => {
                 <div>
                     <div className="flex items-center justify-between mb-8">
                         <h2 className="text-2xl font-bold tracking-tight">Daily Improvement Plan</h2>
-                        <span className="text-sm font-medium px-3 py-1 bg-white/5 border border-white/10 rounded-full text-zinc-400">
-                            7 Day Cycle
+                        <span className="text-sm font-medium px-3 py-1 bg-blue-500/10 border border-blue-500/20 rounded-full text-blue-400">
+                            Focus: {plan.focusTopics?.join(', ') || 'General Topics'}
                         </span>
                     </div>
 
@@ -128,12 +128,15 @@ const StudentDashboard = () => {
                                                                 <FileText size={10} />
                                                                 Study: {task.resource.title}
                                                             </Link>
-                                                        ) : (
+                                                        ) : task.availableCount === 0 && task.type !== 'READ' ? (
+                                                            <span className="text-[10px] font-bold text-red-500 uppercase tracking-tighter">No questions available - Check documentation</span>
+                                                        ) : task.type === 'READ' ? (
                                                             <span className="text-[10px] font-bold text-zinc-600 uppercase tracking-tighter">Self-paced study recommended</span>
-                                                        )}
+                                                        ) : null}
                                                     </div>
                                                     {task.target && (
-                                                        <span className="px-3 py-1 bg-white/5 border border-white/10 rounded-full text-[10px] font-black text-zinc-500">
+                                                        <span className={`px-3 py-1 border rounded-full text-[10px] font-black ${task.availableCount === 0 ? 'bg-red-500/5 border-red-500/20 text-red-500' : 'bg-white/5 border-white/10 text-zinc-500'
+                                                            }`}>
                                                             {task.target}
                                                         </span>
                                                     )}
