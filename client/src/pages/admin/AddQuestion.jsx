@@ -217,65 +217,6 @@ const AddQuestion = () => {
                         </div>
                     </div>
 
-                    {/* Explanation & Code Snippet Section */}
-                    <div className="bg-zinc-900/50 border border-white/5 rounded-[2.5rem] p-8 md:p-10 backdrop-blur-sm">
-                        <div className="flex items-center gap-3 mb-8">
-                            <div className="p-3 bg-blue-500/10 rounded-2xl text-blue-500">
-                                <Lightbulb size={20} />
-                            </div>
-                            <h2 className="text-xl font-bold tracking-tight">Explanation & Code Snippet (Optional)</h2>
-                        </div>
-
-                        <div className="space-y-6">
-                            {/* Explanation Field */}
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium text-zinc-400 ml-1">
-                                    Explanation
-                                    <span className="text-zinc-600 ml-2">(Shown for wrong answers during review)</span>
-                                </label>
-                                <textarea
-                                    name="explanation"
-                                    rows={4}
-                                    placeholder="Explain why the correct answer is correct..."
-                                    className="w-full px-5 py-4 bg-zinc-950 border border-white/10 rounded-2xl text-white focus:outline-none focus:border-blue-500 transition-all resize-none"
-                                    value={formData.explanation}
-                                    onChange={handleChange}
-                                />
-                            </div>
-
-                            {/* Code Snippet Section */}
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium text-zinc-400 ml-1">Code Snippet</label>
-                                <select
-                                    name="codeLanguage"
-                                    className="w-full px-5 py-4 bg-zinc-950 border border-white/10 rounded-2xl text-white focus:outline-none mb-3"
-                                    value={formData.codeLanguage}
-                                    onChange={handleChange}
-                                >
-                                    <option value="javascript">JavaScript</option>
-                                    <option value="python">Python</option>
-                                    <option value="java">Java</option>
-                                    <option value="cpp">C++</option>
-                                    <option value="c">C</option>
-                                    <option value="html">HTML</option>
-                                    <option value="css">CSS</option>
-                                    <option value="sql">SQL</option>
-                                    <option value="typescript">TypeScript</option>
-                                    <option value="go">Go</option>
-                                    <option value="rust">Rust</option>
-                                </select>
-                                <textarea
-                                    name="codeSnippet"
-                                    rows={8}
-                                    placeholder="Paste code snippet here..."
-                                    className="w-full px-5 py-4 bg-zinc-950 border border-white/10 rounded-2xl text-white focus:outline-none focus:border-blue-500 transition-all resize-none font-mono text-sm"
-                                    value={formData.codeSnippet}
-                                    onChange={handleChange}
-                                />
-                            </div>
-                        </div>
-                    </div>
-
                     {type === 'MCQ' && (
                         <div className="bg-zinc-900/50 border border-white/5 rounded-[2.5rem] p-8 md:p-10 backdrop-blur-sm">
                             <div className="flex items-center gap-3 mb-8">
@@ -305,6 +246,22 @@ const AddQuestion = () => {
                                         />
                                     </div>
                                 ))}
+                            </div>
+
+                            {/* Explanation Field for MCQ */}
+                            <div className="space-y-2 mt-6 pt-6 border-t border-white/5">
+                                <label className="text-sm font-medium text-zinc-400 ml-1">
+                                    Explanation (Optional)
+                                    <span className="text-zinc-600 ml-2">Shown for wrong answers during review</span>
+                                </label>
+                                <textarea
+                                    name="explanation"
+                                    rows={3}
+                                    placeholder="Explain why the correct answer is correct..."
+                                    className="w-full px-5 py-4 bg-zinc-950 border border-white/10 rounded-2xl text-white focus:outline-none focus:border-blue-500 transition-all resize-none"
+                                    value={formData.explanation}
+                                    onChange={handleChange}
+                                />
                             </div>
                         </div>
                     )}
@@ -354,6 +311,22 @@ const AddQuestion = () => {
                                             </label>
                                         </div>
                                     ))}
+                                </div>
+
+                                {/* Explanation Field for CODING */}
+                                <div className="space-y-2 mt-6 pt-6 border-t border-white/5">
+                                    <label className="text-sm font-medium text-zinc-400 ml-1">
+                                        Explanation (Optional)
+                                        <span className="text-zinc-600 ml-2">Shown for wrong answers during review</span>
+                                    </label>
+                                    <textarea
+                                        name="explanation"
+                                        rows={3}
+                                        placeholder="Explain the approach or solution..."
+                                        className="w-full px-5 py-4 bg-zinc-950 border border-white/10 rounded-2xl text-white focus:outline-none focus:border-blue-500 transition-all resize-none"
+                                        value={formData.explanation}
+                                        onChange={handleChange}
+                                    />
                                 </div>
                             </div>
                         </div>
@@ -422,9 +395,73 @@ const AddQuestion = () => {
                                         </div>
                                     ))}
                                 </div>
+
+                                {/* Explanation Field for DEVELOPMENT */}
+                                <div className="space-y-2 mt-6 pt-6 border-t border-white/5">
+                                    <label className="text-sm font-medium text-zinc-400 ml-1">
+                                        Explanation (Optional)
+                                        <span className="text-zinc-600 ml-2">Shown for wrong answers during review</span>
+                                    </label>
+                                    <textarea
+                                        name="explanation"
+                                        rows={3}
+                                        placeholder="Explain the evaluation criteria or approach..."
+                                        className="w-full px-5 py-4 bg-zinc-950 border border-white/10 rounded-2xl text-white focus:outline-none focus:border-blue-500 transition-all resize-none"
+                                        value={formData.explanation}
+                                        onChange={handleChange}
+                                    />
+                                </div>
                             </div>
                         </div>
                     )}
+
+                    {/* Code Snippet Section - Separate for all question types */}
+                    <div className="bg-zinc-900/50 border border-white/5 rounded-[2.5rem] p-8 md:p-10 backdrop-blur-sm">
+                        <div className="flex items-center gap-3 mb-8">
+                            <div className="p-3 bg-blue-500/10 rounded-2xl text-blue-500">
+                                <Code size={20} />
+                            </div>
+                            <h2 className="text-xl font-bold tracking-tight">Code Snippet (Optional)</h2>
+                        </div>
+
+                        <div className="space-y-4">
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium text-zinc-400 ml-1">Programming Language</label>
+                                <select
+                                    name="codeLanguage"
+                                    className="w-full px-5 py-4 bg-zinc-950 border border-white/10 rounded-2xl text-white focus:outline-none"
+                                    value={formData.codeLanguage}
+                                    onChange={handleChange}
+                                >
+                                    <option value="javascript">JavaScript</option>
+                                    <option value="python">Python</option>
+                                    <option value="java">Java</option>
+                                    <option value="cpp">C++</option>
+                                    <option value="c">C</option>
+                                    <option value="html">HTML</option>
+                                    <option value="css">CSS</option>
+                                    <option value="sql">SQL</option>
+                                    <option value="typescript">TypeScript</option>
+                                    <option value="go">Go</option>
+                                    <option value="rust">Rust</option>
+                                </select>
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium text-zinc-400 ml-1">
+                                    Code
+                                    <span className="text-zinc-600 ml-2">Will be displayed with syntax highlighting</span>
+                                </label>
+                                <textarea
+                                    name="codeSnippet"
+                                    rows={10}
+                                    placeholder="Paste your code snippet here..."
+                                    className="w-full px-5 py-4 bg-zinc-950 border border-white/10 rounded-2xl text-white focus:outline-none focus:border-blue-500 transition-all resize-none font-mono text-sm"
+                                    value={formData.codeSnippet}
+                                    onChange={handleChange}
+                                />
+                            </div>
+                        </div>
+                    </div>
 
                     <div className="flex justify-end pt-8 border-t border-white/5">
                         <button type="submit" className="px-10 py-4 bg-white text-black font-bold rounded-2xl hover:bg-zinc-200 transition-all flex items-center gap-3">
