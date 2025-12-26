@@ -12,7 +12,11 @@ import {
     Save,
     Code,
     CheckCircle2,
-    Lightbulb
+    Lightbulb,
+    Play,
+    Loader2,
+    Check,
+    X as CloseIcon
 } from 'lucide-react';
 
 const AddQuestion = () => {
@@ -44,6 +48,10 @@ const AddQuestion = () => {
         submissionGuidelines: '',
         expectedDeliverables: ['']
     });
+
+    const [isTesting, setIsTesting] = useState(false);
+    const [testResults, setTestResults] = useState(null);
+    const [testCode, setTestCode] = useState('');
 
     useEffect(() => {
         let time = 10;
@@ -110,6 +118,33 @@ const AddQuestion = () => {
     const removeArrayField = (field, index) => {
         const newArray = formData[field].filter((_, i) => i !== index);
         setFormData({ ...formData, [field]: newArray });
+    };
+
+    const handleTestCode = async () => {
+        if (!testCode.trim()) {
+            alert('Please provide some code to test');
+            return;
+        }
+        if (formData.testCases.length === 0 || !formData.testCases[0].input) {
+            alert('Please add at least one test case with input/output');
+            return;
+        }
+
+        setIsTesting(true);
+        setTestResults(null);
+        try {
+            const { data } = await api.post('/compiler/run', {
+                code: testCode,
+                language: formData.codeLanguage,
+                customTestCases: formData.testCases
+            });
+            setTestResults(data);
+        } catch (error) {
+            console.error(error);
+            alert('Testing failed. Check console or test cases format.');
+        } finally {
+            setIsTesting(false);
+        }
     };
 
     const handleSubmit = async (e) => {
@@ -313,6 +348,88 @@ const AddQuestion = () => {
                                             </label>
                                         </div>
                                     ))}
+                                </div>
+
+                                {/* Real-time Testing Section for Admin */}
+                                <div className="space-y-4 pt-8 border-t border-white/5">
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-3">
+                                            <div className="p-2 bg-blue-500/10 rounded-xl text-blue-500">
+                                                <Play size={16} />
+                                            </div>
+                                            <h3 className="font-bold text-white">Real-time Testing</h3>
+                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={handleTestCode}
+                                            disabled={isTesting}
+                                            className="px-6 py-2 bg-blue-600 text-white text-[11px] font-black uppercase tracking-widest rounded-xl hover:bg-blue-500 transition-all flex items-center gap-3 disabled:opacity-50"
+                                        >
+                                            {isTesting ? <Loader2 size={14} className="animate-spin" /> : <Play size={14} />}
+                                            {isTesting ? 'Testing...' : 'Test Code'}
+                                        </button>
+                                    </div>
+
+                                    <div className="space-y-4">
+                                        <div className="space-y-2">
+                                            <div className="flex items-center justify-between ml-1">
+                                                <label className="text-xs font-medium text-zinc-500">Sample Solution / Test Code</label>
+                                                <select
+                                                    className="bg-black border border-white/10 text-[10px] font-black text-zinc-400 rounded-lg px-3 py-1 focus:outline-none"
+                                                    value={formData.codeLanguage}
+                                                    onChange={(e) => setFormData({ ...formData, codeLanguage: e.target.value })}
+                                                >
+                                                    <option value="javascript">JavaScript</option>
+                                                    <option value="python">Python</option>
+                                                    <option value="java">Java</option>
+                                                    <option value="cpp">C++</option>
+                                                </select>
+                                            </div>
+                                            <textarea
+                                                className="w-full px-5 py-4 bg-black border border-white/10 rounded-2xl text-white font-mono text-sm focus:outline-none focus:border-blue-500/50 resize-none h-48"
+                                                placeholder="Paste a solution to verify your test cases..."
+                                                value={testCode}
+                                                onChange={(e) => setTestCode(e.target.value)}
+                                            />
+                                        </div>
+
+                                        {testResults && (
+                                            <motion.div
+                                                initial={{ opacity: 0, y: 10 }}
+                                                animate={{ opacity: 1, y: 0 }}
+                                                className="bg-zinc-950 border border-white/5 rounded-3xl overflow-hidden"
+                                            >
+                                                <div className="px-6 py-3 border-b border-white/5 flex items-center justify-between bg-white/[0.02]">
+                                                    <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Test Results</span>
+                                                    <div className="flex gap-4">
+                                                        <span className="text-[10px] font-black text-green-500 uppercase tracking-widest">Passed: {testResults.summary.passed}</span>
+                                                        <span className="text-[10px] font-black text-red-500 uppercase tracking-widest">Failed: {testResults.summary.failed}</span>
+                                                    </div>
+                                                </div>
+                                                <div className="p-6 space-y-4 max-h-60 overflow-y-auto custom-scrollbar">
+                                                    {testResults.results.map((res, idx) => (
+                                                        <div key={idx} className={`p-4 rounded-2xl border ${res.passed ? 'bg-green-500/5 border-green-500/10' : 'bg-red-500/5 border-red-500/10'}`}>
+                                                            <div className="flex items-center justify-between mb-2">
+                                                                <span className="text-[10px] font-black text-zinc-600 uppercase tracking-widest">Case {idx + 1}</span>
+                                                                {res.passed ? <Check size={14} className="text-green-500" /> : <CloseIcon size={14} className="text-red-500" />}
+                                                            </div>
+                                                            <div className="grid grid-cols-2 gap-4 text-[11px] font-mono">
+                                                                <div>
+                                                                    <span className="text-zinc-600 block mb-1 uppercase text-[8px]">Actual</span>
+                                                                    <span className="text-zinc-400 break-all">{res.actualOutput || 'N/A'}</span>
+                                                                </div>
+                                                                <div>
+                                                                    <span className="text-zinc-600 block mb-1 uppercase text-[8px]">Expected</span>
+                                                                    <span className="text-zinc-400 break-all">{res.expectedOutput || 'N/A'}</span>
+                                                                </div>
+                                                            </div>
+                                                            {res.error && <div className="mt-2 p-2 bg-red-500/10 text-red-400 text-[10px] rounded-lg border border-red-500/20">{res.error}</div>}
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </motion.div>
+                                        )}
+                                    </div>
                                 </div>
 
                                 {/* Explanation Field for CODING */}

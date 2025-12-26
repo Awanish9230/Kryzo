@@ -145,14 +145,23 @@ const StudentDashboard = () => {
                                         </div>
 
                                         {/* Right: Action */}
-                                        <div className="flex items-center justify-center min-w-[120px]">
+                                        <div className="flex flex-col w-full gap-2">
                                             <Link
                                                 to={day.link}
                                                 className="w-full flex items-center justify-center gap-2 px-6 py-4 bg-white text-black font-black rounded-2xl hover:bg-zinc-200 transition-all text-sm group"
                                             >
-                                                Start
+                                                Start Test
                                                 <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
                                             </Link>
+                                            {day.tasks.some(t => t.type === 'PRACTICE_CODING') && (
+                                                <Link
+                                                    to={`/student/practice/coding?topic=${day.topic}`}
+                                                    className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-zinc-800 text-white font-bold rounded-2xl hover:bg-zinc-700 transition-all text-xs group border border-white/5"
+                                                >
+                                                    Practice Coding
+                                                    <Code size={14} className="ml-1" />
+                                                </Link>
+                                            )}
                                         </div>
                                     </div>
                                 </motion.div>

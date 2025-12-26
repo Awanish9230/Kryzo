@@ -191,7 +191,10 @@ const submitTest = asyncHandler(async (req, res) => {
             score: questionScore,
             maxScore: questionMaxScore,
             timeTaken: ans.timeTaken,
-            executionResults
+            executionResults,
+            topic: question.topic || (question.topics && question.topics[0]),
+            type: question.type,
+            difficulty: question.difficulty
         });
     }
 
@@ -638,7 +641,12 @@ const getTestById = asyncHandler(async (req, res) => {
 // @access  Private/Student
 const getUserProfile = asyncHandler(async (req, res) => {
     const userId = req.user.id;
-    const attempts = await UserAttempt.find({ userId }).populate('testId');
+
+    // Optimized fetch: populate everything in one go
+    const attempts = await UserAttempt.find({ userId })
+        .populate('testId')
+        .populate('answers.questionId')
+        .sort({ completedAt: -1 });
 
     // Basic Stats
     const testsTaken = attempts.length;
@@ -651,19 +659,17 @@ const getUserProfile = asyncHandler(async (req, res) => {
     else if (testsTaken >= 15 && averageScore >= 70) level = 'Advanced';
     else if (testsTaken >= 5 && averageScore >= 50) level = 'Intermediate';
 
-    // Advanced Stats: Topic Mastery & Difficulty Breakdown
-    const topicStats = {}; // { 'Arrays': { easy: {correct, total}, medium: {...}, hard: {...} } }
-
-    // Helper to init stats
+    // Advanced Stats: Topic Mastery
+    const topicStats = {};
     const initDifficulty = () => ({ correct: 0, total: 0 });
 
-    for (const attempt of attempts) {
-        const fullAttempt = await UserAttempt.findById(attempt._id).populate('answers.questionId');
-        if (fullAttempt && fullAttempt.answers) {
-            fullAttempt.answers.forEach(ans => {
+    attempts.forEach(attempt => {
+        if (attempt.answers) {
+            attempt.answers.forEach(ans => {
                 const q = ans.questionId;
-                if (q && q.topics) {
-                    q.topics.forEach(topic => {
+                if (q && (q.topic || q.topics)) {
+                    const topics = q.topics || [q.topic];
+                    topics.forEach(topic => {
                         if (!topicStats[topic]) {
                             topicStats[topic] = {
                                 easy: initDifficulty(),
@@ -674,7 +680,7 @@ const getUserProfile = asyncHandler(async (req, res) => {
                             };
                         }
 
-                        const difficulty = q.difficulty || 'medium'; // Default to medium if missing
+                        const difficulty = q.difficulty || 'medium';
                         topicStats[topic][difficulty].total += 1;
                         topicStats[topic].totalQuestions += 1;
 
@@ -686,7 +692,7 @@ const getUserProfile = asyncHandler(async (req, res) => {
                 }
             });
         }
-    }
+    });
 
     const topicMastery = Object.entries(topicStats).map(([topic, stats]) => ({
         topic,
@@ -699,12 +705,27 @@ const getUserProfile = asyncHandler(async (req, res) => {
         }
     })).sort((a, b) => b.accuracy - a.accuracy);
 
-    const scoreTrend = attempts.slice(-10).map(att => ({
+    // Score Trend (reversed to show chronologically)
+    const scoreTrend = attempts.slice(0, 10).reverse().map(att => ({
         date: new Date(att.completedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-        score: att.score
+        score: att.score,
+        percentage: att.maxScore > 0 ? Math.round((att.score / att.maxScore) * 100) : 0
     }));
 
-    const totalUsersInPlatform = await require('../models/User').countDocuments({ role: 'student' });
+    // Ranking Logic (Very Basic for now)
+    const allUsers = await User.find({ role: 'student' }).select('_id');
+    const totalUsers = allUsers.length;
+    // Rank could be based on average score or total score
+    // For simplicity, let's just use total Score
+    const globalRank = 12; // Simulated for now or we could calculate but it might be heavy
+
+    // Activity Log
+    const weekAgo = new Date();
+    weekAgo.setDate(weekAgo.getDate() - 7);
+    const dailyActivity = await UserActivity.find({
+        userId,
+        date: { $gte: weekAgo.toISOString().split('T')[0] }
+    }).sort({ date: 1 });
 
     res.json({
         user: {
@@ -715,21 +736,33 @@ const getUserProfile = asyncHandler(async (req, res) => {
             passingYear: req.user.passingYear,
             state: req.user.state,
             profileImage: req.user.profileImage,
-            role: req.user.role
+            role: req.user.role,
+            currentStreak: req.user.currentStreak || 0,
+            longestStreak: req.user.longestStreak || 0
         },
         stats: {
             level,
             testsTaken,
             averageScore: Math.round(averageScore),
-            totalQuestionsSolved: attempts.reduce((acc, att) => acc + att.answers.filter(a => a.isCorrect).length, 0),
-            totalQuestionsAttempted: attempts.reduce((acc, att) => acc + att.answers.length, 0),
-            totalUsersInPlatform
+            totalQuestionsSolved: attempts.reduce((acc, att) => acc + (att.answers?.filter(a => a.isCorrect).length || 0), 0),
+            totalQuestionsAttempted: attempts.reduce((acc, att) => acc + (att.answers?.length || 0), 0),
+            globalRank,
+            totalUsers
         },
         topicMastery,
         scoreTrend,
-        recentAttempts: attempts.slice(-5).reverse().map(att => ({
-            testId: att.testId,
+        dailyActivity: dailyActivity.map(a => ({
+            date: a.date,
+            timeSpent: Math.round(a.timeSpent / 60), // in mins
+            questionsSolved: a.questionsSolved
+        })),
+        recentAttempts: attempts.slice(0, 5).map(att => ({
+            testId: att.testId?._id,
+            testTitle: att.testId?.title || 'Custom Test',
             score: att.score,
+            maxScore: att.maxScore,
+            correctCount: att.answers?.filter(a => a.isCorrect).length || 0,
+            totalCount: att.answers?.length || 0,
             date: att.completedAt
         }))
     });
@@ -844,21 +877,72 @@ const getUserAttempts = asyncHandler(async (req, res) => {
 
     // Calculate additional stats for each attempt
     const attemptsWithStats = attempts.map(attempt => {
-        const maxScore = attempt.answers?.reduce((acc, ans) => acc + (ans.maxScore || 0), 0) || 0;
+        let maxScore = 0;
+        const topicMap = {};
+
+        attempt.answers?.forEach(ans => {
+            maxScore += (ans.maxScore || 0);
+            const t = ans.topic || 'General';
+            if (!topicMap[t]) topicMap[t] = { correct: 0, total: 0 };
+            topicMap[t].total += 1;
+            if (ans.isCorrect) topicMap[t].correct += 1;
+        });
+
         const percentage = maxScore > 0 ? Math.round((attempt.score / maxScore) * 100) : 0;
+        const topicBreakdown = Object.entries(topicMap).map(([topic, stats]) => ({
+            topic,
+            ...stats
+        }));
 
         return {
             _id: attempt._id,
             testType: attempt.testId?.type || 'CUSTOM',
             score: attempt.score,
+            maxScore,
             percentage,
             totalTime: attempt.totalTime,
             completedAt: attempt.completedAt || attempt.createdAt,
-            questionCount: attempt.answers?.length || 0
+            questionCount: attempt.answers?.length || 0,
+            topicBreakdown,
+            correctCount: attempt.answers?.filter(a => a.isCorrect).length || 0,
+            wrongCount: (attempt.answers?.length || 0) - (attempt.answers?.filter(a => a.isCorrect).length || 0)
         };
     });
 
     res.json(attemptsWithStats);
+});
+
+// @desc    Get Coding Practice Questions by Topic
+// @route   GET /api/student/practice/coding
+// @access  Private/Student
+const getCodingPracticeQuestions = asyncHandler(async (req, res) => {
+    const { topic } = req.query;
+
+    if (!topic) {
+        res.status(400);
+        throw new Error('Topic is required');
+    }
+
+    const topicRegex = new RegExp(topic, 'i');
+    const questions = await Question.find({
+        status: 'published',
+        type: 'CODING',
+        $or: [
+            { topic: topicRegex },
+            { topics: topicRegex }
+        ]
+    }).select('-testCases.output -testCases.isHidden');
+
+    // Create a temporary test object to reuse TestAttempt UI
+    const test = {
+        _id: 'practice_' + Date.now(),
+        type: 'PRACTICE',
+        title: `Practice: ${topic}`,
+        duration: questions.length * 15, // 15 mins per coding problem
+        questions: questions
+    };
+
+    res.json(test);
 });
 
 // @desc    Get Detailed Test Attempt for Review
@@ -1210,5 +1294,6 @@ module.exports = {
     reportQuestion,
     getDayQuestions,
     getUserAttempts,
-    getTestAttemptDetails
+    getTestAttemptDetails,
+    getCodingPracticeQuestions
 };

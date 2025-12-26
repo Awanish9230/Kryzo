@@ -24,6 +24,15 @@ const userAttemptSchema = new mongoose.Schema({
         },
         timeTaken: {
             type: Number // in seconds
+        },
+        topic: {
+            type: String
+        },
+        type: {
+            type: String
+        },
+        difficulty: {
+            type: String
         }
     }],
     score: {

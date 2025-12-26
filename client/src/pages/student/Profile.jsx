@@ -33,7 +33,10 @@ import {
     XAxis,
     YAxis,
     CartesianGrid,
-    Tooltip
+    Tooltip,
+    BarChart,
+    Bar,
+    Cell
 } from 'recharts';
 
 const Profile = () => {
@@ -255,12 +258,79 @@ const Profile = () => {
                                             Class of {profile.user.passingYear || '2025'}
                                         </div>
                                         <div className="px-4 py-2 bg-white/5 border border-white/10 rounded-xl flex items-center gap-2 text-sm text-zinc-300">
+                                            <Zap size={16} className="text-yellow-500" />
+                                            {profile.user.currentStreak || 0} Day Streak
+                                        </div>
+                                        <div className="px-4 py-2 bg-white/5 border border-white/10 rounded-xl flex items-center gap-2 text-sm text-zinc-300">
                                             <MapPin size={16} className="text-red-500" />
                                             {profile.user.state || 'India'}
                                         </div>
                                     </div>
                                 </>
                             )}
+                        </div>
+                    </div>
+                </div>
+
+                {/* Performance Overview Grid */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
+                    {/* Weekly Activity Chart */}
+                    <div className="lg:col-span-2 bg-zinc-900/50 border border-white/5 rounded-[2.5rem] p-8 backdrop-blur-sm">
+                        <div className="flex items-center justify-between mb-8">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2 bg-orange-500/10 rounded-xl text-orange-500">
+                                    <Activity size={18} />
+                                </div>
+                                <h3 className="font-bold text-lg">Weekly Activity</h3>
+                            </div>
+                            <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Time Spent (Mins)</span>
+                        </div>
+                        <div className="h-48 w-full">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <BarChart data={profile.dailyActivity || []}>
+                                    <CartesianGrid strokeDasharray="3 3" stroke="#ffffff05" vertical={false} />
+                                    <XAxis
+                                        dataKey="date"
+                                        stroke="#52525b"
+                                        fontSize={10}
+                                        tickFormatter={(val) => new Date(val).toLocaleDateString('en-US', { weekday: 'short' })}
+                                        axisLine={false}
+                                        tickLine={false}
+                                    />
+                                    <YAxis hide />
+                                    <Tooltip
+                                        cursor={{ fill: 'rgba(255,255,255,0.03)' }}
+                                        contentStyle={{ backgroundColor: '#000', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', fontSize: '10px' }}
+                                    />
+                                    <Bar dataKey="timeSpent" radius={[4, 4, 0, 0]}>
+                                        {profile.dailyActivity?.map((entry, index) => (
+                                            <Cell key={`cell-${index}`} fill={entry.timeSpent > 30 ? '#3b82f6' : '#52525b'} />
+                                        ))}
+                                    </Bar>
+                                </BarChart>
+                            </ResponsiveContainer>
+                        </div>
+                    </div>
+
+                    {/* Quick Stats Column */}
+                    <div className="space-y-6">
+                        <div className="bg-zinc-900/50 border border-white/5 rounded-[2rem] p-6 backdrop-blur-sm flex items-center justify-between">
+                            <div>
+                                <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-1">Global Rank</p>
+                                <p className="text-3xl font-black text-white">#{profile.stats.globalRank || '---'}</p>
+                            </div>
+                            <div className="p-4 bg-yellow-500/10 rounded-2xl text-yellow-500">
+                                <Trophy size={24} />
+                            </div>
+                        </div>
+                        <div className="bg-zinc-900/50 border border-white/5 rounded-[2rem] p-6 backdrop-blur-sm flex items-center justify-between">
+                            <div>
+                                <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-1">Avg. Accuracy</p>
+                                <p className="text-3xl font-black text-white">{Math.round((profile.stats.totalQuestionsSolved / profile.stats.totalQuestionsAttempted) * 100) || 0}%</p>
+                            </div>
+                            <div className="p-4 bg-green-500/10 rounded-2xl text-green-500">
+                                <TrendingUp size={24} />
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -280,40 +350,38 @@ const Profile = () => {
                     <motion.div
                         initial={{ opacity: 0, scale: 0.95 }}
                         animate={{ opacity: 1, scale: 1 }}
-                        className="md:col-span-2 bg-zinc-900/50 border border-white/5 rounded-[2rem] p-8 backdrop-blur-sm relative overflow-hidden"
+                        className="md:col-span-2 bg-zinc-900/50 border border-white/5 rounded-[2.2rem] p-8 backdrop-blur-sm relative overflow-hidden group hover:border-white/10 transition-all"
                     >
-                        <div className={`absolute inset-0 bg-gradient-to-br ${levelColors[level]} opacity-10`}></div>
-                        <div className="relative z-10">
-                            <div className="flex items-center gap-4 mb-4">
-                                <div className={`p-4 bg-gradient-to-br ${levelColors[level]} rounded-2xl text-white`}>
-                                    {levelIcons[level]}
-                                </div>
-                                <div>
-                                    <p className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-1">Current Level</p>
-                                    <h2 className="text-3xl font-bold tracking-tight">{level}</h2>
-                                </div>
+                        <div className={`absolute inset-0 bg-gradient-to-br ${levelColors[level]} opacity-5 group-hover:opacity-10 transition-all`}></div>
+                        <div className="relative z-10 flex flex-col md:flex-row items-center gap-8">
+                            <div className={`p-6 bg-gradient-to-br ${levelColors[level]} rounded-3xl text-white shadow-2xl`}>
+                                {levelIcons[level]}
                             </div>
-                            <p className="text-zinc-400 text-sm">
-                                {level === 'Beginner' && 'Keep practicing to reach Intermediate!'}
-                                {level === 'Intermediate' && 'Great progress! Aim for Advanced level.'}
-                                {level === 'Advanced' && 'Excellent work! Expert level is within reach.'}
-                                {level === 'Expert' && 'Outstanding! You\'re at the top of your game.'}
-                            </p>
+                            <div className="text-center md:text-left">
+                                <p className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] mb-2">Rank Standing</p>
+                                <h2 className="text-4xl font-black tracking-tighter mb-2">{level}</h2>
+                                <p className="text-zinc-400 text-xs font-medium max-w-xs">
+                                    {level === 'Beginner' && 'The journey of a thousand code blocks begins with a single line.'}
+                                    {level === 'Intermediate' && 'You\'ve mastered the basics. The complex logic awaits your command.'}
+                                    {level === 'Advanced' && 'Architecture and performance are now your second language.'}
+                                    {level === 'Expert' && 'A grandmaster of the digital realm. Nothing is impossible.'}
+                                </p>
+                            </div>
                         </div>
                     </motion.div>
 
                     {/* Tests Taken */}
                     <StatCard
-                        icon={<CheckCircle2 className="text-green-500" />}
-                        label="Tests Taken"
-                        value={profile.stats?.testsTaken || profile.testsTaken}
+                        icon={<CheckCircle2 className="text-green-500" size={20} />}
+                        label="Certifications"
+                        value={profile.stats?.testsTaken || 0}
                         delay={0.1}
                     />
 
-                    {/* Questions Solved - NEW */}
+                    {/* Questions Solved */}
                     <StatCard
-                        icon={<Target className="text-purple-500" />}
-                        label="Questions Solved"
+                        icon={<Target className="text-purple-500" size={20} />}
+                        label="Problems Slain"
                         value={profile.stats?.totalQuestionsSolved || 0}
                         delay={0.15}
                     />
@@ -365,6 +433,54 @@ const Profile = () => {
                     </div>
                 </motion.div>
 
+                {/* Learning Insights */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+                    <div className="bg-green-500/5 border border-green-500/10 rounded-[2rem] p-6 backdrop-blur-sm">
+                        <div className="flex items-center gap-3 mb-4">
+                            <div className="p-2 bg-green-500/10 rounded-xl text-green-500">
+                                <TrendingUp size={16} />
+                            </div>
+                            <h4 className="text-sm font-black text-white uppercase tracking-widest">Top Strength</h4>
+                        </div>
+                        <p className="text-xl font-black text-white mb-1">
+                            {profile.topicMastery[0]?.topic || 'N/A'}
+                        </p>
+                        <p className="text-xs font-medium text-zinc-500">
+                            Mastery: {profile.topicMastery[0]?.accuracy || 0}%
+                        </p>
+                    </div>
+
+                    <div className="bg-orange-500/5 border border-orange-500/10 rounded-[2rem] p-6 backdrop-blur-sm">
+                        <div className="flex items-center gap-3 mb-4">
+                            <div className="p-2 bg-orange-500/10 rounded-xl text-orange-500">
+                                <Target size={16} />
+                            </div>
+                            <h4 className="text-sm font-black text-white uppercase tracking-widest">Focus Area</h4>
+                        </div>
+                        <p className="text-xl font-black text-white mb-1">
+                            {profile.topicMastery[profile.topicMastery.length - 1]?.topic || 'N/A'}
+                        </p>
+                        <p className="text-xs font-medium text-zinc-500">
+                            Current Accuracy: {profile.topicMastery[profile.topicMastery.length - 1]?.accuracy || 0}%
+                        </p>
+                    </div>
+
+                    <div className="bg-blue-500/5 border border-blue-500/10 rounded-[2rem] p-6 backdrop-blur-sm">
+                        <div className="flex items-center gap-3 mb-4">
+                            <div className="p-2 bg-blue-500/10 rounded-xl text-blue-500">
+                                <Zap size={16} />
+                            </div>
+                            <h4 className="text-sm font-black text-white uppercase tracking-widest">Growth Trend</h4>
+                        </div>
+                        <p className="text-xl font-black text-white mb-1">
+                            {profile.scoreTrend[profile.scoreTrend.length - 1]?.score > (profile.stats.averageScore || 0) ? 'Trending Up' : 'Steady Pace'}
+                        </p>
+                        <p className="text-xs font-medium text-zinc-500">
+                            Based on last 10 attempts
+                        </p>
+                    </div>
+                </div>
+
                 {/* Topic Mastery */}
                 <div className="mb-12">
                     <h2 className="text-2xl font-bold tracking-tight mb-6">Topic Mastery</h2>
@@ -376,38 +492,38 @@ const Profile = () => {
                                     initial={{ opacity: 0, y: 10 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     transition={{ delay: 0.4 + idx * 0.05 }}
-                                    className="bg-zinc-900/50 border border-white/5 rounded-2xl p-6 backdrop-blur-sm hover:border-white/10 transition-all"
+                                    className="bg-zinc-900/50 border border-white/5 rounded-[2rem] p-6 backdrop-blur-sm group hover:border-white/10 transition-all"
                                 >
                                     <div className="flex items-center justify-between mb-4">
-                                        <h3 className="font-bold text-white text-lg">{topic.topic}</h3>
-                                        <span className={`text-xl font-bold ${topic.accuracy >= 80 ? 'text-green-500' : topic.accuracy >= 60 ? 'text-yellow-500' : 'text-red-500'
-                                            }`}>
+                                        <div className="flex items-center gap-3">
+                                            <div className={`w-2 h-2 rounded-full ${topic.accuracy >= 80 ? 'bg-green-500' : topic.accuracy >= 60 ? 'bg-yellow-500' : 'bg-red-500'}`} />
+                                            <h3 className="font-bold text-white uppercase text-[11px] tracking-widest">{topic.topic}</h3>
+                                        </div>
+                                        <span className={`text-xl font-black ${topic.accuracy >= 80 ? 'text-green-500' : topic.accuracy >= 60 ? 'text-yellow-500' : 'text-red-500'}`}>
                                             {topic.accuracy}%
                                         </span>
                                     </div>
-                                    <div className="w-full bg-zinc-800 rounded-full h-2 mb-4">
-                                        <div
-                                            className={`h-2 rounded-full transition-all ${topic.accuracy >= 80 ? 'bg-green-500' : topic.accuracy >= 60 ? 'bg-yellow-500' : 'bg-red-500'
-                                                }`}
-                                            style={{ width: `${topic.accuracy}%` }}
-                                        ></div>
+                                    <div className="w-full bg-white/5 rounded-full h-1.5 mb-6 overflow-hidden">
+                                        <motion.div
+                                            initial={{ width: 0 }}
+                                            animate={{ width: `${topic.accuracy}%` }}
+                                            className={`h-full rounded-full transition-all ${topic.accuracy >= 80 ? 'bg-green-500' : topic.accuracy >= 60 ? 'bg-yellow-500' : 'bg-red-500'}`}
+                                        />
                                     </div>
 
                                     {/* Breakdown */}
                                     {topic.breakdown && (
-                                        <div className="grid grid-cols-3 gap-2 mt-4 pt-4 border-t border-white/5">
-                                            <div className="text-center">
-                                                <p className="text-[10px] uppercase text-zinc-500 font-bold mb-1">Easy</p>
-                                                <p className={`font-bold ${topic.breakdown.easy.accuracy >= 80 ? 'text-green-500' : 'text-zinc-400'}`}>{topic.breakdown.easy.accuracy}%</p>
-                                            </div>
-                                            <div className="text-center border-l border-r border-white/5">
-                                                <p className="text-[10px] uppercase text-zinc-500 font-bold mb-1">Medium</p>
-                                                <p className={`font-bold ${topic.breakdown.medium.accuracy >= 80 ? 'text-yellow-500' : 'text-zinc-400'}`}>{topic.breakdown.medium.accuracy}%</p>
-                                            </div>
-                                            <div className="text-center">
-                                                <p className="text-[10px] uppercase text-zinc-500 font-bold mb-1">Hard</p>
-                                                <p className={`font-bold ${topic.breakdown.hard.accuracy >= 80 ? 'text-red-500' : 'text-zinc-400'}`}>{topic.breakdown.hard.accuracy}%</p>
-                                            </div>
+                                        <div className="grid grid-cols-3 gap-4">
+                                            {['easy', 'medium', 'hard'].map((diff) => (
+                                                <div key={diff} className="text-center">
+                                                    <p className="text-[9px] uppercase text-zinc-500 font-black tracking-tighter mb-1">{diff}</p>
+                                                    <div className="flex items-center justify-center gap-1">
+                                                        <span className={`text-xs font-black ${topic.breakdown[diff].accuracy >= 80 ? 'text-green-500' : topic.breakdown[diff].accuracy >= 50 ? 'text-yellow-500' : 'text-zinc-500'}`}>
+                                                            {topic.breakdown[diff].accuracy}%
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            ))}
                                         </div>
                                     )}
                                 </motion.div>
@@ -420,47 +536,68 @@ const Profile = () => {
                     )}
                 </div>
 
-                {/* Recent Activity */}
-                {
-                    profile.recentAttempts && profile.recentAttempts.length > 0 && (
-                        <div>
-                            <h2 className="text-2xl font-bold tracking-tight mb-6">Recent Activity</h2>
-                            <div className="bg-zinc-900/50 border border-white/5 rounded-[2rem] overflow-hidden backdrop-blur-sm">
-                                <div className="divide-y divide-white/5">
-                                    {profile.recentAttempts.map((attempt, idx) => (
-                                        <motion.div
-                                            key={idx}
-                                            initial={{ opacity: 0, x: -10 }}
-                                            animate={{ opacity: 1, x: 0 }}
-                                            transition={{ delay: 0.5 + idx * 0.1 }}
-                                            className="p-6 hover:bg-white/[0.02] transition-colors flex items-center justify-between"
-                                        >
-                                            <div className="flex items-center gap-4">
-                                                <div className="p-3 bg-white/5 rounded-xl">
-                                                    <Clock size={20} className="text-zinc-500" />
-                                                </div>
-                                                <div>
-                                                    <p className="font-bold text-white">Test Completed</p>
-                                                    <p className="text-xs text-zinc-600">
-                                                        {new Date(attempt.completedAt).toLocaleDateString('en-US', {
-                                                            month: 'short',
-                                                            day: 'numeric',
-                                                            year: 'numeric'
-                                                        })}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                            <div className="text-right">
-                                                <p className="text-2xl font-bold">{attempt.score}</p>
-                                                <p className="text-xs text-zinc-600">Score</p>
-                                            </div>
-                                        </motion.div>
-                                    ))}
+                {/* Recent Activity Overhaul */}
+                {profile.recentAttempts && profile.recentAttempts.length > 0 && (
+                    <div className="mb-20">
+                        <div className="flex items-center justify-between mb-8">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2 bg-blue-500/10 rounded-xl text-blue-500">
+                                    <Clock size={18} />
                                 </div>
+                                <h2 className="text-2xl font-black tracking-tighter">Recent Transmissions</h2>
                             </div>
                         </div>
-                    )
-                }
+                        <div className="grid grid-cols-1 gap-4">
+                            {profile.recentAttempts.map((attempt, idx) => (
+                                <motion.div
+                                    key={idx}
+                                    initial={{ opacity: 0, x: -20 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    transition={{ delay: 0.5 + idx * 0.1 }}
+                                    className="bg-zinc-900/40 border border-white/5 rounded-[2rem] p-6 hover:bg-zinc-900/60 hover:border-white/10 transition-all flex flex-col md:flex-row items-center gap-6"
+                                >
+                                    <div className="flex items-center gap-4 flex-1">
+                                        <div className={`w-14 h-14 rounded-2xl flex items-center justify-center font-black text-xl bg-gradient-to-br ${attempt.score / (attempt.maxScore || 1) >= 0.8 ? 'from-green-500/20 to-green-600/20 text-green-500' : 'from-blue-500/20 to-blue-600/20 text-blue-500'}`}>
+                                            {Math.round((attempt.score / (attempt.maxScore || 1)) * 100)}%
+                                        </div>
+                                        <div>
+                                            <h4 className="font-bold text-lg text-white mb-1">{attempt.testTitle}</h4>
+                                            <div className="flex items-center gap-3 text-xs font-medium text-zinc-500">
+                                                <span>{new Date(attempt.date).toLocaleDateString()}</span>
+                                                <span className="w-1 h-1 bg-zinc-700 rounded-full"></span>
+                                                <span>{attempt.totalCount} Questions</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex gap-8 px-8 border-x border-white/5">
+                                        <div className="text-center">
+                                            <p className="text-[10px] font-black text-zinc-600 uppercase tracking-widest mb-1">Correct</p>
+                                            <p className="font-black text-green-500">{attempt.correctCount}</p>
+                                        </div>
+                                        <div className="text-center">
+                                            <p className="text-[10px] font-black text-zinc-600 uppercase tracking-widest mb-1">Total</p>
+                                            <p className="font-black text-white">{attempt.totalCount}</p>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-center gap-4 pr-2">
+                                        <div className="text-right">
+                                            <p className="text-2xl font-black text-white">{attempt.score}</p>
+                                            <p className="text-[8px] font-black text-zinc-600 uppercase tracking-widest">Points earned</p>
+                                        </div>
+                                        <button
+                                            onClick={() => navigate(`/student/attempt/${attempt.testId}`)}
+                                            className="p-4 bg-white/5 text-white rounded-2xl hover:bg-white hover:text-black transition-all"
+                                        >
+                                            <TrendingUp size={18} />
+                                        </button>
+                                    </div>
+                                </motion.div>
+                            ))}
+                        </div>
+                    </div>
+                )}
             </div >
         </div >
     );
