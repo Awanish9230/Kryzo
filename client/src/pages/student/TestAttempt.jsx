@@ -14,7 +14,9 @@ import {
     CheckCircle,
     Info,
     AlertTriangle,
-    Flag as FlagIcon
+    Flag as FlagIcon,
+    AlertCircle,
+    X
 } from 'lucide-react';
 import Editor from '@monaco-editor/react';
 
