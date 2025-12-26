@@ -10,7 +10,9 @@ const {
     getTopics,
     updateProfile,
     reportQuestion,
-    getDayQuestions
+    getDayQuestions,
+    getUserAttempts,
+    getTestAttemptDetails
 } = require('../controllers/studentController');
 const { protect } = require('../middleware/authMiddleware');
 
@@ -24,6 +26,8 @@ router.get('/test/:id', getTestById);
 router.post('/test/submit', submitTest);
 router.get('/plan', getImprovementPlan);
 router.get('/plan/day/:dayNumber/questions', getDayQuestions);
+router.get('/attempts', getUserAttempts);
+router.get('/attempt/:attemptId', getTestAttemptDetails);
 router.post('/question/report', reportQuestion);
 router.get('/documentation/:id', require('../controllers/studentController').getDocumentationById);
 router.post('/activity/update', require('../controllers/studentController').updateActivityStats);

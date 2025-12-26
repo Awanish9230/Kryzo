@@ -62,6 +62,21 @@ const questionSchema = new mongoose.Schema({
         output: { type: String },
         isHidden: { type: Boolean, default: false }
     }],
+    // Explanation and Code Snippet Fields (for all question types)
+    explanation: {
+        type: String,
+        required: false
+    },
+    codeSnippet: {
+        type: String,
+        required: false
+    },
+    codeLanguage: {
+        type: String,
+        enum: ['javascript', 'python', 'java', 'cpp', 'c', 'html', 'css', 'sql', 'typescript', 'go', 'rust'],
+        default: 'javascript',
+        required: false
+    },
     // Development Specific Fields
     projectRequirements: { type: String },
     evaluationCriteria: [{ type: String }],

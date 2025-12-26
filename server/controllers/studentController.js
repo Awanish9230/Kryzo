@@ -833,6 +833,137 @@ const updateActivityStats = asyncHandler(async (req, res) => {
     res.json(activity);
 });
 
+// @desc    Get All Test Attempts for User
+// @route   GET /api/student/attempts
+// @access  Private/Student
+const getUserAttempts = asyncHandler(async (req, res) => {
+    const attempts = await UserAttempt.find({ userId: req.user.id })
+        .sort({ createdAt: -1 })
+        .populate('testId', 'type duration')
+        .select('score totalTime completedAt testId createdAt');
+
+    // Calculate additional stats for each attempt
+    const attemptsWithStats = attempts.map(attempt => {
+        const maxScore = attempt.answers?.reduce((acc, ans) => acc + (ans.maxScore || 0), 0) || 0;
+        const percentage = maxScore > 0 ? Math.round((attempt.score / maxScore) * 100) : 0;
+
+        return {
+            _id: attempt._id,
+            testType: attempt.testId?.type || 'CUSTOM',
+            score: attempt.score,
+            percentage,
+            totalTime: attempt.totalTime,
+            completedAt: attempt.completedAt || attempt.createdAt,
+            questionCount: attempt.answers?.length || 0
+        };
+    });
+
+    res.json(attemptsWithStats);
+});
+
+// @desc    Get Detailed Test Attempt for Review
+// @route   GET /api/student/attempt/:attemptId
+// @access  Private/Student
+const getTestAttemptDetails = asyncHandler(async (req, res) => {
+    const attempt = await UserAttempt.findById(req.params.attemptId)
+        .populate({
+            path: 'answers.questionId',
+            select: 'title description type difficulty options explanation codeSnippet codeLanguage testCases inputFormat outputFormat constraints topic topics'
+        })
+        .populate('testId', 'type duration');
+
+    if (!attempt) {
+        res.status(404);
+        throw new Error('Test attempt not found');
+    }
+
+    // Verify this attempt belongs to the requesting user
+    if (attempt.userId.toString() !== req.user.id) {
+        res.status(403);
+        throw new Error('Not authorized to view this attempt');
+    }
+
+    // Build detailed answers with correct answers and explanations
+    const detailedAnswers = attempt.answers.map(ans => {
+        const question = ans.questionId;
+        if (!question) {
+            return {
+                ...ans.toObject(),
+                questionNotFound: true
+            };
+        }
+
+        let correctAnswer = null;
+        let userAnswerText = null;
+
+        if (question.type === 'MCQ') {
+            // Find correct option
+            const correctIdx = question.options.findIndex(opt => opt.isCorrect);
+            correctAnswer = {
+                index: correctIdx,
+                text: question.options[correctIdx]?.text || 'N/A'
+            };
+
+            // Get user's answer text
+            if (ans.selectedOption !== undefined && ans.selectedOption !== null) {
+                userAnswerText = question.options[ans.selectedOption]?.text || 'Invalid option';
+            }
+        } else if (question.type === 'CODING') {
+            // For coding, we don't show a "correct answer" but show their code
+            userAnswerText = ans.userAnswer || ans.code || 'No code submitted';
+        }
+
+        return {
+            questionId: question._id,
+            title: question.title,
+            description: question.description,
+            type: question.type,
+            difficulty: question.difficulty,
+            topic: question.topic || (question.topics && question.topics[0]) || 'General',
+            options: question.options,
+            codeSnippet: question.codeSnippet,
+            codeLanguage: question.codeLanguage,
+            inputFormat: question.inputFormat,
+            outputFormat: question.outputFormat,
+            constraints: question.constraints,
+            userAnswer: userAnswerText,
+            userCode: ans.code,
+            selectedOption: ans.selectedOption,
+            correctAnswer,
+            isCorrect: ans.isCorrect,
+            score: ans.score,
+            maxScore: ans.maxScore,
+            timeTaken: ans.timeTaken,
+            explanation: question.explanation,
+            showExplanation: !ans.isCorrect && question.explanation, // Only show for wrong answers
+            executionResults: ans.executionResults
+        };
+    });
+
+    // Calculate overall stats
+    const totalQuestions = detailedAnswers.length;
+    const correctCount = detailedAnswers.filter(a => a.isCorrect).length;
+    const wrongCount = totalQuestions - correctCount;
+    const maxScore = attempt.answers.reduce((acc, ans) => acc + (ans.maxScore || 0), 0);
+    const percentage = maxScore > 0 ? Math.round((attempt.score / maxScore) * 100) : 0;
+
+    res.json({
+        attemptId: attempt._id,
+        testType: attempt.testId?.type || 'CUSTOM',
+        completedAt: attempt.completedAt || attempt.createdAt,
+        totalTime: attempt.totalTime,
+        stats: {
+            score: attempt.score,
+            maxScore,
+            percentage,
+            totalQuestions,
+            correctCount,
+            wrongCount
+        },
+        questions: detailedAnswers
+    });
+});
+
 // @desc    Get Activity Log
 // @route   GET /api/student/activity/log
 // @access  Private/Student
@@ -1077,5 +1208,7 @@ module.exports = {
     updateActivityStats,
     getActivityLog,
     reportQuestion,
-    getDayQuestions
+    getDayQuestions,
+    getUserAttempts,
+    getTestAttemptDetails
 };
