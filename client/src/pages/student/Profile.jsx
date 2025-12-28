@@ -587,7 +587,7 @@ const Profile = () => {
                                             <p className="text-[8px] font-black text-zinc-600 uppercase tracking-widest">Points earned</p>
                                         </div>
                                         <button
-                                            onClick={() => navigate(`/student/attempt/${attempt.testId}`)}
+                                            onClick={() => navigate(`/student/review/${attempt._id}`)}
                                             className="p-4 bg-white/5 text-white rounded-2xl hover:bg-white hover:text-black transition-all"
                                         >
                                             <TrendingUp size={18} />
