@@ -284,70 +284,56 @@ const getImprovementPlan = asyncHandler(async (req, res) => {
     }
 
     // 1. Identify Unattempted Questions
-    const attemptedQuestionIds = new Set(lastAttempt.answers.map(ans => ans.questionId?._id?.toString()));
-    const unattemptedQuestions = lastAttempt.testId?.questions.filter(q => !attemptedQuestionIds.has(q._id.toString())) || [];
+    // Generate Plan (which now uses aggregated stats)
+    const planData = await generatePlanForUser(req.user.id);
+    const dailyTasks = planData ? planData.plan : [];
+    const focusTopics = planData ? planData.focusTopics : ["General Aptitude", "Programming Basics"];
 
-    // 2. Analyze Performance with Weakness Score
-    const topicStats = {}; // { 'Arrays': { correct: 2, total: 3, unattempted: 1, weaknessScore: 0.5 } }
-    let totalCorrect = 0;
+    // Analyze Weak & Strong Areas based on the AGGREGATED stats from the plan generator (re-deriving or passing them would be better, but we can re-calc for display quickly or just trust the focus topics as weak)
+    // To be cleaner, we should probably have generatePlanForUser return the full stats. 
+    // For now, let's re-use the robust focus topics as "Weak" and find "Strong" ones.
 
-    // Process attempted answers
-    lastAttempt.answers.forEach(ans => {
-        const question = ans.questionId;
-        if (question) {
-            if (ans.isCorrect) totalCorrect++;
-
-            // Use 'topic' or first element of 'topics'
-            const t = question.topic || (question.topics && question.topics[0]);
-            if (t) {
-                if (!topicStats[t]) topicStats[t] = { correct: 0, total: 0, unattempted: 0, incorrect: 0 };
-                topicStats[t].total += 1;
-                if (ans.isCorrect) {
-                    topicStats[t].correct += 1;
-                } else {
-                    topicStats[t].incorrect += 1;
-                }
-            }
-        }
-    });
-
-    // Process unattempted questions (mark as weak areas)
-    unattemptedQuestions.forEach(q => {
-        const t = q.topic || (q.topics && q.topics[0]);
-        if (t) {
-            if (!topicStats[t]) topicStats[t] = { correct: 0, total: 0, unattempted: 0, incorrect: 0 };
-            topicStats[t].total += 1;
-            topicStats[t].unattempted += 1;
-        }
-    });
-
-    // Calculate weakness score for each topic
-    for (const [topic, stats] of Object.entries(topicStats)) {
-        // Weakness score = (incorrect + unattempted) / total
-        stats.weaknessScore = stats.total > 0 ? (stats.incorrect + stats.unattempted) / stats.total : 0;
-        stats.accuracy = stats.total > 0 ? (stats.correct / stats.total) * 100 : 0;
-    }
-
-    // 3. Select Top 2 Weakest Topics for Weekly Focus
-    const sortedByWeakness = Object.entries(topicStats)
-        .sort((a, b) => b[1].weaknessScore - a[1].weaknessScore);
-
-    // Focus on top 2 weakest topics (or 1 if only 1 exists)
-    const focusTopics = sortedByWeakness.slice(0, 2).map(([topic]) => topic);
-
-    // Fallback if no topics found
-    if (focusTopics.length === 0) {
-        focusTopics.push("General Aptitude", "Programming Basics");
-    }
-
-    // 4. Identify Weak & Strong Areas for display
-    const weakTopics = [];
+    const weakTopics = focusTopics; // The plan generator already picked the weakest ones.
     const strongTopics = [];
+    // We need to fetch the stats again if we want to show "Strong" ones accurately, or update generatePlanForUser to return them.
+    // Let's rely on the planData having what we need. 
+    // *Self-Correction*: I should update generatePlanForUser to return stats to avoid double-querying. 
+    // For this immediate step, let's just assume we want to show the top weak ones. 
+    // To get strong ones, let's grab the topicStats from the same logic.
+
+    // *Quick Refactor*: Let's pull the stats logic into generatePlanForUser so we don't duplicate. 
+    // Actually, let's just make sure we pass the 'analysis' object correctly.
+
+    // Let's trust the `planData` has `focusTopics`. We will populate `strongTopics` by checking the other end of the sorted list in `generatePlanForUser` if we could, 
+    // but without changing the helper signature too much, let's just do a quick fetch here for display to ensure it matches the "Real Time" requirement.
+
+    // Re-fetch for display stats (using same logic as helper)
+    const recentAttempts = await UserAttempt.find({ userId: req.user.id })
+        .sort({ createdAt: -1 })
+        .limit(20)
+        .populate({
+            path: 'answers.questionId',
+            select: 'topics topic difficulty type'
+        });
+
+    const topicStats = {};
+    recentAttempts.forEach(attempt => {
+        attempt.answers.forEach(ans => {
+            const question = ans.questionId;
+            if (question) {
+                const topics = question.topics && question.topics.length > 0 ? question.topics : [question.topic].filter(t => t);
+                topics.forEach(t => {
+                    if (!topicStats[t]) topicStats[t] = { correct: 0, total: 0 };
+                    topicStats[t].total += 1;
+                    if (ans.isCorrect) topicStats[t].correct += 1;
+                });
+            }
+        });
+    });
 
     for (const [topic, stats] of Object.entries(topicStats)) {
-        if (stats.unattempted > 0 || stats.accuracy < 60) {
-            weakTopics.push(topic);
-        } else if (stats.accuracy >= 80) {
+        stats.accuracy = stats.total > 0 ? stats.correct / stats.total : 0;
+        if (stats.accuracy >= 0.8 && stats.total >= 3) {
             strongTopics.push(topic);
         }
     }
@@ -382,123 +368,8 @@ const getImprovementPlan = asyncHandler(async (req, res) => {
         motivation = "Excellent performance! Keep challenging yourself with complex problems to stay on top.";
     }
 
-    // 6. Build 7-Day Plan with Automatic Question Assignment
-    const dailyTasks = [];
-    const today = new Date();
-
-    // Topic distribution: Days 1-3 focus on Topic 1, Days 4-6 on Topic 2, Day 7 review both
-    for (let i = 0; i < 7; i++) {
-        const dayDate = new Date(today);
-        dayDate.setDate(today.getDate() + i + 1);
-        const dayName = dayDate.toLocaleDateString('en-US', { weekday: 'long' });
-
-        // Determine topic for this day
-        let topic;
-        if (i < 3) {
-            topic = focusTopics[0]; // Days 1-3: First weak topic
-        } else if (i < 6) {
-            topic = focusTopics[1] || focusTopics[0]; // Days 4-6: Second weak topic (or first if only 1)
-        } else {
-            topic = focusTopics[0]; // Day 7: Review first topic
-        }
-
-        // Fetch documentation for this topic
-        const doc = await Documentation.findOne({
-            $or: [
-                { topic: new RegExp(`^${topic}$`, 'i') },
-                { title: new RegExp(topic, 'i') }
-            ]
-        });
-
-        // Fetch MCQ questions for this topic
-        const topicRegex = new RegExp(`^${topic.trim()}$`, 'i');
-        const mcqQuestions = await Question.aggregate([
-            {
-                $match: {
-                    status: 'published',
-                    type: 'MCQ',
-                    $or: [
-                        { topic: topicRegex },
-                        { topics: topicRegex }
-                    ]
-                }
-            },
-            { $sample: { size: 4 } } // Try to get 4 MCQs
-        ]);
-
-        // Fetch coding questions for this topic
-        const codingQuestions = await Question.aggregate([
-            {
-                $match: {
-                    status: 'published',
-                    type: 'CODING',
-                    $or: [
-                        { topic: topicRegex },
-                        { topics: topicRegex }
-                    ]
-                }
-            },
-            { $sample: { size: 1 } } // Get 1 coding question
-        ]);
-
-        // Build tasks with actual question counts
-        const tasks = [
-            {
-                type: 'READ',
-                description: `Study ${topic} documentation and core concepts.`,
-                resource: doc ? { title: doc.title, id: doc._id } : null
-            }
-        ];
-
-        // Add MCQ task if questions available
-        if (mcqQuestions.length > 0) {
-            tasks.push({
-                type: 'PRACTICE_MCQ',
-                description: `Solve ${mcqQuestions.length} MCQ question${mcqQuestions.length > 1 ? 's' : ''} on ${topic}.`,
-                target: `${mcqQuestions.length} MCQ${mcqQuestions.length > 1 ? 's' : ''}`,
-                questionIds: mcqQuestions.map(q => q._id),
-                availableCount: mcqQuestions.length
-            });
-        } else {
-            tasks.push({
-                type: 'PRACTICE_MCQ',
-                description: `No MCQ questions available for ${topic} yet.`,
-                target: "0 MCQs",
-                questionIds: [],
-                availableCount: 0
-            });
-        }
-
-        // Add coding task if questions available
-        if (codingQuestions.length > 0) {
-            tasks.push({
-                type: 'PRACTICE_CODING',
-                description: `Complete ${codingQuestions.length} coding challenge on ${topic}.`,
-                target: `${codingQuestions.length} Coding`,
-                questionIds: codingQuestions.map(q => q._id),
-                availableCount: codingQuestions.length
-            });
-        } else {
-            tasks.push({
-                type: 'PRACTICE_CODING',
-                description: `No coding questions available for ${topic} yet.`,
-                target: "0 Coding",
-                questionIds: [],
-                availableCount: 0
-            });
-        }
-
-        dailyTasks.push({
-            day: `Day ${i + 1}`,
-            dayNumber: i + 1,
-            date: dayDate.toISOString().split('T')[0],
-            dayName: dayName,
-            topic: topic,
-            tasks: tasks,
-            assignedQuestions: [...mcqQuestions.map(q => q._id), ...codingQuestions.map(q => q._id)],
-            link: `/student/test/daily/${i + 1}`
-        });
-    }
+    // Plan is already generated by helper
+    // const dailyTasks = ... (removed)
 
     res.json({
         attemptId: lastAttempt._id,
@@ -1178,50 +1049,74 @@ const generatePlanForUser = async (userId) => {
             }
         });
 
-    if (!lastAttempt) return null;
+    // Aggregated Analysis: Fetch last 20 attempts for stable stats
+    const recentAttempts = await UserAttempt.find({ userId })
+        .sort({ createdAt: -1 })
+        .limit(20)
+        .populate({
+            path: 'answers.questionId',
+            select: 'topics topic difficulty type'
+        });
 
-    // Check for "Perfect Score" -> Force HARD mode
-    let maxPossibleScore = lastAttempt.answers.reduce((acc, curr) => acc + (curr.maxScore || 0), 0);
-    const percentage = maxPossibleScore > 0 ? (lastAttempt.score / maxPossibleScore) * 100 : 0;
-    const isHardMode = percentage >= 100;
-
-    const attemptedQuestionIds = new Set(lastAttempt.answers.map(ans => ans.questionId?._id?.toString()));
-    const unattemptedQuestions = lastAttempt.testId?.questions.filter(q => !attemptedQuestionIds.has(q._id.toString())) || [];
+    if (recentAttempts.length === 0) return null;
 
     const topicStats = {};
-    lastAttempt.answers.forEach(ans => {
-        const question = ans.questionId;
-        if (question) {
-            const t = question.topic || (question.topics && question.topics[0]);
-            if (t) {
-                if (!topicStats[t]) topicStats[t] = { correct: 0, total: 0, unattempted: 0, incorrect: 0 };
-                topicStats[t].total += 1;
-                if (ans.isCorrect) {
-                    topicStats[t].correct += 1;
-                } else {
-                    topicStats[t].incorrect += 1;
+
+    // Helper to update stats
+    const updateTopicStats = (topic, isCorrect) => {
+        if (!topic) return;
+        if (!topicStats[topic]) {
+            topicStats[topic] = { correct: 0, total: 0, incorrect: 0 };
+        }
+        topicStats[topic].total += 1;
+        if (isCorrect) {
+            topicStats[topic].correct += 1;
+        } else {
+            topicStats[topic].incorrect += 1;
+        }
+    };
+
+    // Process all recent attempts
+    recentAttempts.forEach(attempt => {
+        attempt.answers.forEach(ans => {
+            const question = ans.questionId;
+            if (question) {
+                // Handle both single topic and topics array
+                if (question.topics && question.topics.length > 0) {
+                    question.topics.forEach(t => updateTopicStats(t, ans.isCorrect));
+                } else if (question.topic) {
+                    updateTopicStats(question.topic, ans.isCorrect);
                 }
             }
-        }
+        });
     });
 
-    unattemptedQuestions.forEach(q => {
-        const t = q.topic || (q.topics && q.topics[0]);
-        if (t) {
-            if (!topicStats[t]) topicStats[t] = { correct: 0, total: 0, unattempted: 0, incorrect: 0 };
-            topicStats[t].total += 1;
-            topicStats[t].unattempted += 1;
-        }
-    });
-
+    // Calculate Scores
     for (const [topic, stats] of Object.entries(topicStats)) {
-        stats.weaknessScore = stats.total > 0 ? (stats.incorrect + stats.unattempted) / stats.total : 0;
+        // Weakness score: weighted towards incorrect answers
+        // If accuracy < 60%, it's a candidate for weakness
+        const accuracy = stats.total > 0 ? stats.correct / stats.total : 0;
+        stats.accuracy = accuracy;
+        stats.weaknessScore = 1 - accuracy; // Higher is weaker
     }
 
     const sortedByWeakness = Object.entries(topicStats)
         .sort((a, b) => b[1].weaknessScore - a[1].weaknessScore);
 
-    const focusTopics = sortedByWeakness.slice(0, 2).map(([topic]) => topic);
+    // Filter for actual weak areas (accuracy < 70%)
+    const weakTopicsList = sortedByWeakness
+        .filter(([_, stats]) => stats.accuracy < 0.7)
+        .map(([topic]) => topic);
+
+    // If no specific weak topics found (all > 70%), pick the ones with lowest accuracy anyway
+    // If still empty (no data?), fallback.
+    let focusTopics = weakTopicsList.slice(0, 2);
+
+    if (focusTopics.length === 0) {
+        // If everything is great, maybe focus on "Advanced" topics or just the "Least Strong" ones
+        focusTopics = sortedByWeakness.slice(0, 2).map(([topic]) => topic);
+    }
+
     if (focusTopics.length === 0) {
         focusTopics.push("General Aptitude", "Programming Basics");
     }

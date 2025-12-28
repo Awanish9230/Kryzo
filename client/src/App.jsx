@@ -99,6 +99,7 @@ function App() {
               <Route path="/student/test/:testId" element={<PrivateRoute role="student"><TestAttempt /></PrivateRoute>} />
               <Route path="/student/test/result" element={<PrivateRoute role="student"><TestResult /></PrivateRoute>} />
               <Route path="/student/reviews" element={<PrivateRoute role="student"><TestReviewList /></PrivateRoute>} />
+              <Route path="/student/attempt/:attemptId" element={<PrivateRoute role="student"><TestReviewDetail /></PrivateRoute>} />
               <Route path="/student/review/:attemptId" element={<PrivateRoute role="student"><TestReviewDetail /></PrivateRoute>} />
               <Route path="/student/study/:id" element={<PrivateRoute role="student"><StudyDocumentation /></PrivateRoute>} />
 
