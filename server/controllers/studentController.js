@@ -1090,6 +1090,7 @@ const getDayQuestions = asyncHandler(async (req, res) => {
 
 // Helper function to generate plan (extracted logic)
 const generatePlanForUser = async (userId) => {
+    const isHardMode = false; // Default to false for now
     const lastAttempt = await UserAttempt.findOne({ userId })
         .sort({ createdAt: -1 })
         .populate({
