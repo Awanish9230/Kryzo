@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import api from '../../utils/api';
 import { motion } from 'framer-motion';
-import { CheckCircle, XCircle, Clock, Calendar, Award, Lightbulb, Code2, ArrowLeft, ChevronLeft, ChevronRight } from 'lucide-react';
+import { CheckCircle, XCircle, Clock, Calendar, Award, Lightbulb, Code2, ArrowLeft, ChevronLeft, ChevronRight, ChevronUp, ChevronDown } from 'lucide-react';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 
@@ -15,6 +15,12 @@ const TestReviewDetail = () => {
     const [generatingId, setGeneratingId] = useState(null);
 
     const [error, setError] = useState(null);
+    const [isExpanded, setIsExpanded] = useState(false);
+
+    // Reset expanded state when question changes
+    useEffect(() => {
+        setIsExpanded(false);
+    }, [currentQuestionIndex]);
 
     const handleGenerateExplanation = async (questionId) => {
         try {
@@ -26,10 +32,11 @@ const TestReviewDetail = () => {
                 ...prev,
                 questions: prev.questions.map(q =>
                     q.questionId === questionId
-                        ? { ...q, explanation: data.explanation, showExplanation: true }
+                        ? { ...q, explanation: data.explanation, showExplanation: true } // keeping showExplanation for compatibility or reference
                         : q
                 )
             }));
+            setIsExpanded(true); // Auto-expand when generated
         } catch (err) {
             console.error(err);
             const msg = err.response?.data?.error || err.response?.data?.message || 'Failed to generate explanation';
@@ -313,42 +320,65 @@ const TestReviewDetail = () => {
                         </div>
                     )}
 
-                    {/* Explanation (only for wrong answers) */}
-                    {currentQuestion.showExplanation && (
-                        <div className="mt-6 p-6 bg-blue-500/5 border border-blue-500/20 rounded-2xl">
-                            <div className="flex items-start gap-3">
-                                <Lightbulb className="w-6 h-6 text-blue-500 shrink-0 mt-1" />
-                                <div>
-                                    <h4 className="text-lg font-bold text-blue-500 mb-2">Explanation</h4>
-                                    <p className="text-zinc-300 leading-relaxed whitespace-pre-wrap">
-                                        {currentQuestion.explanation}
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-
-                    {!currentQuestion.showExplanation && !currentQuestion.isCorrect && (
-                        <div className="mt-6 p-4 bg-zinc-800/50 border border-white/5 rounded-xl text-center">
-                            <p className="text-sm text-zinc-500 mb-4">No explanation available for this question</p>
+                    {/* Explanation Section */}
+                    {currentQuestion.explanation ? (
+                        <div className="mt-6">
                             <button
-                                onClick={() => handleGenerateExplanation(currentQuestion.questionId)}
-                                disabled={generatingId === currentQuestion.questionId}
-                                className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 mx-auto"
+                                onClick={() => setIsExpanded(!isExpanded)}
+                                className="flex items-center gap-2 text-blue-400 hover:text-blue-300 transition-colors font-bold text-sm mb-4"
                             >
-                                {generatingId === currentQuestion.questionId ? (
+                                {isExpanded ? (
                                     <>
-                                        <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-                                        Generating Explanation...
+                                        <ChevronUp size={16} /> Hide Solution
                                     </>
                                 ) : (
                                     <>
-                                        <Lightbulb className="w-4 h-4" />
-                                        Generate AI Explanation
+                                        <ChevronDown size={16} /> Show Solution
                                     </>
                                 )}
                             </button>
+
+                            {isExpanded && (
+                                <motion.div
+                                    initial={{ opacity: 0, height: 0 }}
+                                    animate={{ opacity: 1, height: 'auto' }}
+                                    className="p-6 bg-blue-500/5 border border-blue-500/20 rounded-2xl overflow-hidden"
+                                >
+                                    <div className="flex items-start gap-3">
+                                        <Lightbulb className="w-6 h-6 text-blue-500 shrink-0 mt-1" />
+                                        <div>
+                                            <h4 className="text-lg font-bold text-blue-500 mb-2">Explanation</h4>
+                                            <p className="text-zinc-300 leading-relaxed whitespace-pre-wrap">
+                                                {currentQuestion.explanation}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </motion.div>
+                            )}
                         </div>
+                    ) : (
+                        !currentQuestion.isCorrect && (
+                            <div className="mt-6 p-4 bg-zinc-800/50 border border-white/5 rounded-xl text-center">
+                                <p className="text-sm text-zinc-500 mb-4">No explanation available for this question</p>
+                                <button
+                                    onClick={() => handleGenerateExplanation(currentQuestion.questionId)}
+                                    disabled={generatingId === currentQuestion.questionId}
+                                    className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 mx-auto"
+                                >
+                                    {generatingId === currentQuestion.questionId ? (
+                                        <>
+                                            <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                                            Generating Explanation...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Lightbulb className="w-4 h-4" />
+                                            Generate AI Explanation
+                                        </>
+                                    )}
+                                </button>
+                            </div>
+                        )
                     )}
                 </motion.div>
 
