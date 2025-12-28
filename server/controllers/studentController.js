@@ -381,6 +381,7 @@ const getImprovementPlan = asyncHandler(async (req, res) => {
 
     const percentage = maxPossibleScore > 0 ? (lastAttempt.score / maxPossibleScore) * 100 : 0;
     const totalQuestionsCount = (lastAttempt.testId?.questions?.length) || lastAttempt.answers.length;
+    const totalCorrect = lastAttempt.answers ? lastAttempt.answers.filter(a => a.isCorrect).length : 0;
 
     let motivation = '';
     if (percentage < 40) {
@@ -1238,6 +1239,38 @@ const generatePlanForUser = async (userId) => {
             { $sample: { size: 1 } }
         ]);
 
+        // Generate Tasks for UI
+        const tasks = [];
+
+        // Task 1: Reading/Concept
+        tasks.push({
+            type: 'READ',
+            description: `Review concepts: ${topic}`,
+            time: 15
+        });
+
+        // Task 2: MCQs
+        if (mcqQuestions.length > 0) {
+            tasks.push({
+                type: 'PRACTICE_MCQ',
+                description: `Practice ${mcqQuestions.length} MCQs on ${topic}`,
+                count: mcqQuestions.length,
+                target: `${mcqQuestions.length} Questions`,
+                time: mcqQuestions.length * 2
+            });
+        }
+
+        // Task 3: Coding
+        if (codingQuestions.length > 0) {
+            tasks.push({
+                type: 'PRACTICE_CODING',
+                description: `Solve ${codingQuestions.length} Coding Problem`,
+                count: codingQuestions.length,
+                target: `1 Problem`,
+                time: 15
+            });
+        }
+
         dailyTasks.push({
             day: `Day ${i + 1}`,
             dayNumber: i + 1,
@@ -1246,6 +1279,7 @@ const generatePlanForUser = async (userId) => {
             topic: topic,
             difficulty: dayDifficulty, // Info only
             assignedQuestions: [...mcqQuestions.map(q => q._id), ...codingQuestions.map(q => q._id)],
+            tasks: tasks,
             link: `/student/test/daily/${i + 1}`
         });
     }
