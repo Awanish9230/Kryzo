@@ -310,62 +310,73 @@ const getImprovementPlan = asyncHandler(async (req, res) => {
     // Let's trust the `planData` has `focusTopics`. We will populate `strongTopics` by checking the other end of the sorted list in `generatePlanForUser` if we could, 
     // but without changing the helper signature too much, let's just do a quick fetch here for display to ensure it matches the "Real Time" requirement.
 
-    // Re-fetch for display stats (using same logic as helper)
-    const recentAttempts = await UserAttempt.find({ userId: req.user.id })
-        .sort({ createdAt: -1 })
-        .limit(20)
-        .populate({
-            path: 'answers.questionId',
-            select: 'topics topic difficulty type'
-        });
+    try {
+        // Re-fetch for display stats (using same logic as helper)
+        const recentAttempts = await UserAttempt.find({ userId: req.user.id })
+            .sort({ createdAt: -1 })
+            .limit(20)
+            .populate({
+                path: 'answers.questionId',
+                select: 'topics topic difficulty type'
+            });
 
-    const topicStats = {};
-    recentAttempts.forEach(attempt => {
-        attempt.answers.forEach(ans => {
-            const question = ans.questionId;
-            if (question) {
-                // Robust topic extraction
-                let topics = [];
-                if (question.topics && question.topics.length > 0) {
-                    topics = question.topics;
-                } else if (question.topic) {
-                    topics = [question.topic];
-                }
+        const topicStats = {};
+        recentAttempts.forEach(attempt => {
+            if (attempt.answers && Array.isArray(attempt.answers)) {
+                attempt.answers.forEach(ans => {
+                    const question = ans.questionId;
+                    if (question) {
+                        // Robust topic extraction
+                        let topics = [];
+                        if (question.topics && question.topics.length > 0) {
+                            topics = question.topics;
+                        } else if (question.topic) {
+                            topics = [question.topic];
+                        }
 
-                if (topics.length === 0) topics = ['General Practice'];
+                        if (topics.length === 0) topics = ['General Practice'];
 
-                topics.forEach(t => {
-                    if (!topicStats[t]) topicStats[t] = { correct: 0, total: 0 };
-                    topicStats[t].total += 1;
-                    if (ans.isCorrect) topicStats[t].correct += 1;
+                        topics.forEach(t => {
+                            if (!topicStats[t]) topicStats[t] = { correct: 0, total: 0 };
+                            topicStats[t].total += 1;
+                            if (ans.isCorrect) topicStats[t].correct += 1;
+                        });
+                    }
                 });
             }
         });
-    });
 
-    for (const [topic, stats] of Object.entries(topicStats)) {
-        stats.accuracy = stats.total > 0 ? stats.correct / stats.total : 0;
-        if (stats.accuracy >= 0.8 && stats.total >= 3) {
-            strongTopics.push(topic);
+        for (const [topic, stats] of Object.entries(topicStats)) {
+            stats.accuracy = stats.total > 0 ? stats.correct / stats.total : 0;
+            if (stats.accuracy >= 0.8 && stats.total >= 3) {
+                strongTopics.push(topic);
+            }
         }
+    } catch (err) {
+        console.error("Error analyzing weak/strong topics:", err);
     }
 
     // 5. Generate Motivation
     let maxPossibleScore = 0;
-    if (lastAttempt.testId && lastAttempt.testId.questions) {
-        lastAttempt.testId.questions.forEach(q => {
-            if (q.type === 'MCQ') {
-                if (q.difficulty === 'easy') maxPossibleScore += 1;
-                else if (q.difficulty === 'medium') maxPossibleScore += 2;
-                else if (q.difficulty === 'hard') maxPossibleScore += 3;
-            } else if (q.type === 'CODING') {
-                if (q.difficulty === 'easy') maxPossibleScore += 5;
-                else if (q.difficulty === 'medium') maxPossibleScore += 10;
-                else if (q.difficulty === 'hard') maxPossibleScore += 15;
-            }
-        });
-    } else {
-        maxPossibleScore = lastAttempt.answers.reduce((acc, curr) => acc + (curr.maxScore || 0), 0);
+    try {
+        if (lastAttempt.testId && lastAttempt.testId.questions) {
+            lastAttempt.testId.questions.forEach(q => {
+                if (q.type === 'MCQ') {
+                    if (q.difficulty === 'easy') maxPossibleScore += 1;
+                    else if (q.difficulty === 'medium') maxPossibleScore += 2;
+                    else if (q.difficulty === 'hard') maxPossibleScore += 3;
+                } else if (q.type === 'CODING') {
+                    if (q.difficulty === 'easy') maxPossibleScore += 5;
+                    else if (q.difficulty === 'medium') maxPossibleScore += 10;
+                    else if (q.difficulty === 'hard') maxPossibleScore += 15;
+                }
+            });
+        } else {
+            maxPossibleScore = lastAttempt.answers.reduce((acc, curr) => acc + (curr.maxScore || 0), 0);
+        }
+    } catch (err) {
+        console.error("Error calculating max score:", err);
+        maxPossibleScore = lastAttempt.score || 10;
     }
 
     const percentage = maxPossibleScore > 0 ? (lastAttempt.score / maxPossibleScore) * 100 : 0;
@@ -1122,22 +1133,24 @@ const generatePlanForUser = async (userId) => {
 
     // Process all recent attempts
     recentAttempts.forEach(attempt => {
-        attempt.answers.forEach(ans => {
-            const question = ans.questionId;
-            if (question) {
-                // Normalize topics
-                let topics = [];
-                if (question.topics && question.topics.length > 0) {
-                    topics = question.topics;
-                } else if (question.topic) {
-                    topics = [question.topic];
+        if (attempt.answers && Array.isArray(attempt.answers)) {
+            attempt.answers.forEach(ans => {
+                const question = ans.questionId;
+                if (question) {
+                    // Normalize topics
+                    let topics = [];
+                    if (question.topics && question.topics.length > 0) {
+                        topics = question.topics;
+                    } else if (question.topic) {
+                        topics = [question.topic];
+                    }
+
+                    if (topics.length === 0) topics = ['General Practice'];
+
+                    topics.forEach(t => updateTopicStats(t, ans.isCorrect));
                 }
-
-                if (topics.length === 0) topics = ['General Practice'];
-
-                topics.forEach(t => updateTopicStats(t, ans.isCorrect));
-            }
-        });
+            });
+        }
     });
 
     // Calculate Scores
