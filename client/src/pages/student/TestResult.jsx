@@ -20,6 +20,7 @@ const TestResult = () => {
     const navigate = useNavigate();
     const [result, setResult] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
     useEffect(() => {
         fetchResult();
@@ -27,11 +28,13 @@ const TestResult = () => {
 
     const fetchResult = async () => {
         try {
+            setError(null);
             const { data } = await api.get('/student/plan');
             setResult(data);
             setLoading(false);
         } catch (err) {
             console.error(err);
+            setError('Failed to load results. Please try again.');
             setLoading(false);
         }
     };
@@ -42,9 +45,36 @@ const TestResult = () => {
         </div>
     );
 
+    if (error) return (
+        <div className="min-h-screen bg-black flex flex-col items-center justify-center text-center px-4">
+            <XCircle className="w-12 h-12 text-red-500 mb-4" />
+            <h2 className="text-xl font-bold text-white mb-2">{error}</h2>
+            <button
+                onClick={fetchResult}
+                className="px-6 py-2 bg-white text-black rounded-lg font-bold hover:bg-gray-200 transition-colors"
+            >
+                Retry
+            </button>
+            <div className="mt-4">
+                <button
+                    onClick={() => navigate('/student/dashboard')}
+                    className="text-zinc-500 hover:text-white"
+                >
+                    Back to Dashboard
+                </button>
+            </div>
+        </div>
+    );
+
     if (!result) return (
-        <div className="min-h-screen bg-black flex items-center justify-center">
-            <p className="text-zinc-500">No recent test results found.</p>
+        <div className="min-h-screen bg-black flex flex-col items-center justify-center text-center px-4">
+            <div className="text-zinc-500 mb-4">No recent test results found.</div>
+            <button
+                onClick={() => navigate('/student/dashboard')}
+                className="text-white hover:text-gray-300 underline"
+            >
+                Back to Dashboard
+            </button>
         </div>
     );
 

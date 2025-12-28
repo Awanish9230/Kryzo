@@ -324,7 +324,16 @@ const getImprovementPlan = asyncHandler(async (req, res) => {
         attempt.answers.forEach(ans => {
             const question = ans.questionId;
             if (question) {
-                const topics = question.topics && question.topics.length > 0 ? question.topics : [question.topic].filter(t => t);
+                // Robust topic extraction
+                let topics = [];
+                if (question.topics && question.topics.length > 0) {
+                    topics = question.topics;
+                } else if (question.topic) {
+                    topics = [question.topic];
+                }
+
+                if (topics.length === 0) topics = ['General Practice'];
+
                 topics.forEach(t => {
                     if (!topicStats[t]) topicStats[t] = { correct: 0, total: 0 };
                     topicStats[t].total += 1;
@@ -557,8 +566,19 @@ const getUserProfile = asyncHandler(async (req, res) => {
         if (attempt.answers) {
             attempt.answers.forEach(ans => {
                 const q = ans.questionId;
-                if (q && (q.topic || q.topics)) {
-                    const topics = q.topics || [q.topic];
+                if (q) {
+                    // Normalize topics: Use topics array if available/non-empty, else singleton topic
+                    let topics = [];
+                    if (q.topics && q.topics.length > 0) {
+                        topics = q.topics;
+                    } else if (q.topic) {
+                        topics = [q.topic];
+                    }
+
+                    // Fallback for missing topics if needed (e.g. from Custom tests without specific topic metadata?)
+                    // If no topic, maybe categorize as 'General'?
+                    if (topics.length === 0) topics = ['General Practice'];
+
                     topics.forEach(topic => {
                         if (!topicStats[topic]) {
                             topicStats[topic] = {
@@ -570,12 +590,15 @@ const getUserProfile = asyncHandler(async (req, res) => {
                             };
                         }
 
-                        const difficulty = q.difficulty || 'medium';
-                        topicStats[topic][difficulty].total += 1;
+                        const difficulty = (q.difficulty || 'medium').toLowerCase();
+                        // Handle case mismatch or new difficulties
+                        const validDiff = ['easy', 'medium', 'hard'].includes(difficulty) ? difficulty : 'medium';
+
+                        topicStats[topic][validDiff].total += 1;
                         topicStats[topic].totalQuestions += 1;
 
                         if (ans.isCorrect) {
-                            topicStats[topic][difficulty].correct += 1;
+                            topicStats[topic][validDiff].correct += 1;
                             topicStats[topic].totalCorrect += 1;
                         }
                     });
@@ -771,14 +794,32 @@ const getUserAttempts = asyncHandler(async (req, res) => {
         const topicMap = {};
 
         attempt.answers?.forEach(ans => {
-            maxScore += (ans.maxScore || 0);
+            // Robust maxScore calculation
+            let qMax = ans.maxScore || 0;
+            if (!qMax) {
+                // Fallback based on difficulty if maxScore missing in answer
+                const diff = (ans.difficulty || 'medium').toLowerCase();
+                const type = ans.type || 'MCQ';
+                if (type === 'MCQ') {
+                    qMax = diff === 'easy' ? 1 : diff === 'medium' ? 2 : 3;
+                } else {
+                    qMax = diff === 'easy' ? 5 : diff === 'medium' ? 10 : 15;
+                }
+            }
+            maxScore += qMax;
+
             const t = ans.topic || 'General';
             if (!topicMap[t]) topicMap[t] = { correct: 0, total: 0 };
             topicMap[t].total += 1;
             if (ans.isCorrect) topicMap[t].correct += 1;
         });
 
+        // Fix 300% bug: Ensure maxScore is at least the score (sanity check) or 1 to avoid /0
+        if (maxScore < attempt.score) maxScore = attempt.score; // Should not happen but safety first
+        if (maxScore === 0 && attempt.score > 0) maxScore = attempt.score;
+
         const percentage = maxScore > 0 ? Math.round((attempt.score / maxScore) * 100) : 0;
+
         const topicBreakdown = Object.entries(topicMap).map(([topic, stats]) => ({
             topic,
             ...stats
@@ -789,7 +830,7 @@ const getUserAttempts = asyncHandler(async (req, res) => {
             testType: attempt.testId?.type || 'CUSTOM',
             score: attempt.score,
             maxScore,
-            percentage,
+            percentage: Math.min(percentage, 100), // Cap at 100%
             totalTime: attempt.totalTime,
             completedAt: attempt.completedAt || attempt.createdAt,
             questionCount: attempt.answers?.length || 0,
@@ -1084,12 +1125,17 @@ const generatePlanForUser = async (userId) => {
         attempt.answers.forEach(ans => {
             const question = ans.questionId;
             if (question) {
-                // Handle both single topic and topics array
+                // Normalize topics
+                let topics = [];
                 if (question.topics && question.topics.length > 0) {
-                    question.topics.forEach(t => updateTopicStats(t, ans.isCorrect));
+                    topics = question.topics;
                 } else if (question.topic) {
-                    updateTopicStats(question.topic, ans.isCorrect);
+                    topics = [question.topic];
                 }
+
+                if (topics.length === 0) topics = ['General Practice'];
+
+                topics.forEach(t => updateTopicStats(t, ans.isCorrect));
             }
         });
     });

@@ -14,6 +14,8 @@ const TestReviewDetail = () => {
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
     const [generatingId, setGeneratingId] = useState(null);
 
+    const [error, setError] = useState(null);
+
     const handleGenerateExplanation = async (questionId) => {
         try {
             setGeneratingId(questionId);
@@ -42,13 +44,14 @@ const TestReviewDetail = () => {
 
     const fetchReview = async () => {
         try {
+            setError(null);
             const { data } = await api.get(`/student/attempt/${attemptId}`);
             setReview(data);
             setLoading(false);
         } catch (err) {
             console.error(err);
-            alert('Failed to load test review');
-            navigate('/student/reviews');
+            setError('Failed to load test review');
+            setLoading(false);
         }
     };
 
@@ -72,6 +75,31 @@ const TestReviewDetail = () => {
     if (loading) return (
         <div className="min-h-screen bg-black flex items-center justify-center">
             <div className="w-8 h-8 border-2 border-white/10 border-t-white rounded-full animate-spin"></div>
+        </div>
+    );
+
+    if (!review) return (
+        <div className="min-h-screen bg-black flex flex-col items-center justify-center text-center px-4">
+            <div className="text-zinc-500 mb-4">Review data not available</div>
+            <Link to="/student/reviews" className="text-white hover:text-gray-300 underline">
+                Back to Reviews
+            </Link>
+        </div>
+    );
+
+    if (error) return (
+        <div className="min-h-screen bg-black flex flex-col items-center justify-center text-center px-4">
+            <XCircle className="w-12 h-12 text-red-500 mb-4" />
+            <h2 className="text-xl font-bold text-white mb-2">{error}</h2>
+            <button
+                onClick={fetchReview}
+                className="px-6 py-2 bg-white text-black rounded-lg font-bold hover:bg-gray-200 transition-colors"
+            >
+                Retry
+            </button>
+            <Link to="/student/reviews" className="mt-4 text-zinc-500 hover:text-white">
+                Back to Reviews
+            </Link>
         </div>
     );
 
