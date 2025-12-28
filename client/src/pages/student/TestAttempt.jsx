@@ -121,14 +121,22 @@ const TestAttempt = () => {
 
     const handleSubmit = async () => {
         try {
+            // Calculate total time taken (in seconds)
+            // timeLeft is in seconds. duration is in minutes.
+            const totalDurationSec = test.duration * 60;
+            const timeTaken = totalDurationSec - timeLeft;
+
             const submission = {
                 testId: test._id,
+                totalTime: timeTaken, // Send total time
                 answers: Object.entries(answers).map(([qId, val]) => {
                     const q = test.questions.find(q => q._id === qId);
                     return {
                         questionId: qId,
                         [q.type === 'MCQ' ? 'selectedOption' : 'code']: val,
                         userAnswer: val
+                        // Note: we can't easily track per-question time without significant UI changes, 
+                        // so backend will just use totalTime / answered_count if needed or just track global time.
                     };
                 })
             };

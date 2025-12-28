@@ -116,14 +116,15 @@ const submitTest = asyncHandler(async (req, res) => {
 
     // Calculate maxPossibleScore based on all questions in the test
     test.questions.forEach(q => {
+        const diff = (q.difficulty || 'medium').toLowerCase();
         if (q.type === 'MCQ') {
-            if (q.difficulty === 'easy') maxPossibleScore += 1;
-            else if (q.difficulty === 'medium') maxPossibleScore += 2;
-            else if (q.difficulty === 'hard') maxPossibleScore += 3;
+            if (diff === 'easy') maxPossibleScore += 1;
+            else if (diff === 'medium') maxPossibleScore += 2;
+            else if (diff === 'hard') maxPossibleScore += 3;
         } else if (q.type === 'CODING') {
-            if (q.difficulty === 'easy') maxPossibleScore += 5;
-            else if (q.difficulty === 'medium') maxPossibleScore += 10;
-            else if (q.difficulty === 'hard') maxPossibleScore += 15;
+            if (diff === 'easy') maxPossibleScore += 5;
+            else if (diff === 'medium') maxPossibleScore += 10;
+            else if (diff === 'hard') maxPossibleScore += 15;
         }
     });
 
@@ -135,16 +136,18 @@ const submitTest = asyncHandler(async (req, res) => {
         let questionMaxScore = 0;
 
         if (question) {
-            // Determine marks based on difficulty
+            // Determine marks based on difficulty (normalized)
             let marks = 0;
+            const diff = (question.difficulty || 'medium').toLowerCase();
+
             if (question.type === 'MCQ') {
-                if (question.difficulty === 'easy') marks = 1;
-                else if (question.difficulty === 'medium') marks = 2;
-                else if (question.difficulty === 'hard') marks = 3;
+                if (diff === 'easy') marks = 1;
+                else if (diff === 'medium') marks = 2;
+                else if (diff === 'hard') marks = 3;
             } else if (question.type === 'CODING') {
-                if (question.difficulty === 'easy') marks = 5;
-                else if (question.difficulty === 'medium') marks = 10;
-                else if (question.difficulty === 'hard') marks = 15;
+                if (diff === 'easy') marks = 5;
+                else if (diff === 'medium') marks = 10;
+                else if (diff === 'hard') marks = 15;
             }
 
             questionMaxScore = marks;
@@ -250,7 +253,7 @@ const submitTest = asyncHandler(async (req, res) => {
         testId,
         answers: gradedAnswers,
         score,
-        totalTime: answers.reduce((acc, curr) => acc + (curr.timeTaken || 0), 0),
+        totalTime: req.body.totalTime || answers.reduce((acc, curr) => acc + (curr.timeTaken || 0), 0),
         completedAt: Date.now()
     });
 
@@ -1245,9 +1248,9 @@ const generateQuestionExplanation = asyncHandler(async (req, res) => {
 
         res.json({ explanation: text });
     } catch (error) {
-        console.error("Gemini API Error:", error);
+        console.error("Gemini API Error Detail:", error.message, error.response?.data);
         res.status(500);
-        throw new Error('Failed to generate explanation. Please try again later.');
+        throw new Error('Failed to generate explanation: ' + error.message);
     }
 });
 
