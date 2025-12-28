@@ -32,7 +32,8 @@ const TestReviewDetail = () => {
             }));
         } catch (err) {
             console.error(err);
-            alert('Failed to generate explanation. Please try again.');
+            const msg = err.response?.data?.error || err.response?.data?.message || 'Failed to generate explanation';
+            alert(`Error: ${msg}. Please try again.`);
         } finally {
             setGeneratingId(null);
         }

@@ -1320,10 +1320,14 @@ const generateQuestionExplanation = asyncHandler(async (req, res) => {
     }
 
     // 2. Generate with Gemini
+    // 2. Generate with Gemini
     try {
+        if (!process.env.GEMINI_API_KEY) {
+            throw new Error("GEMINI_API_KEY is missing in environment variables");
+        }
+
         const { GoogleGenerativeAI } = require("@google/generative-ai");
         const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-        const model = genAI.getGenerativeModel({ model: "gemini-pro" });
 
         const prompt = `Explain this ${question.type} question in detail for a student.
         Title: ${question.title}
@@ -1333,9 +1337,21 @@ const generateQuestionExplanation = asyncHandler(async (req, res) => {
         
         Provide a clear, step-by-step explanation of the correct solution and why other options (if any) are incorrect. Keep it educational and encouraging.`;
 
-        const result = await model.generateContent(prompt);
-        const response = await result.response;
-        const text = response.text();
+        let text = '';
+        try {
+            // Try 2.5 Flash first (newest stable-ish)
+            const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+            const result = await model.generateContent(prompt);
+            const response = await result.response;
+            text = response.text();
+        } catch (err1) {
+            console.warn("Gemini 2.5 Flash failed, trying gemini-flash-latest fallback:", err1.message);
+            // Fallback to Flash Latest (often points to current stable 1.5 or 2.0)
+            const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
+            const result = await model.generateContent(prompt);
+            const response = await result.response;
+            text = response.text();
+        }
 
         // 3. Save to Database
         question.explanation = text;
@@ -1343,9 +1359,12 @@ const generateQuestionExplanation = asyncHandler(async (req, res) => {
 
         res.json({ explanation: text });
     } catch (error) {
-        console.error("Gemini API Error Detail:", error.message, error.response?.data);
-        res.status(500);
-        throw new Error('Failed to generate explanation: ' + error.message);
+        console.error("Gemini API Error Detail:", error.message);
+        // Send actual error to frontend for debugging
+        res.status(500).json({
+            message: 'Failed to generate explanation',
+            error: error.message
+        });
     }
 });
 
