@@ -12,6 +12,29 @@ const TestReviewDetail = () => {
     const [review, setReview] = useState(null);
     const [loading, setLoading] = useState(true);
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+    const [generatingId, setGeneratingId] = useState(null);
+
+    const handleGenerateExplanation = async (questionId) => {
+        try {
+            setGeneratingId(questionId);
+            const { data } = await api.post(`/student/question/${questionId}/explain`);
+
+            // Update local state to show the new explanation immediately
+            setReview(prev => ({
+                ...prev,
+                questions: prev.questions.map(q =>
+                    q.questionId === questionId
+                        ? { ...q, explanation: data.explanation, showExplanation: true }
+                        : q
+                )
+            }));
+        } catch (err) {
+            console.error(err);
+            alert('Failed to generate explanation. Please try again.');
+        } finally {
+            setGeneratingId(null);
+        }
+    };
 
     useEffect(() => {
         fetchReview();
@@ -118,10 +141,10 @@ const TestReviewDetail = () => {
                                 key={idx}
                                 onClick={() => setCurrentQuestionIndex(idx)}
                                 className={`w-12 h-12 rounded-lg font-bold text-sm transition-all ${idx === currentQuestionIndex
-                                        ? 'bg-white text-black'
-                                        : q.isCorrect
-                                            ? 'bg-green-500/20 text-green-500 border border-green-500/30'
-                                            : 'bg-red-500/20 text-red-500 border border-red-500/30'
+                                    ? 'bg-white text-black'
+                                    : q.isCorrect
+                                        ? 'bg-green-500/20 text-green-500 border border-green-500/30'
+                                        : 'bg-red-500/20 text-red-500 border border-red-500/30'
                                     }`}
                             >
                                 {idx + 1}
@@ -143,13 +166,13 @@ const TestReviewDetail = () => {
                             Question {currentQuestionIndex + 1}
                         </span>
                         <span className={`px-3 py-1 rounded-lg text-xs font-bold uppercase tracking-wider ${currentQuestion.difficulty === 'easy' ? 'bg-green-500/10 text-green-500 border border-green-500/20' :
-                                currentQuestion.difficulty === 'medium' ? 'bg-yellow-500/10 text-yellow-500 border border-yellow-500/20' :
-                                    'bg-red-500/10 text-red-500 border border-red-500/20'
+                            currentQuestion.difficulty === 'medium' ? 'bg-yellow-500/10 text-yellow-500 border border-yellow-500/20' :
+                                'bg-red-500/10 text-red-500 border border-red-500/20'
                             }`}>
                             {currentQuestion.difficulty}
                         </span>
                         <span className={`px-3 py-1 rounded-lg text-xs font-bold uppercase tracking-wider ${currentQuestion.type === 'MCQ' ? 'bg-purple-500/10 text-purple-500 border border-purple-500/20' :
-                                'bg-blue-500/10 text-blue-500 border border-blue-500/20'
+                            'bg-blue-500/10 text-blue-500 border border-blue-500/20'
                             }`}>
                             {currentQuestion.type}
                         </span>
@@ -205,18 +228,18 @@ const TestReviewDetail = () => {
                                     <div
                                         key={idx}
                                         className={`p-4 rounded-xl border-2 transition-all ${isCorrectAnswer
-                                                ? 'border-green-500 bg-green-500/10'
-                                                : isUserAnswer
-                                                    ? 'border-red-500 bg-red-500/10'
-                                                    : 'border-white/10 bg-white/[0.02]'
+                                            ? 'border-green-500 bg-green-500/10'
+                                            : isUserAnswer
+                                                ? 'border-red-500 bg-red-500/10'
+                                                : 'border-white/10 bg-white/[0.02]'
                                             }`}
                                     >
                                         <div className="flex items-center gap-3">
                                             <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center text-xs font-bold ${isCorrectAnswer
-                                                    ? 'border-green-500 bg-green-500 text-white'
-                                                    : isUserAnswer
-                                                        ? 'border-red-500 bg-red-500 text-white'
-                                                        : 'border-zinc-700 text-zinc-600'
+                                                ? 'border-green-500 bg-green-500 text-white'
+                                                : isUserAnswer
+                                                    ? 'border-red-500 bg-red-500 text-white'
+                                                    : 'border-zinc-700 text-zinc-600'
                                                 }`}>
                                                 {String.fromCharCode(65 + idx)}
                                             </div>
@@ -278,7 +301,24 @@ const TestReviewDetail = () => {
 
                     {!currentQuestion.showExplanation && !currentQuestion.isCorrect && (
                         <div className="mt-6 p-4 bg-zinc-800/50 border border-white/5 rounded-xl text-center">
-                            <p className="text-sm text-zinc-500">No explanation available for this question</p>
+                            <p className="text-sm text-zinc-500 mb-4">No explanation available for this question</p>
+                            <button
+                                onClick={() => handleGenerateExplanation(currentQuestion.questionId)}
+                                disabled={generatingId === currentQuestion.questionId}
+                                className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 mx-auto"
+                            >
+                                {generatingId === currentQuestion.questionId ? (
+                                    <>
+                                        <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                                        Generating Explanation...
+                                    </>
+                                ) : (
+                                    <>
+                                        <Lightbulb className="w-4 h-4" />
+                                        Generate AI Explanation
+                                    </>
+                                )}
+                            </button>
                         </div>
                     )}
                 </motion.div>

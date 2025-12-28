@@ -1279,6 +1279,54 @@ const calculateDuration = (questions) => {
 };
 
 
+// @desc    Generate Explanation for a Question using Gemini AI
+// @route   POST /api/student/question/:id/explain
+// @access  Private/Student
+const generateQuestionExplanation = asyncHandler(async (req, res) => {
+    const { id } = req.params;
+    const question = await Question.findById(id);
+
+    if (!question) {
+        res.status(404);
+        throw new Error('Question not found');
+    }
+
+    // 1. Check if explanation already exists
+    if (question.explanation && question.explanation.length > 10) {
+        return res.json({ explanation: question.explanation });
+    }
+
+    // 2. Generate with Gemini
+    try {
+        const { GoogleGenerativeAI } = require("@google/generative-ai");
+        const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
+        const prompt = `Explain this ${question.type} question in detail for a student.
+        Title: ${question.title}
+        Description: ${question.description}
+        ${question.type === 'MCQ' ? `Options: ${question.options.map(o => o.text).join(', ')}` : ''}
+        ${question.codeSnippet ? `Code Snippet: ${question.codeSnippet}` : ''}
+        
+        Provide a clear, step-by-step explanation of the correct solution and why other options (if any) are incorrect. Keep it educational and encouraging.`;
+
+        const result = await model.generateContent(prompt);
+        const response = await result.response;
+        const text = response.text();
+
+        // 3. Save to Database
+        question.explanation = text;
+        await question.save();
+
+        res.json({ explanation: text });
+    } catch (error) {
+        console.error("Gemini API Error:", error);
+        res.status(500);
+        throw new Error('Failed to generate explanation. Please try again later.');
+    }
+});
+
+
 module.exports = {
     generateDiagnosticTest,
     submitTest,
@@ -1295,5 +1343,6 @@ module.exports = {
     getDayQuestions,
     getUserAttempts,
     getTestAttemptDetails,
-    getCodingPracticeQuestions
+    getCodingPracticeQuestions,
+    generateQuestionExplanation
 };

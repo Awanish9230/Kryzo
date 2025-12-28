@@ -13,7 +13,8 @@ const {
     getDayQuestions,
     getUserAttempts,
     getTestAttemptDetails,
-    getCodingPracticeQuestions
+    getCodingPracticeQuestions,
+    generateQuestionExplanation
 } = require('../controllers/studentController');
 const { protect } = require('../middleware/authMiddleware');
 
@@ -31,6 +32,7 @@ router.get('/attempts', getUserAttempts);
 router.get('/attempt/:attemptId', getTestAttemptDetails);
 router.get('/practice/coding', getCodingPracticeQuestions);
 router.post('/question/report', reportQuestion);
+router.post('/question/:id/explain', generateQuestionExplanation);
 router.get('/documentation/:id', require('../controllers/studentController').getDocumentationById);
 router.post('/activity/update', require('../controllers/studentController').updateActivityStats);
 router.get('/activity/log', require('../controllers/studentController').getActivityLog);
