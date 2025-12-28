@@ -15,6 +15,17 @@ const generateDiagnosticTest = asyncHandler(async (req, res) => {
     const selectedQuestionIds = new Set();
     let selectedQuestions = [];
 
+    // Define 5 basic topics for the diagnostic test
+    const DIAGNOSTIC_TOPICS = [
+        'HTML',
+        'CSS',
+        'JavaScript Basics',
+        'General Aptitude',
+        'Computer Networks'
+    ];
+    // Create regex for case-insensitive matching
+    const topicRegexes = DIAGNOSTIC_TOPICS.map(t => new RegExp(t, 'i'));
+
     // Helper to pick random questions
     const pickQuestions = async (type, difficulty, count) => {
         const questions = await Question.aggregate([
@@ -23,6 +34,11 @@ const generateDiagnosticTest = asyncHandler(async (req, res) => {
                     status: 'published',
                     type: type,
                     difficulty: difficulty,
+                    // Filter by our specific list of easy topics
+                    $or: [
+                        { topic: { $in: topicRegexes } },
+                        { topics: { $in: topicRegexes } }
+                    ],
                     _id: { $nin: Array.from(selectedQuestionIds).map(id => new mongoose.Types.ObjectId(id)) }
                 }
             },
@@ -37,23 +53,23 @@ const generateDiagnosticTest = asyncHandler(async (req, res) => {
         return questions.length;
     };
 
-    // 1. Pick MCQs: 10 Easy, 5 Medium, 5 Hard (Total 20)
-    await pickQuestions('MCQ', 'easy', 10);
+    // 1. Pick MCQs: Focus heavily on EASY
+    // 15 Easy, 5 Medium (Total 20)
+    await pickQuestions('MCQ', 'easy', 15);
     await pickQuestions('MCQ', 'medium', 5);
-    await pickQuestions('MCQ', 'hard', 5);
 
-    // 2. Pick Coding: 2 Easy, 1 Medium, 1 Hard (Total 4)
+    // 2. Pick Coding: 2 Easy, 1 Medium (Total 3)
     await pickQuestions('CODING', 'easy', 2);
     await pickQuestions('CODING', 'medium', 1);
-    await pickQuestions('CODING', 'hard', 1);
 
-    // 3. Fallback: If total is less than 24, fill with random published questions to reach the target
-    if (selectedQuestions.length < 24) {
-        const needed = 24 - selectedQuestions.length;
+    // 3. Fallback: If total is less than target (23), fill with ANY 'easy' published questions
+    if (selectedQuestions.length < 23) {
+        const needed = 23 - selectedQuestions.length;
         const extraQuestions = await Question.aggregate([
             {
                 $match: {
                     status: 'published',
+                    difficulty: 'easy',
                     _id: { $nin: Array.from(selectedQuestionIds).map(id => new mongoose.Types.ObjectId(id)) }
                 }
             },
@@ -66,10 +82,10 @@ const generateDiagnosticTest = asyncHandler(async (req, res) => {
         });
     }
 
-    // 4. Create Test Record (Duration updated to 90 mins for 24 questions)
+    // 4. Create Test Record
     const test = await Test.create({
         type: 'DIAGNOSTIC',
-        duration: 90, // Increased to 90 mins to allow time for 4 coding problems
+        duration: 60, // 60 mins for predominantly easy questions
         questions: selectedQuestions.map(q => q._id),
         createdBy: req.user.id
     });
@@ -1164,6 +1180,11 @@ const generatePlanForUser = async (userId) => {
 
     if (!lastAttempt) return null;
 
+    // Check for "Perfect Score" -> Force HARD mode
+    let maxPossibleScore = lastAttempt.answers.reduce((acc, curr) => acc + (curr.maxScore || 0), 0);
+    const percentage = maxPossibleScore > 0 ? (lastAttempt.score / maxPossibleScore) * 100 : 0;
+    const isHardMode = percentage >= 100;
+
     const attemptedQuestionIds = new Set(lastAttempt.answers.map(ans => ans.questionId?._id?.toString()));
     const unattemptedQuestions = lastAttempt.testId?.questions.filter(q => !attemptedQuestionIds.has(q._id.toString())) || [];
 
@@ -1222,32 +1243,40 @@ const generatePlanForUser = async (userId) => {
             topic = focusTopics[0];
         }
 
+        // Determine difficulty for this day
+        // Hard Mode: Always HARD
+        // Normal Mode: Days 1-2 Easy, 3-5 Medium, 6-7 Hard/Mixed
+        let dayDifficulty = 'medium';
+        if (isHardMode) {
+            dayDifficulty = 'hard';
+        } else {
+            if (i < 2) dayDifficulty = 'easy';
+            else if (i < 5) dayDifficulty = 'medium';
+            else dayDifficulty = 'hard';
+        }
+
         const topicRegex = new RegExp(`^${topic.trim()}$`, 'i');
+
+        // Build Match Query
+        const matchQuery = {
+            status: 'published',
+            $or: [
+                { topic: topicRegex },
+                { topics: topicRegex }
+            ]
+        };
+
+        // If Hard Mode, strictly filter. If Normal, prefer difficulty but allow fallback?
+        // Let's enforce difficulty to match the plan strictness requested.
+        matchQuery.difficulty = dayDifficulty;
+
         const mcqQuestions = await Question.aggregate([
-            {
-                $match: {
-                    status: 'published',
-                    type: 'MCQ',
-                    $or: [
-                        { topic: topicRegex },
-                        { topics: topicRegex }
-                    ]
-                }
-            },
+            { $match: { ...matchQuery, type: 'MCQ' } },
             { $sample: { size: 4 } }
         ]);
 
         const codingQuestions = await Question.aggregate([
-            {
-                $match: {
-                    status: 'published',
-                    type: 'CODING',
-                    $or: [
-                        { topic: topicRegex },
-                        { topics: topicRegex }
-                    ]
-                }
-            },
+            { $match: { ...matchQuery, type: 'CODING' } },
             { $sample: { size: 1 } }
         ]);
 
@@ -1257,12 +1286,13 @@ const generatePlanForUser = async (userId) => {
             date: dayDate.toISOString().split('T')[0],
             dayName: dayName,
             topic: topic,
+            difficulty: dayDifficulty, // Info only
             assignedQuestions: [...mcqQuestions.map(q => q._id), ...codingQuestions.map(q => q._id)],
             link: `/student/test/daily/${i + 1}`
         });
     }
 
-    return { plan: dailyTasks, focusTopics };
+    return { plan: dailyTasks, focusTopics, isHardMode };
 };
 
 // Helper to calculate test duration
