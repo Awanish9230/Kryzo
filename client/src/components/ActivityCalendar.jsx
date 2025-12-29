@@ -51,7 +51,7 @@ const ActivityCalendar = () => {
 
     // return (
     return (
-        <div className="bg-zinc-900/50 border border-white/5 rounded-[1.5rem] p-5 backdrop-blur-sm w-full">
+        <div className="bg-zinc-900/50 border border-white/5 rounded-[1.5rem] p-5 backdrop-blur-sm w-full max-w-xl">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
                 <div className="flex items-center gap-3">
                     <div className="p-2.5 bg-orange-500/10 rounded-xl border border-orange-500/20">

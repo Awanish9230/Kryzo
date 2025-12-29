@@ -352,7 +352,7 @@ const Profile = () => {
                         <motion.div
                             initial={{ opacity: 0, scale: 0.95 }}
                             animate={{ opacity: 1, scale: 1 }}
-                            className="bg-zinc-900/50 border border-white/5 rounded-[2.2rem] p-8 backdrop-blur-sm relative overflow-hidden group hover:border-white/10 transition-all flex-1"
+                            className="bg-zinc-900/50 border border-white/5 rounded-[2.2rem] p-8 backdrop-blur-sm relative overflow-hidden group hover:border-white/10 transition-all"
                         >
                             <div className={`absolute inset-0 bg-gradient-to-br ${levelColors[level]} opacity-5 group-hover:opacity-10 transition-all`}></div>
                             <div className="relative z-10 flex flex-col gap-6">
