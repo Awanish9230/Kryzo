@@ -115,17 +115,22 @@ const submitTest = asyncHandler(async (req, res) => {
     const axios = require('axios');
 
     // Calculate maxPossibleScore based on all questions in the test
+    const Settings = require('../models/Settings');
+    const settings = await Settings.findOne() || { global: { mcqPoints: 1, codingPoints: 10 } };
+
     test.questions.forEach(q => {
         const diff = (q.difficulty || 'medium').toLowerCase();
+        let marks = 0;
         if (q.type === 'MCQ') {
-            if (diff === 'easy') maxPossibleScore += 1;
-            else if (diff === 'medium') maxPossibleScore += 2;
-            else if (diff === 'hard') maxPossibleScore += 3;
+            marks = settings.global.mcqPoints || 1;
+            if (diff === 'medium') marks *= 2;
+            else if (diff === 'hard') marks *= 3;
         } else if (q.type === 'CODING') {
-            if (diff === 'easy') maxPossibleScore += 5;
-            else if (diff === 'medium') maxPossibleScore += 10;
-            else if (diff === 'hard') maxPossibleScore += 15;
+            marks = settings.global.codingPoints || 20;
+            if (diff === 'medium') marks *= 2;
+            else if (diff === 'hard') marks *= 3;
         }
+        maxPossibleScore += marks;
     });
 
     for (const ans of answers) {
@@ -141,13 +146,13 @@ const submitTest = asyncHandler(async (req, res) => {
             const diff = (question.difficulty || 'medium').toLowerCase();
 
             if (question.type === 'MCQ') {
-                if (diff === 'easy') marks = 1;
-                else if (diff === 'medium') marks = 2;
-                else if (diff === 'hard') marks = 3;
+                marks = settings.global.mcqPoints || 1;
+                if (diff === 'medium') marks *= 2;
+                else if (diff === 'hard') marks *= 3;
             } else if (question.type === 'CODING') {
-                if (diff === 'easy') marks = 5;
-                else if (diff === 'medium') marks = 10;
-                else if (diff === 'hard') marks = 15;
+                marks = settings.global.codingPoints || 20;
+                if (diff === 'medium') marks *= 2;
+                else if (diff === 'hard') marks *= 3;
             }
 
             questionMaxScore = marks;
@@ -1238,8 +1243,12 @@ const generatePlanForUser = async (userId) => {
         stats.accuracy = accuracy;
         // Weakness Score: Higher is weaker. 
         // We boost weakness score if they are skipping a lot (fear of topic?)
+        const Settings = require('../models/Settings');
+        const settings = await Settings.findOne() || { ai: { weaknessSensitivity: 0.5 } };
+        const sensitivity = settings.ai?.weaknessSensitivity || 0.5;
+
         const skipRate = stats.total > 0 ? stats.skipped / stats.total : 0;
-        stats.weaknessScore = (1 - accuracy) + (skipRate * 0.5);
+        stats.weaknessScore = (1 - accuracy) + (skipRate * sensitivity);
     }
 
     const sortedByWeakness = Object.entries(topicStats)
@@ -1407,12 +1416,17 @@ const generateQuestionExplanation = asyncHandler(async (req, res) => {
     // 2. Generate with Gemini
     // 2. Generate with Gemini
     try {
-        if (!process.env.GEMINI_API_KEY) {
-            throw new Error("GEMINI_API_KEY is missing in environment variables");
+        const Settings = require('../models/Settings');
+        const settings = await Settings.findOne() || { ai: { promptTemperature: 0.7 } };
+        const apiKey = settings.ai?.geminiApiKey || process.env.GEMINI_API_KEY;
+        const temperature = settings.ai?.promptTemperature || 0.7;
+
+        if (!apiKey) {
+            throw new Error("Gemini API Key is missing. Please configure it in Admin Settings.");
         }
 
         const { GoogleGenerativeAI } = require("@google/generative-ai");
-        const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+        const genAI = new GoogleGenerativeAI(apiKey);
 
         const prompt = `Explain this ${question.type} question concisely for a student.
         Title: ${question.title}
@@ -1424,18 +1438,17 @@ const generateQuestionExplanation = asyncHandler(async (req, res) => {
 
         let text = '';
         try {
-            // Try 2.5 Flash first (newest stable-ish)
-            const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+            // Try 1.5 Flash first (most reliable)
+            const model = genAI.getGenerativeModel({
+                model: "gemini-1.5-flash",
+                generationConfig: { temperature }
+            });
             const result = await model.generateContent(prompt);
             const response = await result.response;
             text = response.text();
         } catch (err1) {
-            console.warn("Gemini 2.5 Flash failed, trying gemini-flash-latest fallback:", err1.message);
-            // Fallback to Flash Latest (often points to current stable 1.5 or 2.0)
-            const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
-            const result = await model.generateContent(prompt);
-            const response = await result.response;
-            text = response.text();
+            console.warn("Gemini 1.5 Flash failed:", err1.message);
+            throw err1;
         }
 
         // 3. Save to Database

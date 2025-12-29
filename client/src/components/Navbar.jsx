@@ -2,7 +2,7 @@ import { useContext } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import AuthContext from '../context/AuthContext';
 import { motion } from 'framer-motion';
-import { LogOut, LayoutDashboard, PlusCircle, BookOpen } from 'lucide-react';
+import { LogOut, LayoutDashboard, PlusCircle, BookOpen, Settings as SettingsIcon } from 'lucide-react';
 
 const Navbar = () => {
     const { user, logout } = useContext(AuthContext);
@@ -54,6 +54,7 @@ const Navbar = () => {
                                 <NavLink to="/admin/questions" icon={<BookOpen size={18} />} active={location.pathname === '/admin/questions'}>Questions</NavLink>
                                 <NavLink to="/admin/documentation" icon={<BookOpen size={18} />} active={location.pathname === '/admin/documentation'}>Documentation</NavLink>
                                 <NavLink to="/admin/users" icon={<PlusCircle size={18} />} active={location.pathname === '/admin/users'}>Manage Users</NavLink>
+                                <NavLink to="/admin/settings" icon={<SettingsIcon size={18} />} active={location.pathname === '/admin/settings'}>Settings</NavLink>
                             </>
                         ) : (
                             <>

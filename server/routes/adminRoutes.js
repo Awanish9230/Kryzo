@@ -21,6 +21,10 @@ const {
     updateReportStatus,
     getPainPointAnalytics
 } = require('../controllers/adminController');
+const {
+    getSettings,
+    updateSettings
+} = require('../controllers/settingsController');
 const { protect, admin } = require('../middleware/authMiddleware');
 
 router.use(protect);
@@ -59,5 +63,10 @@ router.route('/documentation')
     .post(createDocumentation);
 
 router.delete('/documentation/:id', deleteDocumentation);
+
+// System Settings
+router.route('/settings')
+    .get(getSettings)
+    .put(updateSettings);
 
 module.exports = router;

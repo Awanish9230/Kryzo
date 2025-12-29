@@ -14,6 +14,23 @@ const registerUser = asyncHandler(async (req, res) => {
         throw new Error('Please add all fields');
     }
 
+    // Check System Settings
+    const Settings = require('../models/Settings');
+    const settings = await Settings.findOne() || {};
+
+    if (settings.user?.registrationOpen === false) {
+        res.status(403);
+        throw new Error('Registration is currently closed by administration');
+    }
+
+    if (settings.user?.allowedDomains?.length > 0) {
+        const domain = email.split('@')[1];
+        if (!settings.user.allowedDomains.includes(domain)) {
+            res.status(403);
+            throw new Error(`Registration restricted to authorized domains: ${settings.user.allowedDomains.join(', ')}`);
+        }
+    }
+
     // Check if user exists
     const userExists = await User.findOne({ email });
 

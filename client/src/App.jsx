@@ -17,6 +17,7 @@ import AdminDocumentation from './pages/admin/AdminDocumentation';
 import AdminProfile from './pages/admin/Profile';
 import BulkUpload from './pages/admin/BulkUpload';
 import AdminReports from './pages/admin/Reports';
+import SettingsPage from './pages/admin/Settings';
 
 // Student Components
 import StudentDashboard from './pages/student/Dashboard';
@@ -115,6 +116,7 @@ function App() {
               <Route path="/admin/questions/bulk" element={<PrivateRoute role="admin"><BulkUpload /></PrivateRoute>} />
               <Route path="/admin/reports" element={<PrivateRoute role="admin"><AdminReports /></PrivateRoute>} />
               <Route path="/admin/questions/reports" element={<PrivateRoute role="admin"><ReportedQuestions /></PrivateRoute>} />
+              <Route path="/admin/settings" element={<PrivateRoute role="admin"><SettingsPage /></PrivateRoute>} />
 
               <Route path="*" element={<NotFound />} />
             </Routes>

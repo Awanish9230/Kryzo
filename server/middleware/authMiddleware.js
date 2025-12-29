@@ -19,6 +19,14 @@ const protect = asyncHandler(async (req, res, next) => {
             // Get user from the token
             req.user = await User.findById(decoded.id).select('-password');
 
+            // Maintenance Mode Check
+            const Settings = require('../models/Settings');
+            const settings = await Settings.findOne();
+            if (settings?.global?.maintenanceMode && req.user.role !== 'admin') {
+                res.status(503);
+                throw new Error('Platform is under maintenance. Please check back later.');
+            }
+
             next();
         } catch (error) {
             console.log(error);
