@@ -75,9 +75,7 @@ const Footer = () => {
                         © 2025 Kryzo Inc. All rights reserved.
                     </p>
                     <div className="flex items-center gap-2 text-zinc-600 text-sm">
-                        <span>Made with</span>
-                        <Heart size={14} className="text-red-500 fill-red-500" />
-                        <span>for developers</span>
+                        <span>Made with ❤️ by Apm Pvt. Ltd.</span>
                     </div>
                 </div>
             </div>
