@@ -7,6 +7,10 @@ const api = axios.create({
     },
 });
 
+if (!import.meta.env.VITE_BACKEND_URL && import.meta.env.PROD) {
+    console.warn('VITE_BACKEND_URL is not set in production. API calls may fail if not served from the same domain.');
+}
+
 // Request interceptor to add token
 api.interceptors.request.use(
     (config) => {
