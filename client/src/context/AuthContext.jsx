@@ -8,10 +8,14 @@ export const AuthProvider = ({ children }) => {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
+        console.log('AuthContext: Initialization started');
         try {
             const storedUser = localStorage.getItem('user');
-            if (storedUser && storedUser !== 'undefined') {
-                setUser(JSON.parse(storedUser));
+            console.log('AuthContext: Raw stored user:', storedUser);
+            if (storedUser && storedUser !== 'undefined' && storedUser !== 'null') {
+                const parsed = JSON.parse(storedUser);
+                console.log('AuthContext: Parsed user successfully');
+                setUser(parsed);
             }
         } catch (err) {
             console.error('Auth initialization failed', err);

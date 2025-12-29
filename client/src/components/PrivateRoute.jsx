@@ -6,7 +6,10 @@ import Loader from './Loader';
 const PrivateRoute = ({ role, children }) => {
     const { user, loading } = useContext(AuthContext);
 
+    console.log('PrivateRoute: Status', { loading, userRole: user?.role, requiredRole: role });
+
     if (loading) {
+        console.log('PrivateRoute: Rendering Loader');
         return <Loader fullScreen />;
     }
 

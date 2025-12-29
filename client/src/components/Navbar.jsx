@@ -37,7 +37,7 @@ const Navbar = () => {
         </nav>
     );
 
-    const isAdmin = user.role === 'admin';
+    const isAdmin = user?.role === 'admin';
 
     return (
         <nav className="fixed top-0 left-0 w-full z-50 border-b border-white/5 bg-black/50 backdrop-blur-xl">

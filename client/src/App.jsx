@@ -65,6 +65,7 @@ const Layout = ({ children }) => {
 };
 
 function App() {
+  console.log('App: Rendering component tree');
   return (
     <AuthProvider>
       <ErrorBoundary>

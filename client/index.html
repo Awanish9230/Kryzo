@@ -6,14 +6,34 @@
   <link rel="icon" type="image/png" href="/k_logo_browser_copy.png" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Kryzo</title>
+  <style>
+    html,
+    body {
+      background-color: #000000;
+      margin: 0;
+      padding: 0;
+    }
+  </style>
 </head>
 
 <body>
   <div id="root">
-    <div style="background: black; color: white; height: 100vh; display: flex; align-items: center; justify-content: center; font-family: sans-serif;">
-      Initializing Kryzo...
+    <div id="loading-overlay"
+      style="background: black; color: white; height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: sans-serif; gap: 20px;">
+      <div style="font-size: 20px; font-weight: bold;">Kryzo is Initializing...</div>
+      <div id="error-display"
+        style="color: #ff4444; max-width: 80%; text-align: center; font-family: monospace; font-size: 14px;"></div>
     </div>
   </div>
+  <script type="text/javascript">
+    window.onerror = function (msg, url, line, col, error) {
+      var display = document.getElementById('error-display');
+      if (display) {
+        display.innerHTML = 'Error: ' + msg + '<br>Near: ' + line + ':' + col;
+      }
+      return false;
+    };
+  </script>
   <script type="module" src="/src/main.jsx"></script>
 </body>
 
