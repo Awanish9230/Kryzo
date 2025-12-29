@@ -23,7 +23,7 @@ import Footer from '../components/Footer';
 
 
 const Landing = () => {
-    console.log('Landing: Component Rendering');
+
     const { user } = useContext(AuthContext);
     const isAdmin = user?.role === 'admin';
 
