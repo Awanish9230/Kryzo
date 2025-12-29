@@ -4,6 +4,7 @@ import AuthContext from '../context/AuthContext';
 import Loader from './Loader';
 
 const PrivateRoute = ({ role, children }) => {
+    console.log('PrivateRoute: Mounting/Rendering', { role });
     const { user, loading } = useContext(AuthContext);
 
     console.log('PrivateRoute: Status', { loading, userRole: user?.role, requiredRole: role });

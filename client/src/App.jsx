@@ -52,11 +52,14 @@ const Layout = ({ children }) => {
     location.pathname.includes('/student/test-diagnostic') ||
     location.pathname.includes('/student/practice/coding');
 
+  console.log('Layout: Rendering', { isTestRoute, path: location.pathname });
+
   return (
     <div className="flex flex-col min-h-screen bg-black text-white">
       <Navbar />
       <SessionTracker />
       <main className="flex-grow">
+        {console.log('Layout: Rendering children')}
         {children}
       </main>
       {!isTestRoute && <Footer />}
@@ -70,8 +73,10 @@ function App() {
     <AuthProvider>
       <ErrorBoundary>
         <Router>
+          {console.log('App: Router children rendering')}
           <Layout>
             <Routes>
+              {console.log('App: Routes matching started')}
               {/* Public Routes */}
               <Route path="/" element={<Landing />} />
               <Route path="/about" element={<About />} />
