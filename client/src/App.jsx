@@ -51,17 +51,13 @@ const Layout = ({ children }) => {
   const isTestRoute = location.pathname.includes('/student/test/') ||
     location.pathname.includes('/student/practice/coding');
 
-  console.log(`[ROUTE-TRACE] Current Path (location.pathname): ${location.pathname}`);
-  console.log(`[ROUTE-TRACE] Window Path (window.location.pathname): ${window.location.pathname}`);
 
-  console.log('Layout: Rendering', { isTestRoute, path: location.pathname });
 
   return (
     <div className="flex flex-col min-h-screen bg-black text-white">
       <Navbar />
       <SessionTracker />
       <main className="flex-grow">
-        {console.log('Layout: Rendering children')}
         {children}
       </main>
       {!isTestRoute && <Footer />}
@@ -70,7 +66,7 @@ const Layout = ({ children }) => {
 };
 
 function App() {
-  console.log('App: Rendering component tree');
+
   return (
     <AuthProvider>
       <ErrorBoundary>

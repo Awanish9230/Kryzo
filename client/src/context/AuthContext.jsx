@@ -8,13 +8,13 @@ export const AuthProvider = ({ children }) => {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        console.log('AuthContext: Initialization started');
+
         try {
             const storedUser = localStorage.getItem('user');
-            console.log('AuthContext: Raw stored user:', storedUser);
+
             if (storedUser && storedUser !== 'undefined' && storedUser !== 'null') {
                 const parsed = JSON.parse(storedUser);
-                console.log('AuthContext: Parsed user successfully');
+
                 setUser(parsed);
             }
         } catch (err) {
@@ -22,7 +22,7 @@ export const AuthProvider = ({ children }) => {
             localStorage.removeItem('user');
         }
         setLoading(false);
-        console.log('AuthContext: Loading finished');
+
     }, []);
 
     const login = async (email, password, rememberMe) => {
@@ -44,7 +44,7 @@ export const AuthProvider = ({ children }) => {
         setUser(null);
     };
 
-    console.log('AuthProvider: Rendering', { loading, hasUser: !!user });
+
     return (
         <AuthContext.Provider value={{ user, login, register, logout, loading }}>
             {children}

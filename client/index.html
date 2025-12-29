@@ -19,23 +19,8 @@
 </head>
 
 <body>
-  <div id="root">
-    <div id="loading-overlay"
-      style="background: black; color: white; height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: sans-serif; gap: 20px;">
-      <div style="font-size: 20px; font-weight: bold;">Kryzo is Initializing...</div>
-      <div id="error-display"
-        style="color: #ff4444; max-width: 80%; text-align: center; font-family: monospace; font-size: 14px;"></div>
-    </div>
-  </div>
-  <script type="text/javascript">
-    window.onerror = function (msg, url, line, col, error) {
-      var display = document.getElementById('error-display');
-      if (display) {
-        display.innerHTML = 'Error: ' + msg + '<br>Near: ' + line + ':' + col;
-      }
-      return false;
-    };
-  </script>
+  <div id="root"></div>
+
   <script type="module" src="/src/main.jsx"></script>
 </body>
 
