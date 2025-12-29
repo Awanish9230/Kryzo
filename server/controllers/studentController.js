@@ -729,16 +729,37 @@ const getUserProfile = asyncHandler(async (req, res) => {
             timeSpent: Math.round(a.timeSpent / 60), // in mins
             questionsSolved: a.questionsSolved
         })),
-        recentAttempts: attempts.slice(0, 5).map(att => ({
-            _id: att._id,
-            testId: att.testId?._id,
-            testTitle: att.testId?.title || 'Custom Test',
-            score: att.score,
-            maxScore: att.maxScore,
-            correctCount: att.answers?.filter(a => a.isCorrect).length || 0,
-            totalCount: att.answers?.length || 0,
-            date: att.completedAt
-        }))
+        recentAttempts: attempts.slice(0, 5).map(att => {
+            // Fix Title Logic
+            let title = 'Custom Test';
+            if (att.testId) {
+                if (att.testId.type === 'DIAGNOSTIC') title = 'Diagnostic Test';
+                else if (att.testId.type === 'WEEKLY') title = 'Weekly Upgrade';
+                else {
+                    // Try to get topic from first answer
+                    const firstTopic = att.answers?.[0]?.questionId?.topic || att.answers?.[0]?.questionId?.topics?.[0];
+                    if (firstTopic) title = `${firstTopic} Practice`;
+                }
+            }
+
+            // Fix Total Count (Test Questions vs Attempted)
+            const realTotalQuestions = att.testId?.questions?.length || att.answers?.length || 0;
+
+            // Fix Percentage (Cap at 100%)
+            const rawPct = att.maxScore > 0 ? (att.score / att.maxScore) * 100 : 0;
+            const percentage = Math.round(rawPct > 100 ? 100 : rawPct);
+
+            return {
+                _id: att._id,
+                testId: att.testId?._id,
+                testTitle: title,
+                score: att.score,
+                maxScore: att.maxScore,
+                correctCount: att.answers?.filter(a => a.isCorrect).length || 0,
+                totalCount: realTotalQuestions,
+                date: att.completedAt
+            };
+        })
     });
 });
 
