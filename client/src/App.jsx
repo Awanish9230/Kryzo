@@ -51,8 +51,8 @@ const Layout = ({ children }) => {
   const isTestRoute = location.pathname.includes('/student/test/') ||
     location.pathname.includes('/student/practice/coding');
 
-  console.log('Layout: Current Path', location.pathname);
-  console.log('Layout: Window Path', window.location.pathname);
+  console.log(`[ROUTE-TRACE] Current Path (location.pathname): ${location.pathname}`);
+  console.log(`[ROUTE-TRACE] Window Path (window.location.pathname): ${window.location.pathname}`);
 
   console.log('Layout: Rendering', { isTestRoute, path: location.pathname });
 
@@ -75,10 +75,8 @@ function App() {
     <AuthProvider>
       <ErrorBoundary>
         <Router>
-          {console.log('App: Router children rendering')}
           <Layout>
             <Routes>
-              {console.log('App: Routes matching started')}
               {/* Public Routes */}
               <Route path="/" element={<Landing />} />
               <Route path="/about" element={<About />} />
@@ -126,10 +124,7 @@ function App() {
               <Route path="/admin/questions/reports" element={<PrivateRoute role="admin"><ReportedQuestions /></PrivateRoute>} />
               <Route path="/admin/settings" element={<PrivateRoute role="admin"><SettingsPage /></PrivateRoute>} />
 
-              <Route path="*" element={<>
-                {console.log('App: Catch-all route (*) matched')}
-                <NotFound />
-              </>} />
+              <Route path="*" element={<NotFound />} />
             </Routes>
           </Layout>
         </Router>
