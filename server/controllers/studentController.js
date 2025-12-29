@@ -1121,16 +1121,18 @@ const generatePlanForUser = async (userId) => {
     const topicStats = {};
 
     // Helper to update stats
-    const updateTopicStats = (topic, isCorrect) => {
+    const updateTopicStats = (topic, isCorrect, isSkipped) => {
         if (!topic) return;
         if (!topicStats[topic]) {
-            topicStats[topic] = { correct: 0, total: 0, incorrect: 0 };
+            topicStats[topic] = { correct: 0, total: 0, incorrect: 0, skipped: 0 };
         }
         topicStats[topic].total += 1;
         if (isCorrect) {
             topicStats[topic].correct += 1;
         } else {
+            // Treat skipped as incorrect for weakness purpose, but track separately
             topicStats[topic].incorrect += 1;
+            if (isSkipped) topicStats[topic].skipped += 1;
         }
     };
 
@@ -1150,7 +1152,10 @@ const generatePlanForUser = async (userId) => {
 
                     if (topics.length === 0) topics = ['General Practice'];
 
-                    topics.forEach(t => updateTopicStats(t, ans.isCorrect));
+                    // Check if answer is "skipped" (empty or null)
+                    const isSkipped = (ans.userAnswer === null || ans.userAnswer === undefined || ans.userAnswer === '');
+
+                    topics.forEach(t => updateTopicStats(t, ans.isCorrect, isSkipped));
                 }
             });
         }
@@ -1162,7 +1167,10 @@ const generatePlanForUser = async (userId) => {
         // If accuracy < 60%, it's a candidate for weakness
         const accuracy = stats.total > 0 ? stats.correct / stats.total : 0;
         stats.accuracy = accuracy;
-        stats.weaknessScore = 1 - accuracy; // Higher is weaker
+        // Weakness Score: Higher is weaker. 
+        // We boost weakness score if they are skipping a lot (fear of topic?)
+        const skipRate = stats.total > 0 ? stats.skipped / stats.total : 0;
+        stats.weaknessScore = (1 - accuracy) + (skipRate * 0.5);
     }
 
     const sortedByWeakness = Object.entries(topicStats)
@@ -1226,8 +1234,6 @@ const generatePlanForUser = async (userId) => {
             ]
         };
 
-        // If Hard Mode, strictly filter. If Normal, prefer difficulty but allow fallback?
-        // Let's enforce difficulty to match the plan strictness requested.
         matchQuery.difficulty = dayDifficulty;
 
         const mcqQuestions = await Question.aggregate([
@@ -1240,14 +1246,24 @@ const generatePlanForUser = async (userId) => {
             { $sample: { size: 1 } }
         ]);
 
+        // Look for Documentation/Resources for this topic (New Feature)
+        const documentation = await Documentation.findOne({
+            topic: topicRegex
+        }).select('_id title difficulty');
+
         // Generate Tasks for UI
         const tasks = [];
 
         // Task 1: Reading/Concept
         tasks.push({
             type: 'READ',
-            description: `Review concepts: ${topic}`,
-            time: 15
+            description: documentation ? `Master ${documentation.title || topic}` : `Review concepts: ${topic}`,
+            time: 15,
+            resource: documentation ? {
+                id: documentation._id,
+                title: documentation.title,
+                type: 'DOCUMENTATION'
+            } : null
         });
 
         // Task 2: MCQs
@@ -1329,13 +1345,13 @@ const generateQuestionExplanation = asyncHandler(async (req, res) => {
         const { GoogleGenerativeAI } = require("@google/generative-ai");
         const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
-        const prompt = `Explain this ${question.type} question in detail for a student.
+        const prompt = `Explain this ${question.type} question concisely for a student.
         Title: ${question.title}
         Description: ${question.description}
         ${question.type === 'MCQ' ? `Options: ${question.options.map(o => o.text).join(', ')}` : ''}
         ${question.codeSnippet ? `Code Snippet: ${question.codeSnippet}` : ''}
         
-        Provide a clear, step-by-step explanation of the correct solution and why other options (if any) are incorrect. Keep it educational and encouraging.`;
+        Provide a short, direct explanation of the correct solution. Avoid lengthy introductions or conclusions. Maximum 3-4 sentences.`;
 
         let text = '';
         try {
