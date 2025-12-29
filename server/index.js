@@ -40,7 +40,7 @@ app.use(errorHandler);
 app.use(express.static(path.join(__dirname, '../client/dist')));
 
 // Catch-all route to serve the React app
-app.get('*', (req, res) => {
+app.get('/:path*', (req, res) => {
     res.sendFile(path.join(__dirname, '../client/dist', 'index.html'));
 });
 
