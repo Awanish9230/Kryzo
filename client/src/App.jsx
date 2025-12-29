@@ -49,8 +49,10 @@ import NotFound from './pages/NotFound';
 const Layout = ({ children }) => {
   const location = useLocation();
   const isTestRoute = location.pathname.includes('/student/test/') ||
-    location.pathname.includes('/student/test-diagnostic') ||
     location.pathname.includes('/student/practice/coding');
+
+  console.log('Layout: Current Path', location.pathname);
+  console.log('Layout: Window Path', window.location.pathname);
 
   console.log('Layout: Rendering', { isTestRoute, path: location.pathname });
 
@@ -124,7 +126,10 @@ function App() {
               <Route path="/admin/questions/reports" element={<PrivateRoute role="admin"><ReportedQuestions /></PrivateRoute>} />
               <Route path="/admin/settings" element={<PrivateRoute role="admin"><SettingsPage /></PrivateRoute>} />
 
-              <Route path="*" element={<NotFound />} />
+              <Route path="*" element={<>
+                {console.log('App: Catch-all route (*) matched')}
+                <NotFound />
+              </>} />
             </Routes>
           </Layout>
         </Router>

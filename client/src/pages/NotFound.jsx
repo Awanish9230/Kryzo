@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { Home, AlertCircle } from 'lucide-react';
 
 const NotFound = () => {
+    console.log('NotFound: Component Mounted');
     return (
         <div className="min-h-screen bg-black flex flex-col items-center justify-center px-6 relative overflow-hidden">
             {/* Background Effects */}
