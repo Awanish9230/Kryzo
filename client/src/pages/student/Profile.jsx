@@ -335,56 +335,64 @@ const Profile = () => {
                     </div>
                 </div>
 
-                {/* Activity Tracker Section */}
-                <div className="mb-12">
-                    <div className="flex items-center gap-3 mb-8">
-                        <Activity className="text-orange-500" size={24} />
-                        <h2 className="text-2xl font-bold tracking-tight">Daily Activity Tracker</h2>
+                {/* Combined Activity & Stats Section */}
+                <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 mb-12">
+                    {/* Left Column: Activity Calendar (3 cols) */}
+                    <div className="lg:col-span-3">
+                        <div className="flex items-center gap-3 mb-8">
+                            <Activity className="text-orange-500" size={24} />
+                            <h2 className="text-2xl font-bold tracking-tight">Daily Activity Tracker</h2>
+                        </div>
+                        <ActivityCalendar />
                     </div>
-                    <ActivityCalendar />
-                </div>
 
-                {/* Level Badge & Stats Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
-                    {/* Level Badge */}
-                    <motion.div
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        className="md:col-span-2 bg-zinc-900/50 border border-white/5 rounded-[2.2rem] p-8 backdrop-blur-sm relative overflow-hidden group hover:border-white/10 transition-all"
-                    >
-                        <div className={`absolute inset-0 bg-gradient-to-br ${levelColors[level]} opacity-5 group-hover:opacity-10 transition-all`}></div>
-                        <div className="relative z-10 flex flex-col md:flex-row items-center gap-8">
-                            <div className={`p-6 bg-gradient-to-br ${levelColors[level]} rounded-3xl text-white shadow-2xl`}>
-                                {levelIcons[level]}
-                            </div>
-                            <div className="text-center md:text-left">
-                                <p className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] mb-2">Rank Standing</p>
-                                <h2 className="text-4xl font-black tracking-tighter mb-2">{level}</h2>
-                                <p className="text-zinc-400 text-xs font-medium max-w-xs">
+                    {/* Right Column: Stats Stack (2 cols) */}
+                    <div className="lg:col-span-2 flex flex-col gap-6 pt-2">
+                        {/* Level Badge */}
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            className="bg-zinc-900/50 border border-white/5 rounded-[2.2rem] p-8 backdrop-blur-sm relative overflow-hidden group hover:border-white/10 transition-all flex-1"
+                        >
+                            <div className={`absolute inset-0 bg-gradient-to-br ${levelColors[level]} opacity-5 group-hover:opacity-10 transition-all`}></div>
+                            <div className="relative z-10 flex flex-col gap-6">
+                                <div className="flex items-center gap-6">
+                                    <div className={`p-5 bg-gradient-to-br ${levelColors[level]} rounded-3xl text-white shadow-2xl`}>
+                                        {levelIcons[level]}
+                                    </div>
+                                    <div>
+                                        <p className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] mb-1">Rank Standing</p>
+                                        <h2 className="text-3xl font-black tracking-tighter">{level}</h2>
+                                    </div>
+                                </div>
+                                <p className="text-zinc-400 text-xs font-medium leading-relaxed">
                                     {level === 'Beginner' && 'The journey of a thousand code blocks begins with a single line.'}
                                     {level === 'Intermediate' && 'You\'ve mastered the basics. The complex logic awaits your command.'}
                                     {level === 'Advanced' && 'Architecture and performance are now your second language.'}
                                     {level === 'Expert' && 'A grandmaster of the digital realm. Nothing is impossible.'}
                                 </p>
                             </div>
+                        </motion.div>
+
+                        {/* Stats Grid */}
+                        <div className="grid grid-cols-2 gap-4">
+                            {/* Tests Taken */}
+                            <StatCard
+                                icon={<CheckCircle2 className="text-green-500" size={20} />}
+                                label="Tests Completed"
+                                value={profile.stats?.testsTaken || 0}
+                                delay={0.1}
+                            />
+
+                            {/* Questions Solved */}
+                            <StatCard
+                                icon={<Target className="text-purple-500" size={20} />}
+                                label="Problems Slain"
+                                value={profile.stats?.totalQuestionsSolved || 0}
+                                delay={0.15}
+                            />
                         </div>
-                    </motion.div>
-
-                    {/* Tests Taken */}
-                    <StatCard
-                        icon={<CheckCircle2 className="text-green-500" size={20} />}
-                        label="Tests Completed"
-                        value={profile.stats?.testsTaken || 0}
-                        delay={0.1}
-                    />
-
-                    {/* Questions Solved */}
-                    <StatCard
-                        icon={<Target className="text-purple-500" size={20} />}
-                        label="Problems Slain"
-                        value={profile.stats?.totalQuestionsSolved || 0}
-                        delay={0.15}
-                    />
+                    </div>
                 </div>
 
                 {/* Percentile Ranking */}
