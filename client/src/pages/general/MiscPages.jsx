@@ -1,6 +1,6 @@
 import InfoPageLayout from './InfoPageLayout';
 import { motion } from 'framer-motion';
-import Footer from '../../components/Footer';
+
 
 export const Integrations = () => (
     <div className="min-h-screen bg-black text-white">
@@ -15,7 +15,7 @@ export const Integrations = () => (
                 ))}
             </div>
         </div>
-        <Footer />
+
     </div>
 );
 
@@ -49,7 +49,7 @@ export const HelpCenter = () => (
                 ))}
             </div>
         </div>
-        <Footer />
+
     </div>
 );
 

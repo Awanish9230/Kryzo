@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { Check } from 'lucide-react';
-import Footer from '../../components/Footer';
+
 
 const Pricing = () => {
     return (
@@ -62,7 +62,7 @@ const Pricing = () => {
                     </div>
                 </div>
             </div>
-            <Footer />
+
         </div>
     );
 };

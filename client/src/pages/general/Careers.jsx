@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { ArrowRight, Briefcase } from 'lucide-react';
-import Footer from '../../components/Footer';
+
 
 const Careers = () => {
     const roles = [
@@ -52,7 +52,7 @@ const Careers = () => {
                     </div>
                 </div>
             </div>
-            <Footer />
+
         </div>
     );
 };

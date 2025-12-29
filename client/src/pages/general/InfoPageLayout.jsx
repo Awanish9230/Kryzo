@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import Footer from '../../components/Footer';
+
 
 const InfoPageLayout = ({ title, date, children }) => {
     return (
@@ -19,7 +19,7 @@ const InfoPageLayout = ({ title, date, children }) => {
                     </motion.div>
                 </div>
             </div>
-            <Footer />
+
         </div>
     );
 };

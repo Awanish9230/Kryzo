@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { Calendar } from 'lucide-react';
-import Footer from '../../components/Footer';
+
 
 const Blog = () => {
     const posts = [
@@ -45,7 +45,7 @@ const Blog = () => {
                     </div>
                 </div>
             </div>
-            <Footer />
+
         </div>
     );
 };

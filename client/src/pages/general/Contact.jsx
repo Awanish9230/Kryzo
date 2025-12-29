@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { Mail, MessageSquare, Phone, MapPin } from 'lucide-react';
-import Footer from '../../components/Footer';
+
 
 const Contact = () => {
     return (
@@ -85,7 +85,7 @@ const Contact = () => {
                     </div>
                 </div>
             </div>
-            <Footer />
+
         </div>
     );
 };

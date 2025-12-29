@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { Users, Target, Globe, Award } from 'lucide-react';
-import Footer from '../../components/Footer';
+
 
 const About = () => {
     return (
@@ -132,7 +132,7 @@ const About = () => {
                 </div>
             </div>
 
-            <Footer />
+
         </div>
     );
 };

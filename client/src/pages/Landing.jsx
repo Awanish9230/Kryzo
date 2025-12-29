@@ -182,8 +182,7 @@ const Landing = () => {
                 </div>
             </section>
 
-            {/* Footer handled globally in App.jsx */}
-            <Footer />
+
         </div>
     );
 };

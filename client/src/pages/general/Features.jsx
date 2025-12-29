@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { Zap, Shield, Globe, Award, Database, Code2 } from 'lucide-react';
-import Footer from '../../components/Footer';
+
 
 const Features = () => {
     const features = [
@@ -44,7 +44,7 @@ const Features = () => {
                     </div>
                 </div>
             </div>
-            <Footer />
+
         </div>
     );
 };
