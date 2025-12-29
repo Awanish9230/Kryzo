@@ -44,6 +44,7 @@ export const AuthProvider = ({ children }) => {
         setUser(null);
     };
 
+    console.log('AuthProvider: Rendering', { loading, hasUser: !!user });
     return (
         <AuthContext.Provider value={{ user, login, register, logout, loading }}>
             {children}

@@ -6,7 +6,5 @@ import App from './App.jsx'
 console.log('Kryzo: Mount started');
 
 createRoot(document.getElementById('root')).render(
-  <StrictMode>
-    <App />
-  </StrictMode>,
+  <App />
 )
