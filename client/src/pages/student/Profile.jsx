@@ -566,7 +566,7 @@ const Profile = () => {
                                 >
                                     <div className="flex items-center gap-4 flex-1">
                                         <div className={`w-14 h-14 rounded-2xl flex items-center justify-center font-black text-xl bg-gradient-to-br ${attempt.score / (attempt.maxScore || 1) >= 0.8 ? 'from-green-500/20 to-green-600/20 text-green-500' : 'from-blue-500/20 to-blue-600/20 text-blue-500'}`}>
-                                            {Math.round((attempt.score / (attempt.maxScore || 1)) * 100)}%
+                                            {Math.min(100, Math.round((attempt.score / (attempt.maxScore || 1)) * 100))}%
                                         </div>
                                         <div>
                                             <h4 className="font-bold text-lg text-white mb-1">{attempt.testTitle}</h4>
