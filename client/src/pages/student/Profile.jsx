@@ -373,7 +373,7 @@ const Profile = () => {
                     {/* Tests Taken */}
                     <StatCard
                         icon={<CheckCircle2 className="text-green-500" size={20} />}
-                        label="Certifications"
+                        label="Tests Completed"
                         value={profile.stats?.testsTaken || 0}
                         delay={0.1}
                     />

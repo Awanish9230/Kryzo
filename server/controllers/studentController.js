@@ -637,12 +637,59 @@ const getUserProfile = asyncHandler(async (req, res) => {
         percentage: att.maxScore > 0 ? Math.round((att.score / att.maxScore) * 100) : 0
     }));
 
-    // Ranking Logic (Very Basic for now)
-    const allUsers = await User.find({ role: 'student' }).select('_id');
-    const totalUsers = allUsers.length;
-    // Rank could be based on average score or total score
-    // For simplicity, let's just use total Score
-    const globalRank = 12; // Simulated for now or we could calculate but it might be heavy
+    // Ranking Logic (Real-Time Leaderboard)
+    // Aggregate total scores for all students
+    const leaderboard = await UserAttempt.aggregate([
+        {
+            $group: {
+                _id: "$userId",
+                totalScore: { $sum: "$score" }
+            }
+        },
+        { $sort: { totalScore: -1 } }
+    ]);
+
+    const totalUsers = await User.countDocuments({ role: 'student' });
+
+    // Find current user's rank
+    const userRankIndex = leaderboard.findIndex(entry => entry._id.toString() === userId.toString());
+    const globalRank = userRankIndex !== -1 ? userRankIndex + 1 : totalUsers;
+
+    // Time Management Analysis
+    const timeStats = {
+        easy: { totalTime: 0, count: 0 },
+        medium: { totalTime: 0, count: 0 },
+        hard: { totalTime: 0, count: 0 }
+    };
+
+    attempts.forEach(att => {
+        att.answers?.forEach(ans => {
+            if (ans.timeTaken > 0) {
+                const diff = (ans.questionId?.difficulty || 'medium').toLowerCase();
+                if (timeStats[diff]) {
+                    timeStats[diff].totalTime += ans.timeTaken;
+                    timeStats[diff].count += 1;
+                }
+            }
+        });
+    });
+
+    const timeAnalysis = {
+        easy: timeStats.easy.count > 0 ? Math.round(timeStats.easy.totalTime / timeStats.easy.count) : 0,
+        medium: timeStats.medium.count > 0 ? Math.round(timeStats.medium.totalTime / timeStats.medium.count) : 0,
+        hard: timeStats.hard.count > 0 ? Math.round(timeStats.hard.totalTime / timeStats.hard.count) : 0,
+        insights: []
+    };
+
+    // Generate Insights based on benchmarks
+    // Benchmarks (in seconds): Easy < 60, Medium < 180, Hard < 600
+    if (timeAnalysis.easy > 120) timeAnalysis.insights.push("Try to solve Easy questions under 2 minutes to save time for complex problems.");
+    else if (timeAnalysis.easy > 0 && timeAnalysis.easy < 45) timeAnalysis.insights.push("Excellent speed on Easy questions!");
+
+    if (timeAnalysis.medium > 300) timeAnalysis.insights.push("You're taking a bit long on Medium questions. Practice identifying patterns faster.");
+    else if (timeAnalysis.medium > 0 && timeAnalysis.medium < 150) timeAnalysis.insights.push("Great pace on Medium level problems.");
+
+    if (timeAnalysis.hard > 900) timeAnalysis.insights.push("Hard problems are consuming too much time. Focus on breaking them down into smaller sub-problems.");
 
     // Activity Log
     const weekAgo = new Date();
@@ -672,7 +719,8 @@ const getUserProfile = asyncHandler(async (req, res) => {
             totalQuestionsSolved: attempts.reduce((acc, att) => acc + (att.answers?.filter(a => a.isCorrect).length || 0), 0),
             totalQuestionsAttempted: attempts.reduce((acc, att) => acc + (att.answers?.length || 0), 0),
             globalRank,
-            totalUsers
+            totalUsers,
+            timeAnalysis // New Field
         },
         topicMastery,
         scoreTrend,

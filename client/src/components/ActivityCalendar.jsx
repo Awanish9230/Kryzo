@@ -50,7 +50,7 @@ const ActivityCalendar = () => {
     const days = generateDays();
 
     return (
-        <div className="bg-zinc-900/50 border border-white/5 rounded-[1.5rem] p-5 backdrop-blur-sm max-w-2xl mx-auto">
+        <div className="bg-zinc-900/50 border border-white/5 rounded-[1.5rem] p-5 backdrop-blur-sm max-w-md mx-auto">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
                 <div className="flex items-center gap-3">
                     <div className="p-2.5 bg-orange-500/10 rounded-xl border border-orange-500/20">
