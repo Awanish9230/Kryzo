@@ -636,14 +636,14 @@ const getGenAIModel = async () => {
     if (settings?.ai?.geminiApiKey) {
         apiKeys.push(settings.ai.geminiApiKey);
     }
-    
+
     // Parse env keys (comma separated)
     if (process.env.GEMINI_API_KEYS) {
         const envKeys = process.env.GEMINI_API_KEYS.split(',').map(k => k.trim()).filter(k => k);
         apiKeys = [...apiKeys, ...envKeys];
     } else if (process.env.GEMINI_API_KEYS) {
         // Fallback to single key if legacy var is used
-         apiKeys.push(process.env.GEMINI_API_KEY);
+        apiKeys.push(process.env.GEMINI_API_KEY);
     }
 
     // Remove duplicates and filter empty
@@ -657,8 +657,8 @@ const getGenAIModel = async () => {
     // For now, let's try them in order if we implement retry logic, 
     // but here we just return a model initialized with one.
     // To support automatic switching on 429, we need the logic to be "try this key, if fail, try next".
-    
-    return { apiKeys }; 
+
+    return { apiKeys };
 };
 
 // Retry wrapper for Generative AI
@@ -676,7 +676,7 @@ const generateWithRetry = async (prompt, apiKeys) => {
             lastError = error;
             // If it's a quota error (429) or server error (503), continue to next key.
             // Otherwise, maybe it's a prompt issue, but safer to try next just in case.
-            continue; 
+            continue;
         }
     }
     throw new Error(`All API keys failed. Last error: ${lastError?.message}`);
@@ -716,20 +716,23 @@ const generateQuestionAI = asyncHandler(async (req, res) => {
     const remainder = questionCount % targetSubtopics.length;
 
     let totalGenerated = [];
-    
+
     // Process in batches/parallel?
     // For reliability, let's process subtopics sequentially to avoid hitting rate limits too hard simultaneously,
     // although our retry logic handles it. Parallel is faster. 
     // Let's do parallel requests for subtopics.
-    
+
     const validDifficulties = ['easy', 'medium', 'hard'];
-    
+
+    // Capture errors to report if generation completely fails
+    let generationErrors = [];
+
     const generateForSubtopic = async (sub, numToGen) => {
         if (numToGen <= 0) return [];
-        
+
         let prompt = "";
         const diff = validDifficulties.includes(difficulty) ? difficulty : 'medium';
-        
+
         if (type === 'MCQ') {
             prompt = `Generate ${numToGen} UNIQUE high-quality MCQ questions for Subject: "${topic}", Subtopic: "${sub}", Difficulty: ${diff}.
             
@@ -777,13 +780,14 @@ Format:
             const result = await generateWithRetry(prompt, apiKeys);
             const response = await result.response;
             let text = response.text();
-            
+
             // Cleanup
             text = text.replace(/```json/g, '').replace(/```/g, '').trim();
             const parsed = JSON.parse(text);
             return Array.isArray(parsed) ? parsed : [parsed];
         } catch (err) {
             console.error(`Failed to generate for ${sub}:`, err.message);
+            generationErrors.push(`${sub}: ${err.message}`);
             return [];
         }
     };
@@ -794,19 +798,29 @@ Format:
     });
 
     const results = await Promise.all(promises);
-    
+
     // Flatten results
     results.forEach(batch => {
         if (batch) totalGenerated.push(...batch);
     });
 
     // Filter duplicates against existing DB
-    const uniqueQuestions = totalGenerated.filter(q => 
+    const uniqueQuestions = totalGenerated.filter(q =>
         q.title && !existingTitles.has(q.title.toLowerCase())
     );
 
-    // If we filtered out too many, we might want to warn, but for now just return what we have.
-    
+    if (uniqueQuestions.length === 0) {
+        // If we have errors, report them
+        if (generationErrors.length > 0) {
+            res.status(500);
+            throw new Error(`Generation failed. Details: ${generationErrors.join(' | ')}`);
+        } else {
+            // Case where generation worked but duplicates filtered out, or just empty
+            res.status(400);
+            throw new Error('No unique questions generated. Try changing the prompt params or subtopics.');
+        }
+    }
+
     res.json({
         questions: uniqueQuestions,
         generated: uniqueQuestions.length,
