@@ -54,6 +54,9 @@ const AddQuestion = () => {
     const [isGeneratingAI, setIsGeneratingAI] = useState(false);
     const [testResults, setTestResults] = useState(null);
     const [testCode, setTestCode] = useState('');
+    const [aiCount, setAiCount] = useState(1);
+    const [generatedQuestions, setGeneratedQuestions] = useState([]);
+    const [showBulkReview, setShowBulkReview] = useState(false);
 
     useEffect(() => {
         let time = 10;
@@ -134,25 +137,49 @@ const AddQuestion = () => {
                 type,
                 topic: selectedTopic,
                 subtopic: selectedSubtopic,
-                difficulty: formData.difficulty
+                difficulty: formData.difficulty,
+                count: aiCount
             });
 
-            setFormData(prev => ({
-                ...prev,
-                ...data,
-                // Ensure options/testCases are correctly formatted if they were missing something
-                options: data.options || prev.options,
-                testCases: data.testCases || prev.testCases
-            }));
-
-            if (data.explanation) {
-                setFormData(prev => ({ ...prev, explanation: data.explanation }));
+            // Handle bulk response
+            if (data.questions && data.questions.length > 1) {
+                setGeneratedQuestions(data.questions);
+                setShowBulkReview(true);
+            } else if (data.questions && data.questions.length === 1) {
+                // Single question - populate form directly
+                const question = data.questions[0];
+                setFormData(prev => ({
+                    ...prev,
+                    ...question,
+                    options: question.options || prev.options,
+                    testCases: question.testCases || prev.testCases
+                }));
+            } else {
+                alert('No unique questions generated. Try different parameters.');
             }
 
         } catch (error) {
             alert(error.response?.data?.message || 'AI Generation failed');
         } finally {
             setIsGeneratingAI(false);
+        }
+    };
+
+    const handleSaveBulkQuestion = async (question) => {
+        try {
+            const payload = {
+                ...question,
+                type,
+                topic: selectedTopic,
+                subtopic: selectedSubtopic,
+                status: 'published'
+            };
+            await api.post('/admin/questions', payload);
+            // Remove from generated list
+            setGeneratedQuestions(prev => prev.filter(q => q.title !== question.title));
+            alert('Question saved successfully!');
+        } catch (error) {
+            alert(error.response?.data?.message || 'Error saving question');
         }
     };
 
@@ -233,15 +260,26 @@ const AddQuestion = () => {
                                 <h2 className="text-xl font-bold tracking-tight">Question Details</h2>
                             </div>
                             {(type === 'MCQ' || type === 'CODING') && (
-                                <button
-                                    type="button"
-                                    onClick={handleAIGenerate}
-                                    disabled={isGeneratingAI}
-                                    className="px-6 py-2.5 bg-zinc-950 border border-white/5 rounded-2xl text-[11px] font-black uppercase tracking-widest hover:bg-white hover:text-black transition-all flex items-center gap-3 disabled:opacity-50"
-                                >
-                                    {isGeneratingAI ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} className="text-yellow-500" />}
-                                    {isGeneratingAI ? 'Generating...' : 'Generate with AI'}
-                                </button>
+                                <div className="flex items-center gap-3">
+                                    <select
+                                        value={aiCount}
+                                        onChange={(e) => setAiCount(parseInt(e.target.value))}
+                                        className="px-4 py-2.5 bg-zinc-950 border border-white/5 rounded-2xl text-xs font-bold text-zinc-400 focus:outline-none hover:border-white/10"
+                                    >
+                                        <option value={1}>1 Question</option>
+                                        <option value={5}>5 Questions</option>
+                                        <option value={10}>10 Questions</option>
+                                    </select>
+                                    <button
+                                        type="button"
+                                        onClick={handleAIGenerate}
+                                        disabled={isGeneratingAI}
+                                        className="px-6 py-2.5 bg-zinc-950 border border-white/5 rounded-2xl text-[11px] font-black uppercase tracking-widest hover:bg-white hover:text-black transition-all flex items-center gap-3 disabled:opacity-50"
+                                    >
+                                        {isGeneratingAI ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} className="text-yellow-500" />}
+                                        {isGeneratingAI ? 'Generating...' : 'Generate with AI'}
+                                    </button>
+                                </div>
                             )}
                         </div>
 
@@ -670,6 +708,67 @@ const AddQuestion = () => {
                         </button>
                     </div>
                 </form>
+
+                {/* Bulk Review Modal */}
+                {showBulkReview && (
+                    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-6">
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            className="bg-zinc-900 border border-white/10 rounded-[2.5rem] p-8 max-w-4xl w-full max-h-[80vh] overflow-y-auto"
+                        >
+                            <div className="flex items-center justify-between mb-6">
+                                <h2 className="text-2xl font-bold">Review Generated Questions ({generatedQuestions.length})</h2>
+                                <button
+                                    onClick={() => {
+                                        setShowBulkReview(false);
+                                        setGeneratedQuestions([]);
+                                    }}
+                                    className="p-2 hover:bg-white/10 rounded-xl transition-all"
+                                >
+                                    <CloseIcon size={20} />
+                                </button>
+                            </div>
+
+                            <div className="space-y-4">
+                                {generatedQuestions.map((question, idx) => (
+                                    <div key={idx} className="bg-zinc-950 border border-white/5 rounded-2xl p-6">
+                                        <div className="flex items-start justify-between gap-4">
+                                            <div className="flex-1">
+                                                <h3 className="font-bold text-lg mb-2">{question.title}</h3>
+                                                <p className="text-zinc-400 text-sm mb-3">{question.description}</p>
+                                                <div className="flex gap-2 text-xs">
+                                                    <span className="px-3 py-1 bg-blue-500/10 text-blue-500 rounded-full">{question.type}</span>
+                                                    <span className="px-3 py-1 bg-yellow-500/10 text-yellow-500 rounded-full">{question.difficulty}</span>
+                                                </div>
+                                            </div>
+                                            <button
+                                                onClick={() => handleSaveBulkQuestion(question)}
+                                                className="px-4 py-2 bg-white text-black font-bold rounded-xl hover:bg-zinc-200 transition-all flex items-center gap-2"
+                                            >
+                                                <Check size={16} />
+                                                Save
+                                            </button>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+
+                            {generatedQuestions.length === 0 && (
+                                <div className="text-center py-12">
+                                    <CheckCircle2 size={48} className="mx-auto mb-4 text-green-500" />
+                                    <p className="text-zinc-400">All questions saved!</p>
+                                    <button
+                                        onClick={() => setShowBulkReview(false)}
+                                        className="mt-4 px-6 py-2 bg-white text-black font-bold rounded-xl hover:bg-zinc-200 transition-all"
+                                    >
+                                        Close
+                                    </button>
+                                </div>
+                            )}
+                        </motion.div>
+                    </div>
+                )}
             </div>
         </div>
     );

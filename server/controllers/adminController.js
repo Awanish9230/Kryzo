@@ -628,7 +628,10 @@ const getPainPointAnalytics = asyncHandler(async (req, res) => {
 // @route   POST /api/admin/questions/generate-ai
 // @access  Private/Admin
 const generateQuestionAI = asyncHandler(async (req, res) => {
-    const { type, topic, subtopic, difficulty } = req.body;
+    const { type, topic, subtopic, difficulty, count = 1 } = req.body;
+
+    // Validate count (1-10)
+    const questionCount = Math.min(Math.max(1, parseInt(count) || 1), 10);
 
     const settings = await Settings.findOne();
     const apiKey = settings?.ai?.geminiApiKey || process.env.GEMINI_API_KEY;
@@ -638,46 +641,62 @@ const generateQuestionAI = asyncHandler(async (req, res) => {
         throw new Error('Gemini API Key is missing. Configure it in Settings.');
     }
 
+    // Get existing question titles for this topic/subtopic to prevent duplicates
+    const existingQuestions = await Question.find({
+        topic,
+        subtopic,
+        status: { $in: ['published', 'draft'] }
+    }).select('title');
+    const existingTitles = existingQuestions.map(q => q.title);
+
     const genAI = new GoogleGenerativeAI(apiKey);
     const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
 
     let prompt = "";
     if (type === 'MCQ') {
-        prompt = `Generate a high-quality MCQ question for the topic "${topic}" and subtopic "${subtopic}" with ${difficulty} difficulty.
-        Return the response in STRICT JSON format with the following structure:
-        {
-            "title": "Concise Title",
-            "description": "Clear question description",
-            "difficulty": "${difficulty}",
-            "type": "MCQ",
-            "options": [
-                {"text": "Option 1", "isCorrect": true},
-                {"text": "Option 2", "isCorrect": false},
-                {"text": "Option 3", "isCorrect": false},
-                {"text": "Option 4", "isCorrect": false}
-            ],
-            "explanation": "Brief explanation of why the correct option is right"
-        }
-        Response MUST be ONLY the JSON object.`;
+        prompt = `Generate ${questionCount} UNIQUE high-quality MCQ questions for "${topic}" - "${subtopic}" (${difficulty}).
+
+CRITICAL: Avoid these existing titles: ${existingTitles.length > 0 ? existingTitles.join(', ') : 'None'}
+
+Return a JSON ARRAY of ${questionCount} objects:
+[{
+    "title": "Unique Title",
+    "description": "Clear question",
+    "difficulty": "${difficulty}",
+    "type": "MCQ",
+    "options": [
+        {"text": "Option 1", "isCorrect": true},
+        {"text": "Option 2", "isCorrect": false},
+        {"text": "Option 3", "isCorrect": false},
+        {"text": "Option 4", "isCorrect": false}
+    ],
+    "explanation": "Brief explanation"
+}]
+
+Response MUST be ONLY a JSON array.`;
     } else {
-        prompt = `Generate a high-quality CODING question for the topic "${topic}" and subtopic "${subtopic}" with ${difficulty} difficulty.
-        Return the response in STRICT JSON format with the following structure:
-        {
-            "title": "Concise Title",
-            "description": "Clear problem statement with examples",
-            "difficulty": "${difficulty}",
-            "type": "CODING",
-            "constraints": "Time and memory constraints",
-            "inputFormat": "Description of input",
-            "outputFormat": "Description of output",
-            "testCases": [
-                {"input": "Sample input 1", "output": "Sample output 1", "isHidden": false},
-                {"input": "Sample input 2", "output": "Sample output 2", "isHidden": false},
-                {"input": "Hidden input", "output": "Hidden output", "isHidden": true}
-            ],
-            "explanation": "Optimal approach and complexity"
-        }
-        Response MUST be ONLY the JSON object.`;
+        prompt = `Generate ${questionCount} UNIQUE high-quality CODING questions for "${topic}" - "${subtopic}" (${difficulty}).
+
+CRITICAL: Avoid these existing titles: ${existingTitles.length > 0 ? existingTitles.join(', ') : 'None'}
+
+Return a JSON ARRAY of ${questionCount} objects:
+[{
+    "title": "Unique Title",
+    "description": "Clear problem with examples",
+    "difficulty": "${difficulty}",
+    "type": "CODING",
+    "constraints": "Time/memory constraints",
+    "inputFormat": "Input description",
+    "outputFormat": "Output description",
+    "testCases": [
+        {"input": "Sample 1", "output": "Output 1", "isHidden": false},
+        {"input": "Sample 2", "output": "Output 2", "isHidden": false},
+        {"input": "Hidden", "output": "Hidden out", "isHidden": true}
+    ],
+    "explanation": "Approach and complexity"
+}]
+
+Response MUST be ONLY a JSON array.`;
     }
 
     const result = await model.generateContent(prompt);
@@ -689,7 +708,22 @@ const generateQuestionAI = asyncHandler(async (req, res) => {
 
     try {
         const questionData = JSON.parse(text);
-        res.json(questionData);
+
+        // Ensure it's an array
+        const questions = Array.isArray(questionData) ? questionData : [questionData];
+
+        // Filter out any duplicates against existing titles
+        const uniqueQuestions = questions.filter(q =>
+            !existingTitles.some(existing =>
+                existing.toLowerCase() === q.title.toLowerCase()
+            )
+        );
+
+        res.json({
+            questions: uniqueQuestions,
+            generated: uniqueQuestions.length,
+            requested: questionCount
+        });
     } catch (err) {
         console.error("AI Generation Parsing Error:", err.message, "Raw Text:", text);
         res.status(500);
