@@ -14,16 +14,25 @@ import {
     AlertCircle,
     Loader2
 } from 'lucide-react';
+import { useSocket } from '../../context/SocketContext';
 
 const AdminDashboard = () => {
     const [stats, setStats] = useState(null);
     const [loading, setLoading] = useState(true);
     const [isAutoFilling, setIsAutoFilling] = useState(false);
+    const { onlineUsers } = useSocket();
 
     const fetchStats = async () => {
         try {
-            const { data } = await api.get('/admin/stats');
-            setStats(data);
+            const [statsRes, activityRes] = await Promise.all([
+                api.get('/admin/stats'),
+                api.get('/admin/analytics/users')
+            ]);
+
+            setStats({
+                ...statsRes.data,
+                activity: activityRes.data // { dau, wau, mau }
+            });
             setLoading(false);
         } catch (err) {
             console.error(err);
@@ -153,22 +162,50 @@ const AdminDashboard = () => {
                             </div>
                         </div>
 
-                        {/* Recent Activity / Growth */}
+                        {/* Real-time Activity Stats */}
                         <div className="bg-zinc-900/50 border border-white/5 rounded-[2.5rem] p-8 backdrop-blur-sm">
                             <div className="flex items-center justify-between mb-8">
                                 <h2 className="text-xl font-bold flex items-center gap-3">
                                     <TrendingUp className="text-blue-500" />
-                                    Growth Analytics
+                                    Live Activity
                                 </h2>
-                                <select className="bg-white/5 border border-white/10 rounded-lg text-xs font-bold p-2 text-zinc-400 focus:outline-none">
-                                    <option>Last 30 Days</option>
-                                    <option>Last 7 Days</option>
-                                </select>
+                                <span className="flex items-center gap-2 px-3 py-1 bg-green-500/10 border border-green-500/20 rounded-full text-green-500 text-xs font-bold animate-pulse">
+                                    <span className="w-2 h-2 bg-green-500 rounded-full" />
+                                    Live
+                                </span>
                             </div>
-                            <div className="h-48 w-full bg-gradient-to-t from-blue-500/5 to-transparent border border-white/5 rounded-2xl flex items-center justify-center relative overflow-hidden">
-                                <BarChart2 className="w-20 h-20 text-blue-500 opacity-10" />
-                                <div className="absolute inset-0 flex items-center justify-center">
-                                    <span className="text-zinc-600 font-medium text-sm">Real-time tracking enabled</span>
+
+                            <div className="grid grid-cols-2 gap-4 mb-6">
+                                <div className="p-4 bg-zinc-950/50 border border-white/5 rounded-2xl">
+                                    <p className="text-[10px] font-black uppercase text-zinc-500 mb-1">Online Users</p>
+                                    <p className="text-2xl font-bold text-white flex items-center gap-2">
+                                        {onlineUsers?.length || 0}
+                                        <span className="text-xs font-normal text-zinc-500">active now</span>
+                                    </p>
+                                </div>
+                                <div className="p-4 bg-zinc-950/50 border border-white/5 rounded-2xl">
+                                    <p className="text-[10px] font-black uppercase text-zinc-500 mb-1">Daily Active</p>
+                                    <p className="text-2xl font-bold text-white flex items-center gap-2">
+                                        {stats?.activity?.dau || 0}
+                                        <span className="text-xs font-normal text-zinc-500">today</span>
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div className="space-y-3">
+                                <div className="flex justify-between items-center text-sm">
+                                    <span className="text-zinc-500">Weekly Active Users</span>
+                                    <span className="font-bold">{stats?.activity?.wau || 0}</span>
+                                </div>
+                                <div className="w-full h-1 bg-white/5 rounded-full overflow-hidden">
+                                    <div className="h-full bg-blue-500" style={{ width: '100%' }} />
+                                </div>
+                                <div className="flex justify-between items-center text-sm">
+                                    <span className="text-zinc-500">Monthly Active Users</span>
+                                    <span className="font-bold">{stats?.activity?.mau || 0}</span>
+                                </div>
+                                <div className="w-full h-1 bg-white/5 rounded-full overflow-hidden">
+                                    <div className="h-full bg-purple-500" style={{ width: '100%' }} />
                                 </div>
                             </div>
                         </div>

@@ -17,8 +17,10 @@ const {
     generateQuestionExplanation
 } = require('../controllers/studentController');
 const { protect } = require('../middleware/authMiddleware');
+const { trackActivity } = require('../middleware/activityTracker'); // New
 
 router.use(protect);
+router.use(trackActivity); // Track activity on all student routes
 
 router.get('/profile', getUserProfile);
 router.get('/topics', getTopics);

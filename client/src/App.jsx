@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
+import { SocketProvider } from './context/SocketContext';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import PrivateRoute from './components/PrivateRoute';
@@ -51,8 +52,6 @@ const Layout = ({ children }) => {
   const isTestRoute = location.pathname.includes('/student/test/') ||
     location.pathname.includes('/student/practice/coding');
 
-
-
   return (
     <div className="flex flex-col min-h-screen bg-black text-white">
       <Navbar />
@@ -66,65 +65,66 @@ const Layout = ({ children }) => {
 };
 
 function App() {
-
   return (
     <AuthProvider>
-      <ErrorBoundary>
-        <Router>
-          <Layout>
-            <Routes>
-              {/* Public Routes */}
-              <Route path="/" element={<Landing />} />
-              <Route path="/about" element={<About />} />
-              <Route path="/contact" element={<Contact />} />
-              <Route path="/careers" element={<Careers />} />
-              <Route path="/blog" element={<Blog />} />
-              <Route path="/features" element={<Features />} />
-              <Route path="/pricing" element={<Pricing />} />
-              <Route path="/privacy" element={<PrivacyPolicy />} />
-              <Route path="/terms" element={<TermsOfService />} />
-              <Route path="/integrations" element={<Integrations />} />
-              <Route path="/changelog" element={<Changelog />} />
-              <Route path="/help" element={<HelpCenter />} />
-              <Route path="/docs" element={<Documentation />} />
+      <SocketProvider>
+        <ErrorBoundary>
+          <Router>
+            <Layout>
+              <Routes>
+                {/* Public Routes */}
+                <Route path="/" element={<Landing />} />
+                <Route path="/about" element={<About />} />
+                <Route path="/contact" element={<Contact />} />
+                <Route path="/careers" element={<Careers />} />
+                <Route path="/blog" element={<Blog />} />
+                <Route path="/features" element={<Features />} />
+                <Route path="/pricing" element={<Pricing />} />
+                <Route path="/privacy" element={<PrivacyPolicy />} />
+                <Route path="/terms" element={<TermsOfService />} />
+                <Route path="/integrations" element={<Integrations />} />
+                <Route path="/changelog" element={<Changelog />} />
+                <Route path="/help" element={<HelpCenter />} />
+                <Route path="/docs" element={<Documentation />} />
 
-              <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/register" element={<Register />} />
 
-              {/* Student Routes */}
-              <Route path="/student" element={<PrivateRoute role="student"><StudentDashboard /></PrivateRoute>} />
-              <Route path="/student/dashboard" element={<PrivateRoute role="student"><StudentDashboard /></PrivateRoute>} />
-              <Route path="/student/profile" element={<PrivateRoute role="student"><Profile /></PrivateRoute>} />
-              <Route path="/student/practice/coding" element={<PrivateRoute role="student"><CodingPractice /></PrivateRoute>} />
-              <Route path="/student/test/diagnostic" element={<PrivateRoute role="student"><TestAttempt /></PrivateRoute>} />
-              <Route path="/student/test/custom" element={<PrivateRoute role="student"><CustomTestBuilder /></PrivateRoute>} />
-              <Route path="/student/test/daily/:dayNumber" element={<PrivateRoute role="student"><DailyTest /></PrivateRoute>} />
-              <Route path="/student/test/:testId" element={<PrivateRoute role="student"><TestAttempt /></PrivateRoute>} />
-              <Route path="/student/test/result" element={<PrivateRoute role="student"><TestResult /></PrivateRoute>} />
-              <Route path="/student/reviews" element={<PrivateRoute role="student"><TestReviewList /></PrivateRoute>} />
-              <Route path="/student/attempt/:attemptId" element={<PrivateRoute role="student"><TestReviewDetail /></PrivateRoute>} />
-              <Route path="/student/review/:attemptId" element={<PrivateRoute role="student"><TestReviewDetail /></PrivateRoute>} />
-              <Route path="/student/study/:id" element={<PrivateRoute role="student"><StudyDocumentation /></PrivateRoute>} />
+                {/* Student Routes */}
+                <Route path="/student" element={<PrivateRoute role="student"><StudentDashboard /></PrivateRoute>} />
+                <Route path="/student/dashboard" element={<PrivateRoute role="student"><StudentDashboard /></PrivateRoute>} />
+                <Route path="/student/profile" element={<PrivateRoute role="student"><Profile /></PrivateRoute>} />
+                <Route path="/student/practice/coding" element={<PrivateRoute role="student"><CodingPractice /></PrivateRoute>} />
+                <Route path="/student/test/diagnostic" element={<PrivateRoute role="student"><TestAttempt /></PrivateRoute>} />
+                <Route path="/student/test/custom" element={<PrivateRoute role="student"><CustomTestBuilder /></PrivateRoute>} />
+                <Route path="/student/test/daily/:dayNumber" element={<PrivateRoute role="student"><DailyTest /></PrivateRoute>} />
+                <Route path="/student/test/:testId" element={<PrivateRoute role="student"><TestAttempt /></PrivateRoute>} />
+                <Route path="/student/test/result" element={<PrivateRoute role="student"><TestResult /></PrivateRoute>} />
+                <Route path="/student/reviews" element={<PrivateRoute role="student"><TestReviewList /></PrivateRoute>} />
+                <Route path="/student/attempt/:attemptId" element={<PrivateRoute role="student"><TestReviewDetail /></PrivateRoute>} />
+                <Route path="/student/review/:attemptId" element={<PrivateRoute role="student"><TestReviewDetail /></PrivateRoute>} />
+                <Route path="/student/study/:id" element={<PrivateRoute role="student"><StudyDocumentation /></PrivateRoute>} />
 
-              {/* Admin Routes */}
-              <Route path="/admin" element={<PrivateRoute role="admin"><AdminDashboard /></PrivateRoute>} />
-              <Route path="/admin/dashboard" element={<PrivateRoute role="admin"><AdminDashboard /></PrivateRoute>} />
-              <Route path="/admin/profile" element={<PrivateRoute role="admin"><AdminProfile /></PrivateRoute>} />
-              <Route path="/admin/questions" element={<PrivateRoute role="admin"><QuestionList /></PrivateRoute>} />
-              <Route path="/admin/questions/add" element={<PrivateRoute role="admin"><AddQuestion /></PrivateRoute>} />
-              <Route path="/admin/questions/edit/:id" element={<PrivateRoute role="admin"><EditQuestion /></PrivateRoute>} />
-              <Route path="/admin/users" element={<PrivateRoute role="admin"><UserManagement /></PrivateRoute>} />
-              <Route path="/admin/documentation" element={<PrivateRoute role="admin"><AdminDocumentation /></PrivateRoute>} />
-              <Route path="/admin/questions/bulk" element={<PrivateRoute role="admin"><BulkUpload /></PrivateRoute>} />
-              <Route path="/admin/reports" element={<PrivateRoute role="admin"><AdminReports /></PrivateRoute>} />
-              <Route path="/admin/questions/reports" element={<PrivateRoute role="admin"><ReportedQuestions /></PrivateRoute>} />
-              <Route path="/admin/settings" element={<PrivateRoute role="admin"><SettingsPage /></PrivateRoute>} />
+                {/* Admin Routes */}
+                <Route path="/admin" element={<PrivateRoute role="admin"><AdminDashboard /></PrivateRoute>} />
+                <Route path="/admin/dashboard" element={<PrivateRoute role="admin"><AdminDashboard /></PrivateRoute>} />
+                <Route path="/admin/profile" element={<PrivateRoute role="admin"><AdminProfile /></PrivateRoute>} />
+                <Route path="/admin/questions" element={<PrivateRoute role="admin"><QuestionList /></PrivateRoute>} />
+                <Route path="/admin/questions/add" element={<PrivateRoute role="admin"><AddQuestion /></PrivateRoute>} />
+                <Route path="/admin/questions/edit/:id" element={<PrivateRoute role="admin"><EditQuestion /></PrivateRoute>} />
+                <Route path="/admin/users" element={<PrivateRoute role="admin"><UserManagement /></PrivateRoute>} />
+                <Route path="/admin/documentation" element={<PrivateRoute role="admin"><AdminDocumentation /></PrivateRoute>} />
+                <Route path="/admin/questions/bulk" element={<PrivateRoute role="admin"><BulkUpload /></PrivateRoute>} />
+                <Route path="/admin/reports" element={<PrivateRoute role="admin"><AdminReports /></PrivateRoute>} />
+                <Route path="/admin/questions/reports" element={<PrivateRoute role="admin"><ReportedQuestions /></PrivateRoute>} />
+                <Route path="/admin/settings" element={<PrivateRoute role="admin"><SettingsPage /></PrivateRoute>} />
 
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </Layout>
-        </Router>
-      </ErrorBoundary>
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </Layout>
+          </Router>
+        </ErrorBoundary>
+      </SocketProvider>
     </AuthProvider>
   );
 }

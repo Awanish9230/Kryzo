@@ -60,6 +60,8 @@ router.route('/users/:id')
     .delete(deleteUser);
 
 router.get('/my-stats', getAdminQuestionStats);
+// New
+router.get('/analytics/users', require('../controllers/adminController').getUserActivityStats);
 router.get('/analytics/pain-points', getPainPointAnalytics);
 
 router.route('/documentation')

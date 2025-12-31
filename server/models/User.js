@@ -54,6 +54,10 @@ const userSchema = new mongoose.Schema({
     lastActivityDate: {
         type: String, // Store as YYYY-MM-DD
         default: ''
+    },
+    lastActive: {
+        type: Date,
+        default: Date.now
     }
 }, {
     timestamps: true

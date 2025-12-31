@@ -624,6 +624,26 @@ const getPainPointAnalytics = asyncHandler(async (req, res) => {
     res.json(painPoints.sort((a, b) => b.failureRate - a.failureRate));
 });
 
+// @desc    Get user activity stats (DAU, WAU, MAU)
+// @route   GET /api/admin/analytics/users
+// @access  Private/Admin
+const getUserActivityStats = asyncHandler(async (req, res) => {
+    const now = new Date();
+    const oneDayAgo = new Date(now - 24 * 60 * 60 * 1000);
+    const oneWeekAgo = new Date(now - 7 * 24 * 60 * 60 * 1000);
+    const oneMonthAgo = new Date(now - 30 * 24 * 60 * 60 * 1000);
+
+    const dau = await User.countDocuments({ lastActive: { $gte: oneDayAgo } });
+    const wau = await User.countDocuments({ lastActive: { $gte: oneWeekAgo } });
+    const mau = await User.countDocuments({ lastActive: { $gte: oneMonthAgo } });
+
+    res.json({
+        dau,
+        wau,
+        mau
+    });
+});
+
 // @desc    Generate a single question using AI
 // @route   POST /api/admin/questions/generate-ai
 // @access  Private/Admin
@@ -951,6 +971,8 @@ module.exports = {
     getQuestionReports,
     updateReportStatus,
     getPainPointAnalytics,
+    bulkUploadQuestions,
+    getUserActivityStats,
     generateQuestionAI,
     autoFillQuestions
 };

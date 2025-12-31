@@ -13,6 +13,7 @@ import {
     X,
     Save
 } from 'lucide-react';
+import { useSocket } from '../../context/SocketContext';
 
 const UserManagement = () => {
     const [users, setUsers] = useState([]);
@@ -83,6 +84,8 @@ const UserManagement = () => {
         role: 'student',
         collegeId: ''
     });
+
+    const { onlineUsers } = useSocket();
 
     const handleAddUser = async () => {
         try {
@@ -182,61 +185,69 @@ const UserManagement = () => {
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-white/5">
-                                {filteredUsers.map((user, idx) => (
-                                    <motion.tr
-                                        key={user._id}
-                                        initial={{ opacity: 0, y: 10 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        transition={{ delay: idx * 0.05 }}
-                                        className="group hover:bg-white/[0.01] transition-colors"
-                                    >
-                                        <td className="px-8 py-6">
-                                            <div className="flex flex-col">
-                                                <span className="text-white font-bold tracking-tight">{user.name}</span>
-                                                <span className="text-xs text-zinc-600">{user.email}</span>
-                                            </div>
-                                        </td>
-                                        <td className="px-8 py-6">
-                                            <div className="flex items-center gap-2">
-                                                {user.role === 'admin' ? (
-                                                    <>
-                                                        <Shield size={14} className="text-purple-500" />
-                                                        <span className="text-xs font-bold uppercase text-purple-500">Admin</span>
-                                                    </>
-                                                ) : (
-                                                    <>
-                                                        <GraduationCap size={14} className="text-blue-500" />
-                                                        <span className="text-xs font-bold uppercase text-blue-500">Student</span>
-                                                    </>
-                                                )}
-                                            </div>
-                                        </td>
-                                        <td className="px-8 py-6">
-                                            <span className="text-sm text-zinc-400 font-mono">{user.collegeId || '—'}</span>
-                                        </td>
-                                        <td className="px-8 py-6">
-                                            <span className="text-sm font-bold text-white">{user.attemptCount || 0}</span>
-                                        </td>
-                                        <td className="px-8 py-6 text-right">
-                                            <div className="flex items-center justify-end gap-2">
-                                                <button
-                                                    onClick={() => handleEdit(user)}
-                                                    className="p-2 text-zinc-600 hover:text-white hover:bg-white/5 rounded-lg transition-all"
-                                                >
-                                                    <Edit2 size={16} />
-                                                </button>
-                                                {user.role !== 'admin' && (
+                                {filteredUsers.map((user, idx) => {
+                                    const isOnline = onlineUsers?.includes(user._id);
+                                    return (
+                                        <motion.tr
+                                            key={user._id}
+                                            initial={{ opacity: 0, y: 10 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            transition={{ delay: idx * 0.05 }}
+                                            className="group hover:bg-white/[0.01] transition-colors"
+                                        >
+                                            <td className="px-8 py-6">
+                                                <div className="flex flex-col">
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="text-white font-bold tracking-tight">{user.name}</span>
+                                                        {isOnline && (
+                                                            <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" title="Online" />
+                                                        )}
+                                                    </div>
+                                                    <span className="text-xs text-zinc-600">{user.email}</span>
+                                                </div>
+                                            </td>
+                                            <td className="px-8 py-6">
+                                                <div className="flex items-center gap-2">
+                                                    {user.role === 'admin' ? (
+                                                        <>
+                                                            <Shield size={14} className="text-purple-500" />
+                                                            <span className="text-xs font-bold uppercase text-purple-500">Admin</span>
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <GraduationCap size={14} className="text-blue-500" />
+                                                            <span className="text-xs font-bold uppercase text-blue-500">Student</span>
+                                                        </>
+                                                    )}
+                                                </div>
+                                            </td>
+                                            <td className="px-8 py-6">
+                                                <span className="text-sm text-zinc-400 font-mono">{user.collegeId || '—'}</span>
+                                            </td>
+                                            <td className="px-8 py-6">
+                                                <span className="text-sm font-bold text-white">{user.attemptCount || 0}</span>
+                                            </td>
+                                            <td className="px-8 py-6 text-right">
+                                                <div className="flex items-center justify-end gap-2">
                                                     <button
-                                                        onClick={() => handleDelete(user._id, user.name)}
-                                                        className="p-2 text-zinc-600 hover:text-red-500 hover:bg-red-500/5 rounded-lg transition-all"
+                                                        onClick={() => handleEdit(user)}
+                                                        className="p-2 text-zinc-600 hover:text-white hover:bg-white/5 rounded-lg transition-all"
                                                     >
-                                                        <Trash2 size={16} />
+                                                        <Edit2 size={16} />
                                                     </button>
-                                                )}
-                                            </div>
-                                        </td>
-                                    </motion.tr>
-                                ))}
+                                                    {user.role !== 'admin' && (
+                                                        <button
+                                                            onClick={() => handleDelete(user._id, user.name)}
+                                                            className="p-2 text-zinc-600 hover:text-red-500 hover:bg-red-500/5 rounded-lg transition-all"
+                                                        >
+                                                            <Trash2 size={16} />
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            </td>
+                                        </motion.tr>
+                                    );
+                                })}
                             </tbody>
                         </table>
                     </div>

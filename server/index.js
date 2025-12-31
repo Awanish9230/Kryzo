@@ -32,10 +32,48 @@ app.use('/api/compiler', require('./routes/compilerRoutes'));
 
 
 
+const http = require('http');
+const { Server } = require('socket.io');
+
+const server = http.createServer(app);
+const io = new Server(server, {
+    cors: {
+        origin: [process.env.FRONTEND_URL, 'http://localhost:5173', 'http://localhost:5174'],
+        credentials: true
+    }
+});
+
+// Track online users
+const onlineUsers = new Map(); // socketId -> userId
+
+io.on('connection', (socket) => {
+    console.log('New client connected:', socket.id);
+
+    socket.on('user_connected', (userId) => {
+        if (userId) {
+            onlineUsers.set(socket.id, userId);
+            // Broadcast online users count/list to admins
+            // For checking live online status, we can store userId -> Set(socketIds) map for better O(1) checks
+            io.emit('online_users_update', Array.from(new Set(onlineUsers.values())));
+        }
+    });
+
+    socket.on('disconnect', () => {
+        if (onlineUsers.has(socket.id)) {
+            onlineUsers.delete(socket.id);
+            io.emit('online_users_update', Array.from(new Set(onlineUsers.values())));
+        }
+        console.log('Client disconnected:', socket.id);
+    });
+});
+
+// Make io accessible in routes if needed
+app.set('io', io);
+
 // Error Handling Middleware
 app.use(errorHandler);
 
-app.listen(PORT, () => {
+server.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 });
 
