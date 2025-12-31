@@ -91,6 +91,10 @@ const EditQuestion = () => {
         }
     };
 
+    useEffect(() => {
+        fetchQuestion();
+    }, [id]);
+
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };

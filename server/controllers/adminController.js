@@ -737,48 +737,59 @@ const generateQuestionAI = asyncHandler(async (req, res) => {
         const diff = validDifficulties.includes(difficulty) ? difficulty : 'medium';
 
         if (type === 'MCQ') {
-            prompt = `Generate ${numToGen} UNIQUE high-quality MCQ questions for Subject: "${topic}", Subtopic: "${sub}", Difficulty: ${diff}.
+            prompt = `Act as a Senior Technical Interviewer or Professor. Generate ${numToGen} UNIQUE, HIGH-QUALITY, SCENARIO-BASED MCQ questions for Subject: "${topic}", Subtopic: "${sub}", Difficulty: ${diff}.
             
-STRICTLY RETURN ONLY A JSON ARRAY. No markdown, no "json" label.
-Format:
-[{
-    "title": "Unique Title related to ${sub}",
-    "description": "Clear question text",
-    "difficulty": "${diff}",
-    "type": "MCQ",
-    "topic": "${topic}",
-    "subtopic": "${sub}",
-    "options": [
-        {"text": "Option A", "isCorrect": true},
-        {"text": "Option B", "isCorrect": false},
-        {"text": "Option C", "isCorrect": false},
-        {"text": "Option D", "isCorrect": false}
-    ],
-    "explanation": "Brief explanation"
-}]`;
+            GUIDELINES:
+            1. AVOID generic definition questions like "What is X?".
+            2. FOCUS on analyzing code snippets, predicting outputs, finding bugs, or real-world application scenarios.
+            3. Make questions sound natural and human-authored. Use phrases like "Consider the following code...", "You are building a system where...", "Which of the following best implements...".
+            4. Options should be plausible distractors.
+            
+            STRICTLY RETURN ONLY A JSON ARRAY. No markdown, no "json" label.
+            Format:
+            [{
+                "title": "Scenario: [Brief Title related to ${sub}]",
+                "description": "Question text here. (Include code snippets if applicable)",
+                "difficulty": "${diff}",
+                "type": "MCQ",
+                "topic": "${topic}",
+                "subtopic": "${sub}",
+                "options": [
+                    {"text": "Option A", "isCorrect": true},
+                    {"text": "Option B", "isCorrect": false},
+                    {"text": "Option C", "isCorrect": false},
+                    {"text": "Option D", "isCorrect": false}
+                ],
+                "explanation": "Detailed explanation of why the correct answer is right and others are wrong."
+            }]`;
         } else {
-            prompt = `Generate ${numToGen} UNIQUE high-quality CODING questions for Subject: "${topic}", Subtopic: "${sub}", Difficulty: ${diff}.
+            prompt = `Act as a Senior Technical Interviewer at a FAANG company. Generate ${numToGen} UNIQUE, REALISTIC CODING questions for Subject: "${topic}", Subtopic: "${sub}", Difficulty: ${diff}.
             
-STRICTLY RETURN ONLY A JSON ARRAY. No markdown, no "json" label.
-Format:
-[{
-    "title": "Unique Title related to ${sub}",
-    "description": "Problem statement with examples",
-    "difficulty": "${diff}",
-    "type": "CODING",
-    "topic": "${topic}",
-    "subtopic": "${sub}",
-    "constraints": "Time/memory constraints",
-    "inputFormat": "Input format description",
-    "outputFormat": "Output format description",
-    "testCases": [
-        {"input": "Sample In 1", "output": "Sample Out 1", "isHidden": false},
-        {"input": "Hidden In 1", "output": "Hidden Out 1", "isHidden": true}
-    ],
-    "explanation": "Approach and logic"
-}]`;
+            GUIDELINES:
+            1. AVOID generic requests like "Write a program to do X".
+            2. FRAMING: Present the problem as a real-world scenario or a specific algorithmic challenge.
+            3. CODE SNIPPETS: You may include a starting snippet or context in the description.
+            4. Example Style: "You are designing a cache system...", "Given a stream of packets...", "Optimize the following function...".
+            
+            STRICTLY RETURN ONLY A JSON ARRAY. No markdown, no "json" label.
+            Format:
+            [{
+                "title": "Problem: [Unique Title related to ${sub}]",
+                "description": "Detailed problem statement with context, input/output explanation and examples.",
+                "difficulty": "${diff}",
+                "type": "CODING",
+                "topic": "${topic}",
+                "subtopic": "${sub}",
+                "constraints": "Time Complexity: O(N), Space Complexity: O(1), etc.",
+                "inputFormat": "Description of input.",
+                "outputFormat": "Description of output.",
+                "testCases": [
+                    {"input": "Sample In 1", "output": "Sample Out 1", "isHidden": false},
+                    {"input": "Hidden In 1", "output": "Hidden Out 1", "isHidden": true}
+                ],
+                "explanation": "Optimal approach and logic explanation."
+            }]`;
         }
-
         try {
             const result = await generateWithRetry(prompt, apiKeys);
             const response = await result.response;
