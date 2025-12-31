@@ -25,6 +25,7 @@ const AddQuestion = () => {
     const [type, setType] = useState('MCQ');
     const [selectedTopic, setSelectedTopic] = useState('');
     const [selectedSubtopic, setSelectedSubtopic] = useState('');
+    const [selectedSubtopics, setSelectedSubtopics] = useState([]); // For AI Bulk Generation
     const [formData, setFormData] = useState({
         title: '',
         description: '',
@@ -126,8 +127,24 @@ const AddQuestion = () => {
     };
 
     const handleAIGenerate = async () => {
-        if (!selectedTopic || !selectedSubtopic) {
-            alert('Please select a Topic and Subtopic first.');
+        if (!selectedTopic) {
+            alert('Please select a Topic first.');
+            return;
+        }
+
+        // If bulk generation (count > 1), we prefer using selectedSubtopics if available, 
+        // otherwise fall back to selectedSubtopic.
+        // If single generation, we use selectedSubtopic.
+
+        let targetSubtopics = [];
+        if (aiCount > 1 && selectedSubtopics.length > 0) {
+            targetSubtopics = selectedSubtopics;
+        } else if (selectedSubtopic) {
+            targetSubtopics = [selectedSubtopic];
+        }
+
+        if (targetSubtopics.length === 0) {
+            alert('Please select at least one Subtopic.');
             return;
         }
 
@@ -136,24 +153,27 @@ const AddQuestion = () => {
             const { data } = await api.post('/admin/questions/generate-ai', {
                 type,
                 topic: selectedTopic,
-                subtopic: selectedSubtopic,
+                subtopic: targetSubtopics[0], // fallback/primary
+                subtopics: targetSubtopics,   // new field
                 difficulty: formData.difficulty,
                 count: aiCount
             });
 
             // Handle bulk response
-            if (data.questions && data.questions.length > 1) {
-                setGeneratedQuestions(data.questions);
-                setShowBulkReview(true);
-            } else if (data.questions && data.questions.length === 1) {
-                // Single question - populate form directly
-                const question = data.questions[0];
-                setFormData(prev => ({
-                    ...prev,
-                    ...question,
-                    options: question.options || prev.options,
-                    testCases: question.testCases || prev.testCases
-                }));
+            if (data.questions && data.questions.length > 0) {
+                // If single result request but returned as array
+                if (data.questions.length === 1 && aiCount === 1) {
+                    const question = data.questions[0];
+                    setFormData(prev => ({
+                        ...prev,
+                        ...question,
+                        options: question.options || prev.options,
+                        testCases: question.testCases || prev.testCases
+                    }));
+                } else {
+                    setGeneratedQuestions(data.questions);
+                    setShowBulkReview(true);
+                }
             } else {
                 alert('No unique questions generated. Try different parameters.');
             }
@@ -171,15 +191,40 @@ const AddQuestion = () => {
                 ...question,
                 type,
                 topic: selectedTopic,
-                subtopic: selectedSubtopic,
+                subtopic: question.subtopic || selectedSubtopic, // Use question's subtopic if available (from bulk gen)
                 status: 'published'
             };
             await api.post('/admin/questions', payload);
             // Remove from generated list
             setGeneratedQuestions(prev => prev.filter(q => q.title !== question.title));
-            alert('Question saved successfully!');
+            // alert('Question saved successfully!'); // Too spammy for individual saves if we have a lot, maybe toast?
         } catch (error) {
             alert(error.response?.data?.message || 'Error saving question');
+        }
+    };
+
+    const handleSaveAllQuestions = async () => {
+        if (generatedQuestions.length === 0) return;
+
+        try {
+            // Prepare payload for bulk upload
+            // We use the existent /api/admin/questions endpoint for single, but we might want a bulk endpoint.
+            // checking adminController... yes, there is 'bulkUploadQuestions' at /api/admin/questions/bulk
+
+            const payload = generatedQuestions.map(q => ({
+                ...q,
+                type,
+                topic: selectedTopic,
+                subtopic: q.subtopic || selectedSubtopic,
+                status: 'published'
+            }));
+
+            await api.post('/admin/questions/bulk', payload);
+            setGeneratedQuestions([]);
+            setShowBulkReview(false);
+            alert('All questions saved successfully!');
+        } catch (error) {
+            alert(error.response?.data?.message || 'Error saving questions');
         }
     };
 
@@ -269,6 +314,10 @@ const AddQuestion = () => {
                                         <option value={1}>1 Question</option>
                                         <option value={5}>5 Questions</option>
                                         <option value={10}>10 Questions</option>
+                                        <option value={20}>20 Questions</option>
+                                        <option value={30}>30 Questions</option>
+                                        <option value={40}>40 Questions</option>
+                                        <option value={50}>50 Questions</option>
                                     </select>
                                     <button
                                         type="button"
@@ -324,18 +373,50 @@ const AddQuestion = () => {
                                     </select>
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-sm font-medium text-zinc-400 ml-1">Subtopic</label>
-                                    <select
-                                        className="w-full px-5 py-4 bg-zinc-950 border border-white/10 rounded-2xl text-white focus:outline-none"
-                                        value={selectedSubtopic}
-                                        onChange={(e) => setSelectedSubtopic(e.target.value)}
-                                        disabled={!selectedTopic}
-                                    >
-                                        <option value="">Select Subtopic</option>
-                                        {selectedTopic && TOPICS_DATA[selectedTopic]?.map(subtopic => (
-                                            <option key={subtopic} value={subtopic}>{subtopic}</option>
-                                        ))}
-                                    </select>
+                                    <label className="text-sm font-medium text-zinc-400 ml-1">Subtopic {aiCount > 1 && '(Multi-select)'}</label>
+                                    {aiCount > 1 ? (
+                                        <div className="w-full px-5 py-4 bg-zinc-950 border border-white/10 rounded-2xl text-white max-h-40 overflow-y-auto custom-scrollbar">
+                                            {selectedTopic && TOPICS_DATA[selectedTopic] ? (
+                                                <div className="space-y-2">
+                                                    {TOPICS_DATA[selectedTopic].map(sub => (
+                                                        <label key={sub} className="flex items-center gap-3 cursor-pointer hover:bg-white/5 p-2 rounded-lg transition-all">
+                                                            <div className={`w-5 h-5 rounded-md border flex items-center justify-center transition-all ${selectedSubtopics.includes(sub) ? 'bg-blue-500 border-blue-500' : 'border-zinc-700'
+                                                                }`}>
+                                                                {selectedSubtopics.includes(sub) && <Check size={12} className="text-white" />}
+                                                            </div>
+                                                            <input
+                                                                type="checkbox"
+                                                                className="hidden"
+                                                                checked={selectedSubtopics.includes(sub)}
+                                                                onChange={(e) => {
+                                                                    if (e.target.checked) {
+                                                                        setSelectedSubtopics(prev => [...prev, sub]);
+                                                                    } else {
+                                                                        setSelectedSubtopics(prev => prev.filter(s => s !== sub));
+                                                                    }
+                                                                }}
+                                                            />
+                                                            <span className="text-sm text-zinc-300">{sub}</span>
+                                                        </label>
+                                                    ))}
+                                                </div>
+                                            ) : (
+                                                <div className="text-zinc-500 text-sm">Select a topic first</div>
+                                            )}
+                                        </div>
+                                    ) : (
+                                        <select
+                                            className="w-full px-5 py-4 bg-zinc-950 border border-white/10 rounded-2xl text-white focus:outline-none"
+                                            value={selectedSubtopic}
+                                            onChange={(e) => setSelectedSubtopic(e.target.value)}
+                                            disabled={!selectedTopic}
+                                        >
+                                            <option value="">Select Subtopic</option>
+                                            {selectedTopic && TOPICS_DATA[selectedTopic]?.map(subtopic => (
+                                                <option key={subtopic} value={subtopic}>{subtopic}</option>
+                                            ))}
+                                        </select>
+                                    )}
                                 </div>
                             </div>
                         </div>
@@ -719,15 +800,24 @@ const AddQuestion = () => {
                         >
                             <div className="flex items-center justify-between mb-6">
                                 <h2 className="text-2xl font-bold">Review Generated Questions ({generatedQuestions.length})</h2>
-                                <button
-                                    onClick={() => {
-                                        setShowBulkReview(false);
-                                        setGeneratedQuestions([]);
-                                    }}
-                                    className="p-2 hover:bg-white/10 rounded-xl transition-all"
-                                >
-                                    <CloseIcon size={20} />
-                                </button>
+                                <div className="flex gap-3">
+                                    <button
+                                        onClick={handleSaveAllQuestions}
+                                        className="px-4 py-2 bg-white text-black font-bold rounded-xl hover:bg-zinc-200 transition-all flex items-center gap-2"
+                                    >
+                                        <CheckCircle2 size={16} />
+                                        Save All
+                                    </button>
+                                    <button
+                                        onClick={() => {
+                                            setShowBulkReview(false);
+                                            setGeneratedQuestions([]);
+                                        }}
+                                        className="p-2 hover:bg-white/10 rounded-xl transition-all"
+                                    >
+                                        <CloseIcon size={20} />
+                                    </button>
+                                </div>
                             </div>
 
                             <div className="space-y-4">

@@ -627,108 +627,191 @@ const getPainPointAnalytics = asyncHandler(async (req, res) => {
 // @desc    Generate a single question using AI
 // @route   POST /api/admin/questions/generate-ai
 // @access  Private/Admin
-const generateQuestionAI = asyncHandler(async (req, res) => {
-    const { type, topic, subtopic, difficulty, count = 1 } = req.body;
-
-    // Validate count (1-10)
-    const questionCount = Math.min(Math.max(1, parseInt(count) || 1), 10);
-
+// Helper to get Gemini Model with Key Rotation
+const getGenAIModel = async () => {
     const settings = await Settings.findOne();
-    const apiKey = settings?.ai?.geminiApiKey || process.env.GEMINI_API_KEY;
+    let apiKeys = [];
 
-    if (!apiKey) {
-        res.status(400);
-        throw new Error('Gemini API Key is missing. Configure it in Settings.');
+    // Prioritize Settings keys, then env keys
+    if (settings?.ai?.geminiApiKey) {
+        apiKeys.push(settings.ai.geminiApiKey);
+    }
+    
+    // Parse env keys (comma separated)
+    if (process.env.GEMINI_API_KEYS) {
+        const envKeys = process.env.GEMINI_API_KEYS.split(',').map(k => k.trim()).filter(k => k);
+        apiKeys = [...apiKeys, ...envKeys];
+    } else if (process.env.GEMINI_API_KEYS) {
+        // Fallback to single key if legacy var is used
+         apiKeys.push(process.env.GEMINI_API_KEY);
     }
 
-    // Get existing question titles for this topic/subtopic to prevent duplicates
+    // Remove duplicates and filter empty
+    apiKeys = [...new Set(apiKeys)].filter(k => k);
+
+    if (apiKeys.length === 0) {
+        throw new Error('No Gemini API Keys found. Please configure settings or .env');
+    }
+
+    // Simple rotation strategy: Pick random or round-robin?
+    // For now, let's try them in order if we implement retry logic, 
+    // but here we just return a model initialized with one.
+    // To support automatic switching on 429, we need the logic to be "try this key, if fail, try next".
+    
+    return { apiKeys }; 
+};
+
+// Retry wrapper for Generative AI
+const generateWithRetry = async (prompt, apiKeys) => {
+    let lastError = null;
+
+    for (const apiKey of apiKeys) {
+        try {
+            const genAI = new GoogleGenerativeAI(apiKey);
+            const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
+            const result = await model.generateContent(prompt);
+            return result;
+        } catch (error) {
+            console.error(`Gemini API Error (Key: ...${apiKey.slice(-4)}):`, error.message);
+            lastError = error;
+            // If it's a quota error (429) or server error (503), continue to next key.
+            // Otherwise, maybe it's a prompt issue, but safer to try next just in case.
+            continue; 
+        }
+    }
+    throw new Error(`All API keys failed. Last error: ${lastError?.message}`);
+};
+
+// @desc    Generate questions using AI (Bulk & Multi-Subtopic support)
+// @route   POST /api/admin/questions/generate-ai
+// @access  Private/Admin
+const generateQuestionAI = asyncHandler(async (req, res) => {
+    const { type, topic, subtopic, subtopics, difficulty, count = 1 } = req.body;
+
+    // Validate count (1-50)
+    const questionCount = Math.min(Math.max(1, parseInt(count) || 1), 50);
+
+    // Determine target subtopics
+    // If 'subtopics' array is provided, use it. Otherwise fall back to single 'subtopic'.
+    const targetSubtopics = (Array.isArray(subtopics) && subtopics.length > 0) ? subtopics : [subtopic].filter(Boolean);
+
+    if (targetSubtopics.length === 0) {
+        res.status(400);
+        throw new Error('Please contain at least one subtopic.');
+    }
+
+    // Get API Keys
+    const { apiKeys } = await getGenAIModel();
+
+    // Get existing question titles for context to avoid duplicates (Global check might be too heavy, so we limit to this topic)
     const existingQuestions = await Question.find({
         topic,
-        subtopic,
         status: { $in: ['published', 'draft'] }
     }).select('title');
-    const existingTitles = existingQuestions.map(q => q.title);
+    const existingTitles = new Set(existingQuestions.map(q => q.title.toLowerCase()));
 
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
+    // Distribution of questions per subtopic
+    // Example: 20 questions, 3 subtopics. ~7 each.
+    const baseCount = Math.floor(questionCount / targetSubtopics.length);
+    const remainder = questionCount % targetSubtopics.length;
 
-    let prompt = "";
-    if (type === 'MCQ') {
-        prompt = `Generate ${questionCount} UNIQUE high-quality MCQ questions for "${topic}" - "${subtopic}" (${difficulty}).
-
-CRITICAL: Avoid these existing titles: ${existingTitles.length > 0 ? existingTitles.join(', ') : 'None'}
-
-Return a JSON ARRAY of ${questionCount} objects:
+    let totalGenerated = [];
+    
+    // Process in batches/parallel?
+    // For reliability, let's process subtopics sequentially to avoid hitting rate limits too hard simultaneously,
+    // although our retry logic handles it. Parallel is faster. 
+    // Let's do parallel requests for subtopics.
+    
+    const validDifficulties = ['easy', 'medium', 'hard'];
+    
+    const generateForSubtopic = async (sub, numToGen) => {
+        if (numToGen <= 0) return [];
+        
+        let prompt = "";
+        const diff = validDifficulties.includes(difficulty) ? difficulty : 'medium';
+        
+        if (type === 'MCQ') {
+            prompt = `Generate ${numToGen} UNIQUE high-quality MCQ questions for Subject: "${topic}", Subtopic: "${sub}", Difficulty: ${diff}.
+            
+STRICTLY RETURN ONLY A JSON ARRAY. No markdown, no "json" label.
+Format:
 [{
-    "title": "Unique Title",
-    "description": "Clear question",
-    "difficulty": "${difficulty}",
+    "title": "Unique Title related to ${sub}",
+    "description": "Clear question text",
+    "difficulty": "${diff}",
     "type": "MCQ",
+    "topic": "${topic}",
+    "subtopic": "${sub}",
     "options": [
-        {"text": "Option 1", "isCorrect": true},
-        {"text": "Option 2", "isCorrect": false},
-        {"text": "Option 3", "isCorrect": false},
-        {"text": "Option 4", "isCorrect": false}
+        {"text": "Option A", "isCorrect": true},
+        {"text": "Option B", "isCorrect": false},
+        {"text": "Option C", "isCorrect": false},
+        {"text": "Option D", "isCorrect": false}
     ],
     "explanation": "Brief explanation"
-}]
-
-Response MUST be ONLY a JSON array.`;
-    } else {
-        prompt = `Generate ${questionCount} UNIQUE high-quality CODING questions for "${topic}" - "${subtopic}" (${difficulty}).
-
-CRITICAL: Avoid these existing titles: ${existingTitles.length > 0 ? existingTitles.join(', ') : 'None'}
-
-Return a JSON ARRAY of ${questionCount} objects:
+}]`;
+        } else {
+            prompt = `Generate ${numToGen} UNIQUE high-quality CODING questions for Subject: "${topic}", Subtopic: "${sub}", Difficulty: ${diff}.
+            
+STRICTLY RETURN ONLY A JSON ARRAY. No markdown, no "json" label.
+Format:
 [{
-    "title": "Unique Title",
-    "description": "Clear problem with examples",
-    "difficulty": "${difficulty}",
+    "title": "Unique Title related to ${sub}",
+    "description": "Problem statement with examples",
+    "difficulty": "${diff}",
     "type": "CODING",
+    "topic": "${topic}",
+    "subtopic": "${sub}",
     "constraints": "Time/memory constraints",
-    "inputFormat": "Input description",
-    "outputFormat": "Output description",
+    "inputFormat": "Input format description",
+    "outputFormat": "Output format description",
     "testCases": [
-        {"input": "Sample 1", "output": "Output 1", "isHidden": false},
-        {"input": "Sample 2", "output": "Output 2", "isHidden": false},
-        {"input": "Hidden", "output": "Hidden out", "isHidden": true}
+        {"input": "Sample In 1", "output": "Sample Out 1", "isHidden": false},
+        {"input": "Hidden In 1", "output": "Hidden Out 1", "isHidden": true}
     ],
-    "explanation": "Approach and complexity"
-}]
+    "explanation": "Approach and logic"
+}]`;
+        }
 
-Response MUST be ONLY a JSON array.`;
-    }
+        try {
+            const result = await generateWithRetry(prompt, apiKeys);
+            const response = await result.response;
+            let text = response.text();
+            
+            // Cleanup
+            text = text.replace(/```json/g, '').replace(/```/g, '').trim();
+            const parsed = JSON.parse(text);
+            return Array.isArray(parsed) ? parsed : [parsed];
+        } catch (err) {
+            console.error(`Failed to generate for ${sub}:`, err.message);
+            return [];
+        }
+    };
 
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    let text = response.text();
+    const promises = targetSubtopics.map((sub, idx) => {
+        const countForThis = baseCount + (idx < remainder ? 1 : 0);
+        return generateForSubtopic(sub, countForThis);
+    });
 
-    // Clean up JSON if extra markdown formatting is present
-    text = text.replace(/```json/g, '').replace(/```/g, '').trim();
+    const results = await Promise.all(promises);
+    
+    // Flatten results
+    results.forEach(batch => {
+        if (batch) totalGenerated.push(...batch);
+    });
 
-    try {
-        const questionData = JSON.parse(text);
+    // Filter duplicates against existing DB
+    const uniqueQuestions = totalGenerated.filter(q => 
+        q.title && !existingTitles.has(q.title.toLowerCase())
+    );
 
-        // Ensure it's an array
-        const questions = Array.isArray(questionData) ? questionData : [questionData];
-
-        // Filter out any duplicates against existing titles
-        const uniqueQuestions = questions.filter(q =>
-            !existingTitles.some(existing =>
-                existing.toLowerCase() === q.title.toLowerCase()
-            )
-        );
-
-        res.json({
-            questions: uniqueQuestions,
-            generated: uniqueQuestions.length,
-            requested: questionCount
-        });
-    } catch (err) {
-        console.error("AI Generation Parsing Error:", err.message, "Raw Text:", text);
-        res.status(500);
-        throw new Error('AI generated an invalid format. Please try again.');
-    }
+    // If we filtered out too many, we might want to warn, but for now just return what we have.
+    
+    res.json({
+        questions: uniqueQuestions,
+        generated: uniqueQuestions.length,
+        requested: questionCount
+    });
 });
 
 // @desc    Autonomous gap-filling
