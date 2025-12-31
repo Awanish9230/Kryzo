@@ -642,8 +642,9 @@ const getGenAIModel = async () => {
         const envKeys = process.env.GEMINI_API_KEYS.split(',').map(k => k.trim().replace(/['"]/g, '')).filter(k => k);
         apiKeys = [...apiKeys, ...envKeys];
     } else if (process.env.GEMINI_API_KEY) {
-        // Fallback to single key
-        apiKeys.push(process.env.GEMINI_API_KEY.trim().replace(/['"]/g, ''));
+        // Fallback to single key or comma separate in legacy var
+        const envKeys = process.env.GEMINI_API_KEY.split(',').map(k => k.trim().replace(/['"]/g, '')).filter(k => k);
+        apiKeys = [...apiKeys, ...envKeys];
     }
 
     // Remove duplicates and filter empty
