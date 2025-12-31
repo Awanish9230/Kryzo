@@ -653,6 +653,8 @@ const getGenAIModel = async () => {
         throw new Error('No Gemini API Keys found. Please configure settings or .env');
     }
 
+    console.log(`Loaded ${apiKeys.length} Gemini API Keys:`, apiKeys.map(k => `...${k.slice(-4)}`)); // DEBUG LOG
+
     // Simple rotation strategy: Pick random or round-robin?
     // For now, let's try them in order if we implement retry logic, 
     // but here we just return a model initialized with one.
