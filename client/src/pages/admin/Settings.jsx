@@ -78,8 +78,8 @@ const SettingsPage = () => {
                                 key={tab.id}
                                 onClick={() => setActiveTab(tab.id)}
                                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl transition-all ${activeTab === tab.id
-                                        ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20'
-                                        : 'text-zinc-500 hover:bg-white/5 hover:text-zinc-300'
+                                    ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20'
+                                    : 'text-zinc-500 hover:bg-white/5 hover:text-zinc-300'
                                     }`}
                             >
                                 <tab.icon size={18} />
@@ -180,6 +180,25 @@ const SettingsPage = () => {
                                             className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500"
                                             placeholder="sk-..."
                                         />
+                                    </div>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <Toggle
+                                            label="Autonomous Generation"
+                                            description="Enable AI to fill topic gaps automatically"
+                                            enabled={settings.ai.autoGenerationEnabled}
+                                            onChange={(val) => setSettings({ ...settings, ai: { ...settings.ai, autoGenerationEnabled: val } })}
+                                        />
+                                        <div className="p-4 bg-white/5 border border-white/5 rounded-2xl space-y-2">
+                                            <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest ml-1">Target Qns Per Subtopic</label>
+                                            <input
+                                                type="number"
+                                                min="1"
+                                                max="20"
+                                                value={settings.ai.targetQuestionsPerTopic}
+                                                onChange={(e) => setSettings({ ...settings, ai: { ...settings.ai, targetQuestionsPerTopic: Number(e.target.value) } })}
+                                                className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-2 text-white focus:outline-none focus:border-blue-500"
+                                            />
+                                        </div>
                                     </div>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
                                         <Slider

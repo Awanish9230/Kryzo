@@ -9,26 +9,44 @@ import {
     Clock,
     ArrowUpRight,
     TrendingUp,
-    BarChart2
+    BarChart2,
+    Sparkles,
+    AlertCircle,
+    Loader2
 } from 'lucide-react';
 
 const AdminDashboard = () => {
     const [stats, setStats] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [isAutoFilling, setIsAutoFilling] = useState(false);
+
+    const fetchStats = async () => {
+        try {
+            const { data } = await api.get('/admin/stats');
+            setStats(data);
+            setLoading(false);
+        } catch (err) {
+            console.error(err);
+            setLoading(false);
+        }
+    };
 
     useEffect(() => {
-        const fetchStats = async () => {
-            try {
-                const { data } = await api.get('/admin/stats');
-                setStats(data);
-                setLoading(false);
-            } catch (err) {
-                console.error(err);
-                setLoading(false);
-            }
-        };
         fetchStats();
     }, []);
+
+    const handleAutoFill = async () => {
+        setIsAutoFilling(true);
+        try {
+            await api.post('/admin/questions/auto-fill');
+            alert('Autonomous gap-filling complete!');
+            fetchStats();
+        } catch (err) {
+            alert(err.response?.data?.message || 'Auto-fill failed');
+        } finally {
+            setIsAutoFilling(false);
+        }
+    };
 
     if (loading) return (
         <div className="min-h-screen bg-black flex items-center justify-center">
@@ -76,7 +94,7 @@ const AdminDashboard = () => {
                                     <div>
                                         <h3 className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-4">By Type</h3>
                                         <div className="space-y-4">
-                                            {Object.entries(stats?.breakdown?.type || {}).map(([type, count]) => (
+                                            {stats?.breakdown?.type && Object.entries(stats.breakdown.type).map(([type, count]) => (
                                                 <div key={type} className="space-y-2">
                                                     <div className="flex justify-between text-sm font-medium">
                                                         <span className="text-zinc-400">{type}</span>
@@ -98,8 +116,7 @@ const AdminDashboard = () => {
                                         <h3 className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-4">By Difficulty</h3>
                                         <div className="flex gap-2">
                                             {['easy', 'medium', 'hard'].map((diff) => {
-                                                const count = stats?.breakdown?.difficulty[diff] || 0;
-                                                const percentage = stats?.totalQuestions ? (count / stats.totalQuestions) * 100 : 0;
+                                                const count = stats?.breakdown?.difficulty?.[diff] || 0;
                                                 return (
                                                     <div key={diff} className="flex-1 p-4 bg-white/5 border border-white/5 rounded-2xl text-center">
                                                         <p className={`text-[10px] font-bold uppercase mb-1 ${diff === 'easy' ? 'text-green-500' : diff === 'medium' ? 'text-yellow-500' : 'text-red-500'}`}>{diff}</p>
@@ -157,15 +174,55 @@ const AdminDashboard = () => {
                         </div>
                     </div>
 
-                    <div className="bg-zinc-900/50 border border-white/5 rounded-[2.5rem] p-8 backdrop-blur-sm self-start">
-                        <h2 className="text-xl font-bold mb-6">Quick Actions</h2>
-                        <div className="space-y-3">
-                            <QuickActionLink label="Manage Questions" href="/admin/questions" />
-                            <QuickActionLink label="Bulk Upload" href="/admin/questions/bulk" />
-                            <QuickActionLink label="Documentation" href="/admin/documentation" />
-                            <QuickActionLink label="User Management" href="/admin/users" />
-                            <QuickActionLink label="Global Reports" href="/admin/reports" />
-                            <QuickActionLink label="Settings" href="/admin/settings" />
+                    <div className="space-y-6">
+                        {/* Question Bank Health (Gaps) */}
+                        <div className="bg-zinc-900/50 border border-white/5 rounded-[2.5rem] p-8 backdrop-blur-sm border-yellow-500/20">
+                            <div className="flex items-center justify-between mb-6">
+                                <h2 className="text-xl font-bold flex items-center gap-3">
+                                    <AlertCircle className="text-yellow-500" />
+                                    Coverage Gaps
+                                </h2>
+                                <button
+                                    onClick={handleAutoFill}
+                                    disabled={isAutoFilling}
+                                    className="p-2 bg-white/5 rounded-xl hover:bg-white hover:text-black transition-all disabled:opacity-50"
+                                    title="Auto-fill questions using AI"
+                                >
+                                    {isAutoFilling ? <Loader2 size={18} className="animate-spin" /> : <Sparkles size={18} className="text-yellow-500" />}
+                                </button>
+                            </div>
+                            <p className="text-xs text-zinc-500 mb-6">The following subtopics have low question coverage. You can use autonomous AI to fill these gaps.</p>
+                            <div className="space-y-3">
+                                {stats?.gaps?.map((gap, idx) => (
+                                    <div key={idx} className="p-3 bg-zinc-950 border border-white/5 rounded-2xl flex items-center justify-between">
+                                        <div className="overflow-hidden">
+                                            <p className="text-[10px] font-bold text-zinc-600 truncate uppercase tracking-tighter">{gap.topic}</p>
+                                            <p className="text-sm font-bold text-zinc-300 truncate">{gap.subtopic}</p>
+                                        </div>
+                                        <div className="text-right ml-4 shrink-0">
+                                            <p className="text-xs font-black text-yellow-500/80">{gap.count} / 5</p>
+                                            <div className="w-12 h-1 bg-white/5 rounded-full mt-1 overflow-hidden">
+                                                <div className="h-full bg-yellow-500/50" style={{ width: `${(gap.count / 5) * 100}%` }} />
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                                {(!stats?.gaps || stats?.gaps.length === 0) && (
+                                    <p className="text-zinc-600 text-xs text-center py-4">Great! All topics are well covered.</p>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="bg-zinc-900/50 border border-white/5 rounded-[2.5rem] p-8 backdrop-blur-sm self-start">
+                            <h2 className="text-xl font-bold mb-6">Quick Actions</h2>
+                            <div className="space-y-3">
+                                <QuickActionLink label="Manage Questions" href="/admin/questions" />
+                                <QuickActionLink label="Bulk Upload" href="/admin/questions/bulk" />
+                                <QuickActionLink label="Documentation" href="/admin/documentation" />
+                                <QuickActionLink label="User Management" href="/admin/users" />
+                                <QuickActionLink label="Global Reports" href="/admin/reports" />
+                                <QuickActionLink label="Settings" href="/admin/settings" />
+                            </div>
                         </div>
                     </div>
                 </div>

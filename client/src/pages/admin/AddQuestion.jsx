@@ -16,6 +16,7 @@ import {
     Play,
     Loader2,
     Check,
+    Sparkles,
     X as CloseIcon
 } from 'lucide-react';
 
@@ -50,6 +51,7 @@ const AddQuestion = () => {
     });
 
     const [isTesting, setIsTesting] = useState(false);
+    const [isGeneratingAI, setIsGeneratingAI] = useState(false);
     const [testResults, setTestResults] = useState(null);
     const [testCode, setTestCode] = useState('');
 
@@ -118,6 +120,40 @@ const AddQuestion = () => {
     const removeArrayField = (field, index) => {
         const newArray = formData[field].filter((_, i) => i !== index);
         setFormData({ ...formData, [field]: newArray });
+    };
+
+    const handleAIGenerate = async () => {
+        if (!selectedTopic || !selectedSubtopic) {
+            alert('Please select a Topic and Subtopic first.');
+            return;
+        }
+
+        setIsGeneratingAI(true);
+        try {
+            const { data } = await api.post('/admin/questions/generate-ai', {
+                type,
+                topic: selectedTopic,
+                subtopic: selectedSubtopic,
+                difficulty: formData.difficulty
+            });
+
+            setFormData(prev => ({
+                ...prev,
+                ...data,
+                // Ensure options/testCases are correctly formatted if they were missing something
+                options: data.options || prev.options,
+                testCases: data.testCases || prev.testCases
+            }));
+
+            if (data.explanation) {
+                setFormData(prev => ({ ...prev, explanation: data.explanation }));
+            }
+
+        } catch (error) {
+            alert(error.response?.data?.message || 'AI Generation failed');
+        } finally {
+            setIsGeneratingAI(false);
+        }
     };
 
     const handleTestCode = async () => {
@@ -189,11 +225,24 @@ const AddQuestion = () => {
 
                 <form onSubmit={handleSubmit} className="space-y-8">
                     <div className="bg-zinc-900/50 border border-white/5 rounded-[2.5rem] p-8 md:p-10 backdrop-blur-sm">
-                        <div className="flex items-center gap-3 mb-8">
-                            <div className="p-3 bg-blue-500/10 rounded-2xl text-blue-500">
-                                <Settings size={20} />
+                        <div className="flex items-center justify-between mb-8">
+                            <div className="flex items-center gap-3">
+                                <div className="p-3 bg-blue-500/10 rounded-2xl text-blue-500">
+                                    <Settings size={20} />
+                                </div>
+                                <h2 className="text-xl font-bold tracking-tight">Question Details</h2>
                             </div>
-                            <h2 className="text-xl font-bold tracking-tight">Question Details</h2>
+                            {(type === 'MCQ' || type === 'CODING') && (
+                                <button
+                                    type="button"
+                                    onClick={handleAIGenerate}
+                                    disabled={isGeneratingAI}
+                                    className="px-6 py-2.5 bg-zinc-950 border border-white/5 rounded-2xl text-[11px] font-black uppercase tracking-widest hover:bg-white hover:text-black transition-all flex items-center gap-3 disabled:opacity-50"
+                                >
+                                    {isGeneratingAI ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} className="text-yellow-500" />}
+                                    {isGeneratingAI ? 'Generating...' : 'Generate with AI'}
+                                </button>
+                            )}
                         </div>
 
                         <div className="space-y-6">

@@ -19,7 +19,9 @@ const {
     bulkUploadQuestions,
     getQuestionReports,
     updateReportStatus,
-    getPainPointAnalytics
+    getPainPointAnalytics,
+    generateQuestionAI,
+    autoFillQuestions
 } = require('../controllers/adminController');
 const {
     getSettings,
@@ -38,6 +40,8 @@ router.route('/questions')
     .get(getQuestions);
 
 router.post('/questions/bulk', bulkUploadQuestions);
+router.post('/questions/generate-ai', generateQuestionAI);
+router.post('/questions/auto-fill', autoFillQuestions);
 
 router.route('/questions/:id')
     .get(getQuestionById)

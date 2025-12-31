@@ -5,6 +5,10 @@ const Test = require('../models/Test');
 const UserAttempt = require('../models/UserAttempt');
 const Documentation = require('../models/Documentation');
 const ReportedQuestion = require('../models/ReportedQuestion');
+const TOPICS_DATA = require('../config/topicsData');
+const { GoogleGenerativeAI } = require("@google/generative-ai");
+const Settings = require('../models/Settings');
+const bcrypt = require('bcryptjs');
 
 // @desc    Get system stats
 // @route   GET /api/admin/stats
@@ -47,6 +51,24 @@ const getStats = asyncHandler(async (req, res) => {
         { $limit: 10 } // Show top 10 topics
     ]);
 
+    // Gap Analysis
+    const allExistingQuestions = await Question.find({ status: 'published' }).select('topic subtopic');
+    const gaps = [];
+    const targetCount = (await Settings.findOne())?.ai?.targetQuestionsPerTopic || 5;
+
+    for (const [topic, subtopics] of Object.entries(TOPICS_DATA)) {
+        for (const sub of subtopics) {
+            const count = allExistingQuestions.filter(q =>
+                (q.topic === topic && q.subtopic === sub) ||
+                (q.topics && q.topics.includes(sub))
+            ).length;
+
+            if (count < targetCount) {
+                gaps.push({ topic, subtopic: sub, count, needed: targetCount - count });
+            }
+        }
+    }
+
     res.json({
         totalQuestions,
         publishedQuestions,
@@ -54,6 +76,7 @@ const getStats = asyncHandler(async (req, res) => {
         totalTests,
         totalUsers,
         totalAttempts,
+        gaps: gaps.sort((a, b) => a.count - b.count).slice(0, 10),
         breakdown: {
             type: typeStats.reduce((acc, curr) => ({ ...acc, [curr._id]: curr.count }), {}),
             difficulty: difficultyStats.reduce((acc, curr) => ({ ...acc, [curr._id]: curr.count }), {}),
@@ -333,7 +356,6 @@ const createUser = asyncHandler(async (req, res) => {
     // I will use a separate replacement to add the import first.
 
     // placeholder implementation relying on subsequent import addition
-    const bcrypt = require('bcryptjs');
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
@@ -558,88 +580,209 @@ const updateReportStatus = asyncHandler(async (req, res) => {
     res.json(report);
 });
 
-// @desc    Get Pain Point Analytics
+// @desc    Get analytics for questions where students struggle
 // @route   GET /api/admin/analytics/pain-points
 // @access  Private/Admin
 const getPainPointAnalytics = asyncHandler(async (req, res) => {
-    // Analyze question failure rates
-    const analytics = await UserAttempt.aggregate([
-        { $unwind: "$answers" },
-        {
-            $group: {
-                _id: "$answers.questionId",
-                totalAttempts: { $sum: 1 },
-                correctAttempts: { $sum: { $cond: ["$answers.isCorrect", 1, 0] } },
-                skippedCount: { $sum: { $cond: [{ $eq: ["$answers.status", "skipped"] }, 1, 0] } }
-            }
-        },
-        {
-            $lookup: {
-                from: "questions",
-                localField: "_id",
-                foreignField: "_id",
-                as: "questionDetails"
-            }
-        },
-        { $unwind: "$questionDetails" },
-        {
-            $project: {
-                title: "$questionDetails.title",
-                topic: "$questionDetails.topic",
-                topics: "$questionDetails.topics",
-                difficulty: "$questionDetails.difficulty",
-                type: "$questionDetails.type",
-                totalAttempts: 1,
-                correctAttempts: 1,
-                failureRate: {
-                    $multiply: [
-                        { $subtract: [1, { $divide: ["$correctAttempts", "$totalAttempts"] }] },
-                        100
-                    ]
-                }
-            }
-        },
-        { $sort: { failureRate: -1 } },
-        { $limit: 20 }
-    ]);
+    const attempts = await UserAttempt.find({});
+    const questionStats = {};
 
-    // Group by topic to see "Topics Needing Attention"
-    const topicPainPoints = await UserAttempt.aggregate([
-        { $unwind: "$answers" },
-        {
-            $lookup: {
-                from: "questions",
-                localField: "answers.questionId",
-                foreignField: "_id",
-                as: "q"
+    attempts.forEach(attempt => {
+        attempt.answers.forEach(answer => {
+            if (!questionStats[answer.questionId]) {
+                questionStats[answer.questionId] = {
+                    total: 0,
+                    correct: 0,
+                    topic: answer.topic,
+                    type: answer.type
+                };
             }
-        },
-        { $unwind: "$q" },
-        {
-            $project: {
-                topic: { $ifNull: ["$q.topic", { $arrayElemAt: ["$q.topics", 0] }] },
-                isCorrect: "$answers.isCorrect"
+            questionStats[answer.questionId].total++;
+            if (answer.isCorrect) {
+                questionStats[answer.questionId].correct++;
             }
-        },
-        {
-            $group: {
-                _id: "$topic",
-                total: { $sum: 1 },
-                correct: { $sum: { $cond: ["$isCorrect", 1, 0] } }
-            }
-        },
-        {
-            $project: {
-                topic: "$_id",
-                accuracy: { $multiply: [{ $divide: ["$correct", "$total"] }, 100] },
-                totalQuestions: "$total"
-            }
-        },
-        { $sort: { accuracy: 1 } },
-        { $limit: 10 }
-    ]);
+        });
+    });
 
-    res.json({ hardestQuestions: analytics, weakTopics: topicPainPoints });
+    const painPoints = [];
+    for (const [qId, stats] of Object.entries(questionStats)) {
+        const failureRate = (stats.total - stats.correct) / stats.total;
+        if (stats.total >= 3 && failureRate > 0.4) { // Only count if at least 3 students tried and >40% failure
+            const question = await Question.findById(qId).select('title questionNumber');
+            painPoints.push({
+                questionId: qId,
+                title: question?.title || 'Unknown',
+                questionNumber: question?.questionNumber,
+                topic: stats.topic,
+                type: stats.type,
+                failureRate: Math.round(failureRate * 100),
+                totalAttempts: stats.total
+            });
+        }
+    }
+
+    res.json(painPoints.sort((a, b) => b.failureRate - a.failureRate));
+});
+
+// @desc    Generate a single question using AI
+// @route   POST /api/admin/questions/generate-ai
+// @access  Private/Admin
+const generateQuestionAI = asyncHandler(async (req, res) => {
+    const { type, topic, subtopic, difficulty } = req.body;
+
+    const settings = await Settings.findOne();
+    const apiKey = settings?.ai?.geminiApiKey || process.env.GEMINI_API_KEY;
+
+    if (!apiKey) {
+        res.status(400);
+        throw new Error('Gemini API Key is missing. Configure it in Settings.');
+    }
+
+    const genAI = new GoogleGenerativeAI(apiKey);
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
+    let prompt = "";
+    if (type === 'MCQ') {
+        prompt = `Generate a high-quality MCQ question for the topic "${topic}" and subtopic "${subtopic}" with ${difficulty} difficulty.
+        Return the response in STRICT JSON format with the following structure:
+        {
+            "title": "Concise Title",
+            "description": "Clear question description",
+            "difficulty": "${difficulty}",
+            "type": "MCQ",
+            "options": [
+                {"text": "Option 1", "isCorrect": true},
+                {"text": "Option 2", "isCorrect": false},
+                {"text": "Option 3", "isCorrect": false},
+                {"text": "Option 4", "isCorrect": false}
+            ],
+            "explanation": "Brief explanation of why the correct option is right"
+        }
+        Response MUST be ONLY the JSON object.`;
+    } else {
+        prompt = `Generate a high-quality CODING question for the topic "${topic}" and subtopic "${subtopic}" with ${difficulty} difficulty.
+        Return the response in STRICT JSON format with the following structure:
+        {
+            "title": "Concise Title",
+            "description": "Clear problem statement with examples",
+            "difficulty": "${difficulty}",
+            "type": "CODING",
+            "constraints": "Time and memory constraints",
+            "inputFormat": "Description of input",
+            "outputFormat": "Description of output",
+            "testCases": [
+                {"input": "Sample input 1", "output": "Sample output 1", "isHidden": false},
+                {"input": "Sample input 2", "output": "Sample output 2", "isHidden": false},
+                {"input": "Hidden input", "output": "Hidden output", "isHidden": true}
+            ],
+            "explanation": "Optimal approach and complexity"
+        }
+        Response MUST be ONLY the JSON object.`;
+    }
+
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    let text = response.text();
+
+    // Clean up JSON if extra markdown formatting is present
+    text = text.replace(/```json/g, '').replace(/```/g, '').trim();
+
+    try {
+        const questionData = JSON.parse(text);
+        res.json(questionData);
+    } catch (err) {
+        console.error("AI Generation Parsing Error:", err.message, "Raw Text:", text);
+        res.status(500);
+        throw new Error('AI generated an invalid format. Please try again.');
+    }
+});
+
+// @desc    Autonomous gap-filling
+// @route   POST /api/admin/questions/auto-fill
+// @access  Private/Admin
+const autoFillQuestions = asyncHandler(async (req, res) => {
+    const settings = await Settings.findOne();
+    const apiKey = settings?.ai?.geminiApiKey || process.env.GEMINI_API_KEY;
+    const targetCount = settings?.ai?.targetQuestionsPerTopic || 5;
+
+    if (!apiKey) {
+        res.status(400);
+        throw new Error('Gemini API Key is missing.');
+    }
+
+    // 1. Find Gaps
+    const allExistingQuestions = await Question.find({ status: 'published' }).select('topic subtopic');
+    const gaps = [];
+
+    for (const [topic, subtopics] of Object.entries(TOPICS_DATA)) {
+        for (const sub of subtopics) {
+            const count = allExistingQuestions.filter(q =>
+                (q.topic === topic && q.subtopic === sub) ||
+                (q.topics && q.topics.includes(sub))
+            ).length;
+
+            if (count < targetCount) {
+                gaps.push({ topic, subtopic: sub, count });
+            }
+        }
+    }
+
+    if (gaps.length === 0) {
+        return res.json({ message: 'All topics have sufficient coverage!' });
+    }
+
+    // Pick top 3 most empty subtopics
+    const selectedGaps = gaps.sort((a, b) => a.count - b.count).slice(0, 3);
+    const generatedQuestions = [];
+
+    const genAI = new GoogleGenerativeAI(apiKey);
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
+    const lastQuestion = await Question.findOne().sort({ questionNumber: -1 });
+    let currentNumber = lastQuestion && lastQuestion.questionNumber ? lastQuestion.questionNumber : 0;
+
+    for (const gap of selectedGaps) {
+        // Generate one MCQ and one CODING for each gap to ensure variety
+        const types = ['MCQ', 'CODING'];
+        for (const type of types) {
+            const difficulty = ['easy', 'medium', 'hard'][Math.floor(Math.random() * 3)];
+
+            let prompt = `Generate a ${difficulty} difficulty ${type} question for ${gap.topic} -> ${gap.subtopic}. Return ONLY JSON.`;
+            if (type === 'MCQ') {
+                prompt += ` Structure: {"title":"","description":"","options":[{"text":"","isCorrect":true},...],"explanation":""}`;
+            } else {
+                prompt += ` Structure: {"title":"","description":"","constraints":"","inputFormat":"","outputFormat":"","testCases":[{"input":"","output":"","isHidden":false},...],"explanation":""}`;
+            }
+
+            try {
+                const result = await model.generateContent(prompt);
+                let text = (await result.response).text();
+                text = text.replace(/```json/g, '').replace(/```/g, '').trim();
+                const qData = JSON.parse(text);
+
+                currentNumber++;
+                const newQ = await Question.create({
+                    ...qData,
+                    questionNumber: currentNumber,
+                    topic: gap.topic,
+                    subtopic: gap.subtopic,
+                    difficulty,
+                    type,
+                    status: 'published',
+                    createdBy: req.user.id
+                });
+                generatedQuestions.push(newQ);
+            } catch (err) {
+                console.error(`Failed to auto-generate for ${gap.subtopic}:`, err.message);
+            }
+        }
+    }
+
+    res.status(201).json({
+        message: `Successfully generated ${generatedQuestions.length} questions to fill gaps.`,
+        generatedCount: generatedQuestions.length,
+        topicsFilled: selectedGaps.map(g => g.subtopic)
+    });
 });
 
 module.exports = {
@@ -662,5 +805,7 @@ module.exports = {
     bulkUploadQuestions, // New
     getQuestionReports,
     updateReportStatus,
-    getPainPointAnalytics
+    getPainPointAnalytics,
+    generateQuestionAI,
+    autoFillQuestions
 };

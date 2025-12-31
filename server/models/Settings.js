@@ -13,7 +13,9 @@ const settingsSchema = new mongoose.Schema({
     ai: {
         geminiApiKey: { type: String, default: '' },
         promptTemperature: { type: Number, default: 0.7, min: 0, max: 1 },
-        weaknessSensitivity: { type: Number, default: 0.5, min: 0, max: 1 }
+        weaknessSensitivity: { type: Number, default: 0.5, min: 0, max: 1 },
+        autoGenerationEnabled: { type: Boolean, default: false },
+        targetQuestionsPerTopic: { type: Number, default: 5 }
     },
     user: {
         registrationOpen: { type: Boolean, default: true },
