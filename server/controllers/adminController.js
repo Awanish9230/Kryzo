@@ -639,7 +639,7 @@ const generateQuestionAI = asyncHandler(async (req, res) => {
     }
 
     const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
 
     let prompt = "";
     if (type === 'MCQ') {
@@ -736,7 +736,7 @@ const autoFillQuestions = asyncHandler(async (req, res) => {
     const generatedQuestions = [];
 
     const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
 
     const lastQuestion = await Question.findOne().sort({ questionNumber: -1 });
     let currentNumber = lastQuestion && lastQuestion.questionNumber ? lastQuestion.questionNumber : 0;

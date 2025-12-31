@@ -1440,7 +1440,7 @@ const generateQuestionExplanation = asyncHandler(async (req, res) => {
         try {
             // Try 1.5 Flash first (most reliable)
             const model = genAI.getGenerativeModel({
-                model: "gemini-1.5-flash",
+                model: "gemini-flash-latest",
                 generationConfig: { temperature }
             });
             const result = await model.generateContent(prompt);
