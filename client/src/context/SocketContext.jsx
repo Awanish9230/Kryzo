@@ -62,7 +62,7 @@ export const SocketProvider = ({ children }) => {
 
         // Cleanup function
         return () => {
-            if (socketRef.current && !user) {
+            if (socketRef.current) {
                 console.log('Cleaning up socket connection');
                 socketRef.current.disconnect();
                 socketRef.current = null;
