@@ -17,7 +17,8 @@ import {
     Camera,
     MapPin,
     Calendar,
-    Activity
+    Activity,
+    GraduationCap
 } from 'lucide-react';
 import Loader from '../../components/Loader';
 import ActivityCalendar from '../../components/ActivityCalendar';

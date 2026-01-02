@@ -69,6 +69,13 @@ const userSchema = new mongoose.Schema({
     completedDSATopics: {
         type: [String],
         default: []
+    },
+    currentPlanTopics: {
+        type: [String],
+        default: []
+    },
+    currentPlanGeneratedAt: {
+        type: Date
     }
 }, {
     timestamps: true

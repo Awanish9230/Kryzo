@@ -88,10 +88,12 @@ const TestResult = () => {
                 >
                     <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/5 rounded-full mb-6 border border-white/5">
                         <Trophy size={16} className="text-yellow-500" />
-                        <span className="text-sm font-bold text-yellow-500 uppercase tracking-widest">Analysis Complete</span>
+                        <span className="text-sm font-bold text-yellow-500 uppercase tracking-widest">
+                            {result.isDiagnostic ? 'Analysis Complete' : 'Session Complete'}
+                        </span>
                     </div>
                     <h1 className="text-5xl md:text-7xl font-bold tracking-tighter text-white mb-6">
-                        {result.percentage}% <span className="text-zinc-600 text-3xl md:text-5xl">Score</span>
+                        {result.percentage}% <span className="text-zinc-600 text-3xl md:text-5xl">{result.isDiagnostic ? 'Score' : 'Accuracy'}</span>
                     </h1>
                     <div className="flex items-center justify-center gap-6 mb-6">
                         <div className="text-center px-6 py-3 bg-zinc-900 rounded-2xl border border-white/5">
@@ -229,7 +231,9 @@ const TestResult = () => {
 
                 {/* 7-Day Plan */}
                 <div>
-                    <h2 className="text-3xl font-bold tracking-tight mb-8">7-Day Improvement Plan</h2>
+                    <h2 className="text-3xl font-bold tracking-tight mb-8">
+                        {result.isDiagnostic ? 'New 7-Day Improvement Plan' : 'Current 7-Day Journey'}
+                    </h2>
                     <div className="space-y-4">
                         {result.plan.map((day, idx) => (
                             <motion.div

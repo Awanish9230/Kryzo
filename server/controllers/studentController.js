@@ -437,6 +437,9 @@ const getImprovementPlan = asyncHandler(async (req, res) => {
 
     const focusTopics = planData ? planData.focusTopics : ["General Aptitude", "Programming Basics"];
 
+    const isDiagnostic = lastAttempt.testId?.type === 'DIAGNOSTIC';
+    const lastTestType = lastAttempt.testId?.type || 'UNKNOWN';
+
     // Analyze Weak & Strong Areas based on the AGGREGATED stats from the plan generator (re-deriving or passing them would be better, but we can re-calc for display quickly or just trust the focus topics as weak)
     // To be cleaner, we should probably have generatePlanForUser return the full stats. 
     // For now, let's re-use the robust focus topics as "Weak" and find "Strong" ones.
@@ -547,12 +550,14 @@ const getImprovementPlan = asyncHandler(async (req, res) => {
         totalQuestions: totalQuestionsCount,
         correctQuestions: totalCorrect,
         motivation,
-        focusTopics: focusTopics, // NEW: Show which 2 topics we're focusing on
+        focusTopics: focusTopics,
         analysis: {
             weak: weakTopics,
             strong: strongTopics
         },
         plan: dailyTasks,
+        isDiagnostic,
+        lastTestType,
         questions: lastAttempt.answers.map(ans => {
             let status = 'skipped';
             if (ans.isCorrect) status = 'solved';
@@ -1453,10 +1458,27 @@ const generatePlanForUser = async (userId) => {
         .filter(([topic]) => currentLevelTopics.some(levelTopic => new RegExp(levelTopic, 'i').test(topic)))
         .sort((a, b) => b[1].weaknessScore - a[1].weaknessScore);
 
-    let focusTopics = sortedByWeakness.slice(0, 2).map(([topic]) => topic);
-    if (focusTopics.length < 2) focusTopics = currentLevelTopics.slice(0, 2);
-    if (focusTopics.length === 1) focusTopics.push(currentLevelTopics[1] || currentLevelTopics[0]);
-    if (focusTopics.length === 0) focusTopics = currentLevelTopics.slice(0, 2);
+    // PERSISTENCE LOGIC START
+    let focusTopics = [];
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+    if (user.currentPlanTopics && user.currentPlanTopics.length > 0 && user.currentPlanGeneratedAt > sevenDaysAgo) {
+        // Reuse existing plan
+        focusTopics = user.currentPlanTopics;
+    } else {
+        // Generate new plan
+        focusTopics = sortedByWeakness.slice(0, 2).map(([topic]) => topic);
+        if (focusTopics.length < 2) focusTopics = currentLevelTopics.slice(0, 2);
+        if (focusTopics.length === 1) focusTopics.push(currentLevelTopics[1] || currentLevelTopics[0]);
+        if (focusTopics.length === 0) focusTopics = currentLevelTopics.slice(0, 2);
+
+        // Save new plan to user
+        user.currentPlanTopics = focusTopics;
+        user.currentPlanGeneratedAt = Date.now();
+        await user.save();
+    }
+    // PERSISTENCE LOGIC END
 
     // 2. Determine Plan Strategy (Smart Engine)
     // Focus Topic 1 Stats
