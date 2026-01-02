@@ -7,6 +7,51 @@ const User = require('../models/User');
 const UserActivity = require('../models/UserActivity');
 const ReportedQuestion = require('../models/ReportedQuestion');
 
+// DSA Topics in Progressive Order (1-20)
+// DSA Topics in Progressive Order (1-20)
+const DSA_TOPICS = [
+    'Programming & DSA Foundations',    // 0
+    'Arrays',                           // 1
+    'Strings',                          // 2
+    'Recursion & Backtracking',         // 3
+    'Linked List',                      // 4
+    'Stack',                            // 5
+    'Queue',                            // 6
+    'Hashing',                          // 7
+    'Sorting Algorithms',               // 8
+    'Searching Algorithms',             // 9
+    'Trees',                            // 10
+    'Binary Search Tree',               // 11
+    'Heap',                             // 12
+    'Graphs',                           // 13
+    'Greedy Algorithms',                // 14
+    'Dynamic Programming',              // 15
+    'Bit Manipulation',                 // 16
+    'Advanced Data Structures',         // 17
+    'Mathematical Algorithms',          // 18
+    'Competitive Programming Patterns'  // 19
+];
+
+// Helper function to get topics based on progression level
+// Levels 0-3: 3 Topics each
+// Levels 4-7: 2 Topics each
+const getTopicsForLevel = (level) => {
+    let startIndex, endIndex;
+
+    if (level < 4) {
+        startIndex = level * 3;
+        endIndex = startIndex + 3;
+    } else {
+        // First 4 levels (0-3) took 12 topics (4 * 3)
+        // Level 4 starts at index 12
+        const levelOffset = level - 4;
+        startIndex = 12 + (levelOffset * 2);
+        endIndex = startIndex + 2;
+    }
+
+    return DSA_TOPICS.slice(startIndex, endIndex);
+};
+
 // @desc    Generate Diagnostic Test
 // @route   GET /api/student/test/diagnostic
 // @access  Private/Student
@@ -15,14 +60,13 @@ const generateDiagnosticTest = asyncHandler(async (req, res) => {
     const selectedQuestionIds = new Set();
     let selectedQuestions = [];
 
-    // Define 5 basic topics for the diagnostic test
-    const DIAGNOSTIC_TOPICS = [
-        'HTML',
-        'CSS',
-        'JavaScript Basics',
-        'General Aptitude',
-        'Computer Networks'
-    ];
+    // Get user's current DSA progression level
+    const user = await User.findById(req.user.id);
+    const userLevel = user.dsaProgressionLevel || 0;
+
+    // Get topics for current progression level (first 4 topics for level 0)
+    const DIAGNOSTIC_TOPICS = getTopicsForLevel(userLevel);
+
     // Create regex for case-insensitive matching
     const topicRegexes = DIAGNOSTIC_TOPICS.map(t => new RegExp(t, 'i'));
 
@@ -34,7 +78,7 @@ const generateDiagnosticTest = asyncHandler(async (req, res) => {
                     status: 'published',
                     type: type,
                     difficulty: difficulty,
-                    // Filter by our specific list of easy topics
+                    // Filter by current progression topics
                     $or: [
                         { topic: { $in: topicRegexes } },
                         { topics: { $in: topicRegexes } }
@@ -62,7 +106,7 @@ const generateDiagnosticTest = asyncHandler(async (req, res) => {
     await pickQuestions('CODING', 'easy', 2);
     await pickQuestions('CODING', 'medium', 1);
 
-    // 3. Fallback: If total is less than target (23), fill with ANY 'easy' published questions
+    // 3. Fallback: If total is less than target (23), fill with ANY 'easy' published questions from current topics
     if (selectedQuestions.length < 23) {
         const needed = 23 - selectedQuestions.length;
         const extraQuestions = await Question.aggregate([
@@ -70,6 +114,10 @@ const generateDiagnosticTest = asyncHandler(async (req, res) => {
                 $match: {
                     status: 'published',
                     difficulty: 'easy',
+                    $or: [
+                        { topic: { $in: topicRegexes } },
+                        { topics: { $in: topicRegexes } }
+                    ],
                     _id: { $nin: Array.from(selectedQuestionIds).map(id => new mongoose.Types.ObjectId(id)) }
                 }
             },
@@ -715,7 +763,11 @@ const getUserProfile = asyncHandler(async (req, res) => {
             profileImage: req.user.profileImage,
             role: req.user.role,
             currentStreak: req.user.currentStreak || 0,
-            longestStreak: req.user.longestStreak || 0
+            longestStreak: req.user.longestStreak || 0,
+            dsaProgressionLevel: req.user.dsaProgressionLevel || 0,
+            completedDSATopics: req.user.completedDSATopics || [],
+            currentDSATopics: getTopicsForLevel(req.user.dsaProgressionLevel || 0),
+            totalDSATopics: DSA_TOPICS.length
         },
         stats: {
             level,
@@ -1166,7 +1218,7 @@ const getDayQuestions = asyncHandler(async (req, res) => {
 
 // Helper function to generate plan (extracted logic)
 const generatePlanForUser = async (userId) => {
-    const isHardMode = false; // Default to false for now
+    // 1. Fetch Data & Analyze Performance
     const lastAttempt = await UserAttempt.findOne({ userId })
         .sort({ createdAt: -1 })
         .populate({
@@ -1181,18 +1233,18 @@ const generatePlanForUser = async (userId) => {
             }
         });
 
-    // Aggregated Analysis: Fetch last 20 attempts for stable stats
     const recentAttempts = await UserAttempt.find({ userId })
         .sort({ createdAt: -1 })
-        .limit(20)
+        .limit(30) // Increased limit for better spaced repetition candidates
         .populate({
             path: 'answers.questionId',
-            select: 'topics topic difficulty type'
+            select: 'topics topic difficulty type title'
         });
 
     if (recentAttempts.length === 0) return null;
 
     const topicStats = {};
+    const incorrectQuestions = []; // For spaced repetition
 
     // Helper to update stats
     const updateTopicStats = (topic, isCorrect, isSkipped) => {
@@ -1204,166 +1256,194 @@ const generatePlanForUser = async (userId) => {
         if (isCorrect) {
             topicStats[topic].correct += 1;
         } else {
-            // Treat skipped as incorrect for weakness purpose, but track separately
             topicStats[topic].incorrect += 1;
             if (isSkipped) topicStats[topic].skipped += 1;
         }
     };
 
-    // Process all recent attempts
+    // Get user's DSA progression level and topics
+    const user = await User.findById(userId);
+    const userLevel = user.dsaProgressionLevel || 0;
+    const currentLevelTopics = getTopicsForLevel(userLevel);
+
     recentAttempts.forEach(attempt => {
         if (attempt.answers && Array.isArray(attempt.answers)) {
             attempt.answers.forEach(ans => {
                 const question = ans.questionId;
                 if (question) {
-                    // Normalize topics
-                    let topics = [];
-                    if (question.topics && question.topics.length > 0) {
-                        topics = question.topics;
-                    } else if (question.topic) {
-                        topics = [question.topic];
+                    // Collect incorrect questions for spaced repetition
+                    if (!ans.isCorrect && ans.userAnswer) {
+                        // Check if topic is in current level
+                        const qTopic = question.topic || (question.topics && question.topics[0]);
+                        if (qTopic && currentLevelTopics.some(t => new RegExp(t, 'i').test(qTopic))) {
+                            incorrectQuestions.push(question._id);
+                        }
                     }
 
-                    if (topics.length === 0) topics = ['General Practice'];
+                    // Normalize topics for stats
+                    let topics = [];
+                    if (question.topics && question.topics.length > 0) topics = question.topics;
+                    else if (question.topic) topics = [question.topic];
 
-                    // Check if answer is "skipped" (empty or null)
-                    const isSkipped = (ans.userAnswer === null || ans.userAnswer === undefined || ans.userAnswer === '');
-
-                    topics.forEach(t => updateTopicStats(t, ans.isCorrect, isSkipped));
+                    // Only track stats for current level topics
+                    topics.forEach(t => {
+                        if (currentLevelTopics.some(levelTopic => new RegExp(levelTopic, 'i').test(t))) {
+                            updateTopicStats(t, ans.isCorrect, ans.userAnswer === null || ans.userAnswer === undefined || ans.userAnswer === '');
+                        }
+                    });
                 }
             });
         }
     });
 
-    // Calculate Scores
+    // Calculate Weakness Scores & Determine Focus Topics
     for (const [topic, stats] of Object.entries(topicStats)) {
-        // Weakness score: weighted towards incorrect answers
-        // If accuracy < 60%, it's a candidate for weakness
         const accuracy = stats.total > 0 ? stats.correct / stats.total : 0;
         stats.accuracy = accuracy;
-        // Weakness Score: Higher is weaker. 
-        // We boost weakness score if they are skipping a lot (fear of topic?)
         const Settings = require('../models/Settings');
         const settings = await Settings.findOne() || { ai: { weaknessSensitivity: 0.5 } };
         const sensitivity = settings.ai?.weaknessSensitivity || 0.5;
-
         const skipRate = stats.total > 0 ? stats.skipped / stats.total : 0;
         stats.weaknessScore = (1 - accuracy) + (skipRate * sensitivity);
     }
 
     const sortedByWeakness = Object.entries(topicStats)
+        .filter(([topic]) => currentLevelTopics.some(levelTopic => new RegExp(levelTopic, 'i').test(topic)))
         .sort((a, b) => b[1].weaknessScore - a[1].weaknessScore);
 
-    // Filter for actual weak areas (accuracy < 70%)
-    const weakTopicsList = sortedByWeakness
-        .filter(([_, stats]) => stats.accuracy < 0.7)
-        .map(([topic]) => topic);
+    let focusTopics = sortedByWeakness.slice(0, 2).map(([topic]) => topic);
+    if (focusTopics.length < 2) focusTopics = currentLevelTopics.slice(0, 2);
+    if (focusTopics.length === 1) focusTopics.push(currentLevelTopics[1] || currentLevelTopics[0]);
+    if (focusTopics.length === 0) focusTopics = currentLevelTopics.slice(0, 2);
 
-    // If no specific weak topics found (all > 70%), pick the ones with lowest accuracy anyway
-    // If still empty (no data?), fallback.
-    let focusTopics = weakTopicsList.slice(0, 2);
+    // 2. Determine Plan Strategy (Smart Engine)
+    // Focus Topic 1 Stats
+    const focus1Stats = topicStats[focusTopics[0]] || { accuracy: 0.5 };
+    const focus2Stats = topicStats[focusTopics[1]] || { accuracy: 0.5 };
 
-    if (focusTopics.length === 0) {
-        // If everything is great, maybe focus on "Advanced" topics or just the "Least Strong" ones
-        focusTopics = sortedByWeakness.slice(0, 2).map(([topic]) => topic);
-    }
+    // Determine Daily Focus Mode based on accuracy
+    const getFocusMode = (acc) => {
+        if (acc < 0.5) return 'Accuracy';   // Weak: Focus on getting it right
+        if (acc < 0.8) return 'Speed';      // Moderate: Focus on time
+        return 'Challenge';                 // Strong: Focus on hard problems
+    };
 
-    if (focusTopics.length === 0) {
-        focusTopics.push("General Aptitude", "Programming Basics");
-    }
+    const focus1Mode = getFocusMode(focus1Stats.accuracy);
+    const focus2Mode = getFocusMode(focus2Stats.accuracy);
+
+    // Insight Logic
+    let planInsight = "Your personalized plan is ready.";
+    if (focus1Mode === 'Accuracy') planInsight = `We noticed you're struggling with ${focusTopics[0]}. The plan focuses on building accuracy with untimed practice.`;
+    else if (focus1Mode === 'Speed') planInsight = `You have good grasp of ${focusTopics[0]}. Use the 'Speed Days' to improve your solving time.`;
+    else planInsight = `You've mastered ${focusTopics[0]}! Challenge Days are scheduled to push your limits.`;
 
     const dailyTasks = [];
     const today = new Date();
+
+    // Spaced Repetition Set (Unique incorrect questions)
+    const spacedRepetitionPool = [...new Set(incorrectQuestions)];
 
     for (let i = 0; i < 7; i++) {
         const dayDate = new Date(today);
         dayDate.setDate(today.getDate() + i + 1);
         const dayName = dayDate.toLocaleDateString('en-US', { weekday: 'long' });
 
-        let topic;
-        if (i < 3) {
-            topic = focusTopics[0];
-        } else if (i < 6) {
-            topic = focusTopics[1] || focusTopics[0];
-        } else {
-            topic = focusTopics[0];
-        }
+        let topic, mode;
+        // Schedule: 1-3 (Focus 1), 4-6 (Focus 2), 7 (Review)
+        if (i < 3) { topic = focusTopics[0]; mode = focus1Mode; }
+        else if (i < 6) { topic = focusTopics[1]; mode = focus2Mode; }
+        else { topic = focusTopics[0]; mode = 'Review'; }
 
-        // Determine difficulty for this day
-        // Hard Mode: Always HARD
-        // Normal Mode: Days 1-2 Easy, 3-5 Medium, 6-7 Hard/Mixed
-        let dayDifficulty = 'medium';
-        if (isHardMode) {
-            dayDifficulty = 'hard';
-        } else {
-            if (i < 2) dayDifficulty = 'easy';
-            else if (i < 5) dayDifficulty = 'medium';
-            else dayDifficulty = 'hard';
-        }
+        // Day Theme Config
+        let dayTheme = `${mode} Focus`;
+        if (i === 2 || i === 6) dayTheme = 'Retention & Review'; // Spaced Repetition Days
 
         const topicRegex = new RegExp(`^${topic.trim()}$`, 'i');
 
-        // Build Match Query
-        const matchQuery = {
-            status: 'published',
-            $or: [
-                { topic: topicRegex },
-                { topics: topicRegex }
-            ]
-        };
+        // fetch resources
+        const documentation = await Documentation.findOne({ topic: topicRegex }).select('_id title difficulty');
 
-        matchQuery.difficulty = dayDifficulty;
+        const tasks = [];
 
-        const mcqQuestions = await Question.aggregate([
-            { $match: { ...matchQuery, type: 'MCQ' } },
-            { $sample: { size: 4 } }
-        ]);
+        // --- PHASE 1: WARM-UP ---
+        // 1 Easy MCQ or Concept Read
+        tasks.push({
+            phase: 'Warm-up',
+            type: 'READ_AND_MCQ',
+            description: `Warm-up: ${documentation ? 'Review ' + documentation.title : 'Quick Concept Check'}`,
+            time: 10,
+            resource: documentation ? { id: documentation._id, title: documentation.title, type: 'DOCUMENTATION' } : null
+        });
 
-        const codingQuestions = await Question.aggregate([
-            { $match: { ...matchQuery, type: 'CODING' } },
+        // --- PHASE 2: DEEP WORK (Coding) ---
+        let codingDiff = 'medium';
+        if (mode === 'Accuracy') codingDiff = 'easy'; // Build confidence
+        if (mode === 'Challenge') codingDiff = 'hard';
+
+        // Override for progression within block
+        if (i % 3 === 0) codingDiff = 'easy'; // Start easy
+        if (i % 3 === 2) codingDiff = 'hard'; // End hard
+
+        const codingQ = await Question.aggregate([
+            { $match: { status: 'published', type: 'CODING', difficulty: codingDiff, $or: [{ topic: topicRegex }, { topics: topicRegex }] } },
             { $sample: { size: 1 } }
         ]);
 
-        // Look for Documentation/Resources for this topic (New Feature)
-        const documentation = await Documentation.findOne({
-            topic: topicRegex
-        }).select('_id title difficulty');
-
-        // Generate Tasks for UI
-        const tasks = [];
-
-        // Task 1: Reading/Concept
-        tasks.push({
-            type: 'READ',
-            description: documentation ? `Master ${documentation.title || topic}` : `Review concepts: ${topic}`,
-            time: 15,
-            resource: documentation ? {
-                id: documentation._id,
-                title: documentation.title,
-                type: 'DOCUMENTATION'
-            } : null
-        });
-
-        // Task 2: MCQs
-        if (mcqQuestions.length > 0) {
+        if (codingQ.length > 0) {
             tasks.push({
-                type: 'PRACTICE_MCQ',
-                description: `Practice ${mcqQuestions.length} MCQs on ${topic}`,
-                count: mcqQuestions.length,
-                target: `${mcqQuestions.length} Questions`,
-                time: mcqQuestions.length * 2
+                phase: 'Deep Work',
+                type: 'PRACTICE_CODING',
+                description: `Solve 1 ${codingDiff} Coding Problem (${mode} Mode)`,
+                count: 1,
+                target: mode === 'Speed' ? 'Solve in < 15 mins' : 'Solve Correctly',
+                time: 20
             });
         }
 
-        // Task 3: Coding
-        if (codingQuestions.length > 0) {
-            tasks.push({
-                type: 'PRACTICE_CODING',
-                description: `Solve ${codingQuestions.length} Coding Problem`,
-                count: codingQuestions.length,
-                target: `1 Problem`,
-                time: 15
-            });
+        // --- PHASE 3: REVIEW / SPACED REPETITION ---
+        if (i === 2 || i === 6) {
+            // INSERT SPACED REPETITION TASK
+            // Pick 2 questions from pool
+            const reviewIds = spacedRepetitionPool.splice(0, 2);
+            if (reviewIds.length > 0) {
+                tasks.push({
+                    phase: 'Review',
+                    type: 'SPACED_REPETITION',
+                    description: `Re-attempt ${reviewIds.length} previously incorrect questions`,
+                    count: reviewIds.length,
+                    target: 'Fix Past Mistakes',
+                    time: 15,
+                    questionIds: reviewIds // Frontend can use this to fetch specifics if needed, or link to "Mistakes" page
+                });
+            } else {
+                // Fallback if no mistakes to review
+                tasks.push({
+                    phase: 'Review',
+                    type: 'PRACTICE_MCQ',
+                    description: `Review 5 MCQs on ${topic}`,
+                    count: 5,
+                    target: 'Verify Retention',
+                    time: 10
+                });
+            }
+        } else {
+            // Standard Practice MCQs
+            const mcqCount = mode === 'Accuracy' ? 6 : 4; // More practice if weak
+            const mcqQ = await Question.aggregate([
+                { $match: { status: 'published', type: 'MCQ', difficulty: 'medium', $or: [{ topic: topicRegex }, { topics: topicRegex }] } },
+                { $sample: { size: mcqCount } }
+            ]);
+
+            if (mcqQ.length > 0) {
+                tasks.push({
+                    phase: 'Review',
+                    type: 'PRACTICE_MCQ',
+                    description: `Practice ${mcqCount} MCQs`,
+                    count: mcqCount,
+                    target: 'Consolidate Knowledge',
+                    time: mcqCount * 2
+                });
+            }
         }
 
         dailyTasks.push({
@@ -1372,14 +1452,15 @@ const generatePlanForUser = async (userId) => {
             date: dayDate.toISOString().split('T')[0],
             dayName: dayName,
             topic: topic,
-            difficulty: dayDifficulty, // Info only
-            assignedQuestions: [...mcqQuestions.map(q => q._id), ...codingQuestions.map(q => q._id)],
+            difficulty: codingDiff,
+            theme: dayTheme, // NEW FIELD
+            focusMode: mode, // NEW FIELD
             tasks: tasks,
             link: `/student/test/daily/${i + 1}`
         });
     }
 
-    return { plan: dailyTasks, focusTopics, isHardMode };
+    return { plan: dailyTasks, focusTopics, planInsight }; // Added planInsight
 };
 
 // Helper to calculate test duration
@@ -1467,6 +1548,100 @@ const generateQuestionExplanation = asyncHandler(async (req, res) => {
 });
 
 
+// @desc    Advance DSA Progression Level
+// @route   POST /api/student/dsa/advance
+// @access  Private/Student
+const advanceDSAProgression = asyncHandler(async (req, res) => {
+    const user = await User.findById(req.user.id);
+
+    if (!user) {
+        res.status(404);
+        throw new Error('User not found');
+    }
+
+    // Check if user can advance (max level is 7)
+    if (user.dsaProgressionLevel >= 7) {
+        return res.status(400).json({
+            message: 'You have already completed all DSA topics!',
+            currentLevel: user.dsaProgressionLevel,
+            completedTopics: user.completedDSATopics
+        });
+    }
+
+    // Get current level topics
+    const currentTopics = getTopicsForLevel(user.dsaProgressionLevel);
+
+    // Analyze performance on current topics (last 10 attempts)
+    const recentAttempts = await UserAttempt.find({ userId: user._id })
+        .sort({ createdAt: -1 })
+        .limit(10)
+        .populate({
+            path: 'answers.questionId',
+            select: 'topics topic'
+        });
+
+    let totalQuestions = 0;
+    let correctQuestions = 0;
+
+    recentAttempts.forEach(attempt => {
+        if (attempt.answers && Array.isArray(attempt.answers)) {
+            attempt.answers.forEach(ans => {
+                const question = ans.questionId;
+                if (question) {
+                    let topics = [];
+                    if (question.topics && question.topics.length > 0) {
+                        topics = question.topics;
+                    } else if (question.topic) {
+                        topics = [question.topic];
+                    }
+
+                    // Check if question belongs to current level topics
+                    const belongsToCurrentLevel = topics.some(t =>
+                        currentTopics.some(levelTopic => new RegExp(levelTopic, 'i').test(t))
+                    );
+
+                    if (belongsToCurrentLevel) {
+                        totalQuestions++;
+                        if (ans.isCorrect) correctQuestions++;
+                    }
+                }
+            });
+        }
+    });
+
+    const accuracy = totalQuestions > 0 ? (correctQuestions / totalQuestions) * 100 : 0;
+    const ADVANCEMENT_THRESHOLD = 60; // 60% accuracy required
+
+    if (accuracy < ADVANCEMENT_THRESHOLD && totalQuestions >= 5) {
+        return res.status(400).json({
+            message: `You need at least ${ADVANCEMENT_THRESHOLD}% accuracy to advance. Current: ${Math.round(accuracy)}%`,
+            currentAccuracy: Math.round(accuracy),
+            requiredAccuracy: ADVANCEMENT_THRESHOLD,
+            questionsAttempted: totalQuestions,
+            currentLevel: user.dsaProgressionLevel,
+            currentTopics: currentTopics
+        });
+    }
+
+    // Advance to next level
+    user.dsaProgressionLevel += 1;
+    user.completedDSATopics = [...user.completedDSATopics, ...currentTopics];
+    await user.save();
+
+    const nextTopics = getTopicsForLevel(user.dsaProgressionLevel);
+
+    res.json({
+        message: 'Congratulations! You have advanced to the next level!',
+        previousLevel: user.dsaProgressionLevel - 1,
+        currentLevel: user.dsaProgressionLevel,
+        completedTopics: currentTopics,
+        nextTopics: nextTopics,
+        totalCompleted: user.completedDSATopics.length,
+        totalTopics: DSA_TOPICS.length
+    });
+});
+
+
 module.exports = {
     generateDiagnosticTest,
     submitTest,
@@ -1484,5 +1659,6 @@ module.exports = {
     getUserAttempts,
     getTestAttemptDetails,
     getCodingPracticeQuestions,
-    generateQuestionExplanation
+    generateQuestionExplanation,
+    advanceDSAProgression
 };

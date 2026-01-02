@@ -58,6 +58,17 @@ const userSchema = new mongoose.Schema({
     lastActive: {
         type: Date,
         default: Date.now
+    },
+    // DSA Progression Tracking
+    dsaProgressionLevel: {
+        type: Number,
+        default: 0, // 8 Levels (0-7): 0-3 (3 topics each), 4-7 (2 topics each)
+        min: 0,
+        max: 7
+    },
+    completedDSATopics: {
+        type: [String],
+        default: []
     }
 }, {
     timestamps: true

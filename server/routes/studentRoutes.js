@@ -14,7 +14,8 @@ const {
     getUserAttempts,
     getTestAttemptDetails,
     getCodingPracticeQuestions,
-    generateQuestionExplanation
+    generateQuestionExplanation,
+    advanceDSAProgression
 } = require('../controllers/studentController');
 const { protect } = require('../middleware/authMiddleware');
 const { trackActivity } = require('../middleware/activityTracker'); // New
@@ -39,5 +40,6 @@ router.get('/documentation/:id', require('../controllers/studentController').get
 router.post('/activity/update', require('../controllers/studentController').updateActivityStats);
 router.get('/activity/log', require('../controllers/studentController').getActivityLog);
 router.put('/profile', updateProfile);
+router.post('/dsa/advance', advanceDSAProgression);
 
 module.exports = router;
