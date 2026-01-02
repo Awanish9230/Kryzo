@@ -47,7 +47,7 @@ const io = new Server(server, {
 const onlineUsers = new Map(); // socketId -> userId
 
 io.on('connection', (socket) => {
-    console.log('New client connected:', socket.id);
+    // console.log('New client connected:', socket.id);
 
     socket.on('user_connected', (userId) => {
         if (userId) {
@@ -63,7 +63,7 @@ io.on('connection', (socket) => {
             onlineUsers.delete(socket.id);
             io.emit('online_users_update', Array.from(new Set(onlineUsers.values())));
         }
-        console.log('Client disconnected:', socket.id);
+        // console.log('Client disconnected:', socket.id);
     });
 });
 

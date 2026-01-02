@@ -35,6 +35,7 @@ const TestAttempt = () => {
     const [timeLeft, setTimeLeft] = useState(0);
     const [loading, setLoading] = useState(true);
     const [isRunning, setIsRunning] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false); // Lock for submission
     const [runResults, setRunResults] = useState(null);
     const [selectedLanguage, setSelectedLanguage] = useState('javascript');
     const [showSummaryModal, setShowSummaryModal] = useState(false);
@@ -121,6 +122,9 @@ const TestAttempt = () => {
     };
 
     const handleSubmit = async () => {
+        if (isSubmitting) return; // Prevent duplicate calls
+        setIsSubmitting(true);
+
         try {
             // Calculate total time taken (in seconds)
             // timeLeft is in seconds. duration is in minutes.
@@ -147,6 +151,7 @@ const TestAttempt = () => {
         } catch (err) {
             console.error(err);
             toast.error('Failed to submit test');
+            setIsSubmitting(false); // Reset lock on error
         }
     };
 
@@ -583,10 +588,10 @@ const TestAttempt = () => {
 
                             <div className="flex flex-col gap-3">
                                 <button
-                                    onClick={handleSubmit}
-                                    className="w-full py-5 bg-blue-600 text-white font-black uppercase tracking-[0.2em] rounded-2xl hover:bg-blue-500 transition-all shadow-xl shadow-blue-500/20"
+                                    disabled={isSubmitting}
+                                    className="w-full py-5 bg-blue-600 text-white font-black uppercase tracking-[0.2em] rounded-2xl hover:bg-blue-500 transition-all shadow-xl shadow-blue-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
-                                    Confirm Submission
+                                    {isSubmitting ? 'Submitting...' : 'Confirm Submission'}
                                 </button>
                                 <button
                                     onClick={() => setShowSummaryModal(false)}
