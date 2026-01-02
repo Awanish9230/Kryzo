@@ -18,6 +18,7 @@ import {
     PanelLeftOpen
 } from 'lucide-react';
 import api from '../../utils/api';
+import Loader from '../../components/Loader';
 
 const CodingPractice = () => {
     const [searchParams] = useSearchParams();
@@ -94,9 +95,7 @@ const CodingPractice = () => {
     };
 
     if (loading) return (
-        <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center">
-            <div className="w-10 h-10 border-2 border-white/10 border-t-blue-500 rounded-full animate-spin"></div>
-        </div>
+        <Loader fullScreen />
     );
 
     if (!test || test.questions.length === 0) return (
@@ -163,7 +162,7 @@ const CodingPractice = () => {
                         disabled={submitting}
                         className="flex items-center gap-2 px-5 py-2 bg-blue-500 hover:bg-blue-600 disabled:opacity-50 text-white text-sm font-bold rounded-lg transition-all"
                     >
-                        {submitting ? <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin"></div> : <Play size={16} fill="currentColor" />}
+                        {submitting ? <Loader size="small" showText={false} /> : <Play size={16} fill="currentColor" />}
                         Run Code
                     </button>
                 </div>

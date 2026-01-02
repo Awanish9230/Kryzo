@@ -16,10 +16,10 @@ import {
     X,
     Camera,
     MapPin,
-    GraduationCap,
     Calendar,
     Activity
 } from 'lucide-react';
+import Loader from '../../components/Loader';
 import ActivityCalendar from '../../components/ActivityCalendar';
 import {
     Radar,
@@ -107,9 +107,7 @@ const Profile = () => {
     };
 
     if (loading) return (
-        <div className="min-h-screen bg-black flex items-center justify-center">
-            <div className="w-8 h-8 border-2 border-white/10 border-t-white rounded-full animate-spin"></div>
-        </div>
+        <Loader fullScreen />
     );
 
     if (!profile) return (

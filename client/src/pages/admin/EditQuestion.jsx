@@ -15,10 +15,10 @@ import {
     FileText,
     Lightbulb,
     Play,
-    Loader2,
     Check,
     X as CloseIcon
 } from 'lucide-react';
+import Loader from '../../components/Loader';
 
 const EditQuestion = () => {
     const { id } = useParams();
@@ -191,9 +191,7 @@ const EditQuestion = () => {
     };
 
     if (loading) return (
-        <div className="min-h-screen bg-black flex items-center justify-center">
-            <div className="w-8 h-8 border-2 border-white/10 border-t-white rounded-full animate-spin"></div>
-        </div>
+        <Loader fullScreen />
     );
 
     return (
@@ -389,7 +387,7 @@ const EditQuestion = () => {
                                             disabled={isTesting}
                                             className="px-6 py-2 bg-blue-600 text-white text-[11px] font-black uppercase tracking-widest rounded-xl hover:bg-blue-500 transition-all flex items-center gap-3 disabled:opacity-50"
                                         >
-                                            {isTesting ? <Loader2 size={14} className="animate-spin" /> : <Play size={14} />}
+                                            {isTesting ? <Loader size="small" showText={false} /> : <Play size={14} />}
                                             {isTesting ? 'Testing...' : 'Test Code'}
                                         </button>
                                     </div>

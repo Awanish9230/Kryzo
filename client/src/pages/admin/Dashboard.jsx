@@ -11,10 +11,10 @@ import {
     TrendingUp,
     BarChart2,
     Sparkles,
-    AlertCircle,
-    Loader2
+    AlertCircle
 } from 'lucide-react';
 import { useSocket } from '../../context/SocketContext';
+import Loader from '../../components/Loader';
 
 const AdminDashboard = () => {
     const [stats, setStats] = useState(null);
@@ -58,9 +58,7 @@ const AdminDashboard = () => {
     };
 
     if (loading) return (
-        <div className="min-h-screen bg-black flex items-center justify-center">
-            <div className="w-8 h-8 border-2 border-white/10 border-t-white rounded-full animate-spin"></div>
-        </div>
+        <Loader fullScreen />
     );
 
     return (

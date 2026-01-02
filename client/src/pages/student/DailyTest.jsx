@@ -4,6 +4,7 @@ import api from '../../utils/api';
 import { motion } from 'framer-motion';
 import { Clock, AlertCircle, CheckCircle, Code } from 'lucide-react';
 import { Editor } from '@monaco-editor/react';
+import Loader from '../../components/Loader';
 
 const DailyTest = () => {
     const { dayNumber } = useParams();
@@ -88,9 +89,7 @@ const DailyTest = () => {
     };
 
     if (loading) return (
-        <div className="min-h-screen bg-black flex items-center justify-center">
-            <div className="w-8 h-8 border-2 border-white/10 border-t-white rounded-full animate-spin"></div>
-        </div>
+        <Loader fullScreen />
     );
 
     if (error) return (
@@ -158,13 +157,13 @@ const DailyTest = () => {
                 <div className="bg-zinc-900 border border-white/5 rounded-3xl p-8 mb-8">
                     <div className="flex items-center gap-3 mb-6">
                         <span className={`px-3 py-1 rounded-lg text-xs font-bold ${currentQuestion.difficulty === 'easy' ? 'bg-green-500/10 text-green-500' :
-                                currentQuestion.difficulty === 'medium' ? 'bg-yellow-500/10 text-yellow-500' :
-                                    'bg-red-500/10 text-red-500'
+                            currentQuestion.difficulty === 'medium' ? 'bg-yellow-500/10 text-yellow-500' :
+                                'bg-red-500/10 text-red-500'
                             }`}>
                             {currentQuestion.difficulty?.toUpperCase()}
                         </span>
                         <span className={`px-3 py-1 rounded-lg text-xs font-bold ${currentQuestion.type === 'MCQ' ? 'bg-purple-500/10 text-purple-500' :
-                                'bg-blue-500/10 text-blue-500'
+                            'bg-blue-500/10 text-blue-500'
                             }`}>
                             {currentQuestion.type}
                         </span>
@@ -181,14 +180,14 @@ const DailyTest = () => {
                                     key={idx}
                                     onClick={() => updateAnswer(currentQuestion._id, 'selectedOption', idx)}
                                     className={`w-full text-left p-4 rounded-xl border-2 transition-all ${currentAnswer.selectedOption === idx
-                                            ? 'border-blue-500 bg-blue-500/10'
-                                            : 'border-white/10 bg-white/[0.02] hover:border-white/20'
+                                        ? 'border-blue-500 bg-blue-500/10'
+                                        : 'border-white/10 bg-white/[0.02] hover:border-white/20'
                                         }`}
                                 >
                                     <div className="flex items-center gap-3">
                                         <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${currentAnswer.selectedOption === idx
-                                                ? 'border-blue-500 bg-blue-500'
-                                                : 'border-white/20'
+                                            ? 'border-blue-500 bg-blue-500'
+                                            : 'border-white/20'
                                             }`}>
                                             {currentAnswer.selectedOption === idx && (
                                                 <CheckCircle className="w-4 h-4 text-white" />
@@ -271,10 +270,10 @@ const DailyTest = () => {
                                 key={idx}
                                 onClick={() => setCurrentQuestionIndex(idx)}
                                 className={`w-10 h-10 rounded-lg font-bold transition-all ${idx === currentQuestionIndex
-                                        ? 'bg-blue-500 text-white'
-                                        : answers[test.questions[idx]._id]?.selectedOption !== null || answers[test.questions[idx]._id]?.code
-                                            ? 'bg-green-500/20 text-green-500 border border-green-500/30'
-                                            : 'bg-white/5 text-zinc-500 border border-white/10'
+                                    ? 'bg-blue-500 text-white'
+                                    : answers[test.questions[idx]._id]?.selectedOption !== null || answers[test.questions[idx]._id]?.code
+                                        ? 'bg-green-500/20 text-green-500 border border-green-500/30'
+                                        : 'bg-white/5 text-zinc-500 border border-white/10'
                                     }`}
                             >
                                 {idx + 1}

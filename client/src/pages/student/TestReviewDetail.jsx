@@ -3,6 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import api from '../../utils/api';
 import { motion } from 'framer-motion';
 import { CheckCircle, XCircle, Clock, Calendar, Award, Lightbulb, Code2, ArrowLeft, ChevronLeft, ChevronRight, ChevronUp, ChevronDown } from 'lucide-react';
+import Loader from '../../components/Loader';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 
@@ -81,9 +82,7 @@ const TestReviewDetail = () => {
     };
 
     if (loading) return (
-        <div className="min-h-screen bg-black flex items-center justify-center">
-            <div className="w-8 h-8 border-2 border-white/10 border-t-white rounded-full animate-spin"></div>
-        </div>
+        <Loader fullScreen />
     );
 
     if (!review) return (
@@ -391,7 +390,7 @@ const TestReviewDetail = () => {
                                 >
                                     {generatingId === currentQuestion.questionId ? (
                                         <>
-                                            <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                                            <Loader size="small" showText={false} className="!flex-row" />
                                             Generating Explanation...
                                         </>
                                     ) : (

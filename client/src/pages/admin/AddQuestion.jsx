@@ -15,11 +15,11 @@ import {
     CheckCircle2,
     Lightbulb,
     Play,
-    Loader2,
     Check,
     Sparkles,
     X as CloseIcon
 } from 'lucide-react';
+import Loader from '../../components/Loader';
 
 const AddQuestion = () => {
     const navigate = useNavigate();
@@ -347,7 +347,7 @@ const AddQuestion = () => {
                                         disabled={isGeneratingAI}
                                         className="px-6 py-2.5 bg-zinc-950 border border-white/5 rounded-2xl text-[11px] font-black uppercase tracking-widest hover:bg-white hover:text-black transition-all flex items-center justify-center gap-3 disabled:opacity-50 w-full md:w-auto"
                                     >
-                                        {isGeneratingAI ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} className="text-yellow-500" />}
+                                        {isGeneratingAI ? <Loader size="small" showText={false} /> : <Sparkles size={14} className="text-yellow-500" />}
                                         {isGeneratingAI ? 'Generating...' : 'Generate with AI'}
                                     </button>
                                 </div>

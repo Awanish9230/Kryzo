@@ -13,9 +13,9 @@ import {
     Mail,
     BarChart3,
     AlertCircle,
-    CheckCircle2,
-    Loader2
+    CheckCircle2
 } from 'lucide-react';
+import Loader from '../../components/Loader';
 import api from '../../utils/api';
 
 const SettingsPage = () => {
@@ -54,9 +54,7 @@ const SettingsPage = () => {
     };
 
     if (loading) return (
-        <div className="min-h-screen bg-black flex items-center justify-center">
-            <Loader2 size={32} className="text-blue-500 animate-spin" />
-        </div>
+        <Loader fullScreen />
     );
 
     const tabs = [
@@ -327,7 +325,7 @@ const SettingsPage = () => {
                                 disabled={saving}
                                 className="flex items-center gap-2 px-8 py-4 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl font-black text-sm transition-all shadow-xl shadow-blue-500/20 disabled:opacity-50"
                             >
-                                {saving ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />}
+                                {saving ? <Loader size="small" showText={false} /> : <Save size={18} />}
                                 SAVE CHANGES
                             </button>
                         </div>

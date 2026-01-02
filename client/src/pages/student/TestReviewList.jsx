@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import api from '../../utils/api';
 import { motion } from 'framer-motion';
 import { Clock, Calendar, Award, TrendingUp, Eye, FileText } from 'lucide-react';
+import Loader from '../../components/Loader';
 
 const TestReviewList = () => {
     const [attempts, setAttempts] = useState([]);
@@ -46,9 +47,7 @@ const TestReviewList = () => {
     };
 
     if (loading) return (
-        <div className="min-h-screen bg-black flex items-center justify-center">
-            <div className="w-8 h-8 border-2 border-white/10 border-t-white rounded-full animate-spin"></div>
-        </div>
+        <Loader fullScreen />
     );
 
     return (
@@ -67,8 +66,8 @@ const TestReviewList = () => {
                             key={type}
                             onClick={() => setFilter(type)}
                             className={`px-4 py-2 rounded-xl font-bold text-sm transition-all ${filter === type
-                                    ? 'bg-white text-black'
-                                    : 'bg-zinc-900 text-zinc-500 hover:text-white border border-white/10'
+                                ? 'bg-white text-black'
+                                : 'bg-zinc-900 text-zinc-500 hover:text-white border border-white/10'
                                 }`}
                         >
                             {type === 'all' ? 'All Tests' : type.charAt(0) + type.slice(1).toLowerCase()}
@@ -109,8 +108,8 @@ const TestReviewList = () => {
                                     {/* Test Type Badge */}
                                     <div className="flex items-center justify-between mb-4">
                                         <span className={`px-3 py-1 rounded-lg text-xs font-bold ${attempt.testType === 'DIAGNOSTIC' ? 'bg-blue-500/10 text-blue-500' :
-                                                attempt.testType === 'WEEKLY' ? 'bg-purple-500/10 text-purple-500' :
-                                                    'bg-green-500/10 text-green-500'
+                                            attempt.testType === 'WEEKLY' ? 'bg-purple-500/10 text-purple-500' :
+                                                'bg-green-500/10 text-green-500'
                                             }`}>
                                             {attempt.testType}
                                         </span>

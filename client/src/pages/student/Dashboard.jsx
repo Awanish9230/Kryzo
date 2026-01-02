@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import api from '../../utils/api';
 import { motion } from 'framer-motion';
 import { BookOpen, ArrowRight, Zap, History, Code, FileText } from 'lucide-react';
+import Loader from '../../components/Loader';
 
 const StudentDashboard = () => {
     const navigate = useNavigate();
@@ -32,9 +33,7 @@ const StudentDashboard = () => {
     };
 
     if (loading) return (
-        <div className="min-h-screen bg-black flex items-center justify-center">
-            <div className="w-8 h-8 border-2 border-white/10 border-t-white rounded-full animate-spin"></div>
-        </div>
+        <Loader fullScreen />
     );
 
     if (!plan) {

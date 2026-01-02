@@ -10,6 +10,7 @@ import {
     Filter,
     MessageSquare
 } from 'lucide-react';
+import Loader from '../../components/Loader';
 import { Link } from 'react-router-dom';
 
 const ReportedQuestions = () => {
@@ -45,9 +46,7 @@ const ReportedQuestions = () => {
     const filteredReports = reports.filter(r => r.status === filter);
 
     if (loading) return (
-        <div className="min-h-screen bg-black flex items-center justify-center">
-            <div className="w-8 h-8 border-2 border-white/10 border-t-white rounded-full animate-spin"></div>
-        </div>
+        <Loader fullScreen />
     );
 
     return (
@@ -88,8 +87,8 @@ const ReportedQuestions = () => {
                                     <div className="flex-grow">
                                         <div className="flex items-center gap-3 mb-4">
                                             <span className={`px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest ${report.questionId?.difficulty === 'hard' ? 'bg-red-500/10 text-red-500' :
-                                                    report.questionId?.difficulty === 'medium' ? 'bg-yellow-500/10 text-yellow-500' :
-                                                        'bg-green-500/10 text-green-500'
+                                                report.questionId?.difficulty === 'medium' ? 'bg-yellow-500/10 text-yellow-500' :
+                                                    'bg-green-500/10 text-green-500'
                                                 }`}>
                                                 {report.questionId?.difficulty || 'N/A'}
                                             </span>

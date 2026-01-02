@@ -24,6 +24,7 @@ import {
     PanelRightOpen
 } from 'lucide-react';
 import Editor from '@monaco-editor/react';
+import Loader from '../../components/Loader';
 
 const TestAttempt = () => {
     const { testId } = useParams();
@@ -182,9 +183,7 @@ const TestAttempt = () => {
     };
 
     if (loading) return (
-        <div className="min-h-screen bg-black flex items-center justify-center">
-            <div className="w-8 h-8 border-2 border-white/10 border-t-white rounded-full animate-spin"></div>
-        </div>
+        <Loader fullScreen />
     );
 
     const currentQuestion = test.questions[currentIdx];
@@ -455,7 +454,7 @@ const TestAttempt = () => {
                                         disabled={isRunning}
                                         className="px-5 py-1.5 bg-blue-600 text-[10px] font-black text-white uppercase tracking-widest rounded-xl hover:bg-blue-500 transition-all shadow-lg shadow-blue-500/20 flex items-center gap-3 disabled:opacity-50"
                                     >
-                                        {isRunning ? <div className="w-3 h-3 border-2 border-white/20 border-t-white rounded-full animate-spin" /> : <Play size={10} fill="currentColor" />}
+                                        {isRunning ? <Loader size="small" showText={false} /> : <Play size={10} fill="currentColor" />}
                                         Run Code
                                     </button>
                                 </div>
@@ -491,7 +490,7 @@ const TestAttempt = () => {
                                         <div className="flex-1 overflow-y-auto p-6 custom-scrollbar font-mono">
                                             {!runResults && isRunning ? (
                                                 <div className="text-blue-500 flex items-center gap-3 font-bold tracking-widest uppercase text-[10px]">
-                                                    <div className="w-4 h-4 border-2 border-blue-500/20 border-t-blue-500 rounded-full animate-spin" />
+                                                    <Loader size="small" showText={false} className="!flex-row" />
                                                     Executing Code...
                                                 </div>
                                             ) : (
