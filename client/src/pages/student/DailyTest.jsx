@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../../utils/api';
-import { motion } from 'framer-motion';
-import { Clock, AlertCircle, CheckCircle, Code } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Clock, AlertCircle, CheckCircle, Code, Play, X, CheckCircle2, XCircle, ChevronLeft, ChevronRight, PanelRightClose, PanelRightOpen } from 'lucide-react';
 import { Editor } from '@monaco-editor/react';
 import Loader from '../../components/Loader';
 
@@ -16,6 +16,9 @@ const DailyTest = () => {
     const [answers, setAnswers] = useState({});
     const [timeLeft, setTimeLeft] = useState(0);
     const [submitting, setSubmitting] = useState(false);
+    const [isRunning, setIsRunning] = useState(false);
+    const [runResults, setRunResults] = useState(null);
+    const [showQuestionPanel, setShowQuestionPanel] = useState(true);
 
     useEffect(() => {
         fetchDailyTest();
@@ -80,6 +83,24 @@ const DailyTest = () => {
                 [field]: value
             }
         }));
+    };
+
+    const handleRunCode = async () => {
+        if (isRunning) return;
+        setIsRunning(true);
+        setRunResults(null);
+        try {
+            const { data } = await api.post('/compiler/run', {
+                code: currentAnswer.code,
+                languageId: currentAnswer.languageId,
+                questionId: currentQuestion._id
+            });
+            setRunResults(data);
+        } catch (err) {
+            alert('Execution failed: ' + (err.response?.data?.message || err.message));
+        } finally {
+            setIsRunning(false);
+        }
     };
 
     const formatTime = (seconds) => {
@@ -224,16 +245,26 @@ const DailyTest = () => {
                                         <Code className="w-4 h-4 text-blue-500" />
                                         <span className="text-sm font-bold">Code Editor</span>
                                     </div>
-                                    <select
-                                        value={currentAnswer.languageId}
-                                        onChange={(e) => updateAnswer(currentQuestion._id, 'languageId', parseInt(e.target.value))}
-                                        className="bg-zinc-800 border border-white/10 rounded px-3 py-1 text-sm"
-                                    >
-                                        <option value={63}>JavaScript</option>
-                                        <option value={71}>Python</option>
-                                        <option value={62}>Java</option>
-                                        <option value={54}>C++</option>
-                                    </select>
+                                    <div className="flex items-center gap-3">
+                                        <select
+                                            value={currentAnswer.languageId}
+                                            onChange={(e) => updateAnswer(currentQuestion._id, 'languageId', parseInt(e.target.value))}
+                                            className="bg-zinc-800 border border-white/10 rounded px-3 py-1 text-sm font-bold text-zinc-300"
+                                        >
+                                            <option value={63}>JavaScript</option>
+                                            <option value={71}>Python</option>
+                                            <option value={62}>Java</option>
+                                            <option value={54}>C++</option>
+                                        </select>
+                                        <button
+                                            onClick={handleRunCode}
+                                            disabled={isRunning}
+                                            className="px-4 py-1 bg-blue-600 text-[10px] font-black text-white uppercase tracking-widest rounded-lg hover:bg-blue-500 transition-all flex items-center gap-2 disabled:opacity-50"
+                                        >
+                                            {isRunning ? <Loader size="small" showText={false} /> : <Play size={10} fill="currentColor" />}
+                                            Run Code
+                                        </button>
+                                    </div>
                                 </div>
                                 <Editor
                                     height="400px"
@@ -249,6 +280,47 @@ const DailyTest = () => {
                                         automaticLayout: true
                                     }}
                                 />
+
+                                {/* Results Panel */}
+                                <AnimatePresence>
+                                    {(isRunning || runResults) && (
+                                        <motion.div
+                                            initial={{ height: 0 }}
+                                            animate={{ height: '40%' }}
+                                            exit={{ height: 0 }}
+                                            className="absolute bottom-0 left-0 right-0 bg-zinc-950 border-t border-white/10 z-20 flex flex-col"
+                                        >
+                                            <div className="px-6 py-3 border-b border-white/5 flex items-center justify-between shrink-0">
+                                                <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Execution Results</span>
+                                                <button onClick={() => setRunResults(null)} className="text-zinc-500 hover:text-white"><X size={14} /></button>
+                                            </div>
+                                            <div className="flex-1 overflow-y-auto p-6 font-mono custom-scrollbar">
+                                                {isRunning ? (
+                                                    <div className="text-blue-500 flex items-center gap-3 font-bold tracking-widest uppercase text-[10px]">
+                                                        <Loader size="small" showText={false} />
+                                                        Executing Code...
+                                                    </div>
+                                                ) : (
+                                                    <div className="space-y-4">
+                                                        {runResults?.results?.map((res, idx) => (
+                                                            <div key={idx} className={`p-4 rounded-xl border ${res.passed ? 'bg-green-500/5 border-green-500/10' : 'bg-red-500/5 border-red-500/10'}`}>
+                                                                <div className="flex items-center justify-between mb-3 text-[10px] font-black uppercase tracking-widest">
+                                                                    <span className="text-zinc-600">Case {idx + 1}</span>
+                                                                    <span className={res.passed ? "text-green-500" : "text-red-500"}>{res.passed ? "Passed" : "Failed"}</span>
+                                                                </div>
+                                                                <div className="grid grid-cols-2 gap-4 text-[11px] text-zinc-400">
+                                                                    <div><span className="text-zinc-600 block mb-1 uppercase text-[8px]">Output</span>{res.actualOutput || 'N/A'}</div>
+                                                                    <div><span className="text-zinc-600 block mb-1 uppercase text-[8px]">Expected</span>{res.expectedOutput || 'N/A'}</div>
+                                                                </div>
+                                                                {res.error && <div className="mt-3 p-2 bg-red-500/10 text-red-400 text-[10px] rounded-lg">{res.error}</div>}
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
                             </div>
                         </div>
                     )}
