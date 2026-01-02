@@ -558,6 +558,7 @@ const getImprovementPlan = asyncHandler(async (req, res) => {
         plan: dailyTasks,
         isDiagnostic,
         lastTestType,
+        insight: planData.insight,
         questions: lastAttempt.answers.map(ans => {
             let status = 'skipped';
             if (ans.isCorrect) status = 'solved';
@@ -1459,25 +1460,21 @@ const generatePlanForUser = async (userId) => {
         .sort((a, b) => b[1].weaknessScore - a[1].weaknessScore);
 
     // PERSISTENCE LOGIC START
-    let focusTopics = [];
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-    if (user.currentPlanTopics && user.currentPlanTopics.length > 0 && user.currentPlanGeneratedAt > sevenDaysAgo) {
-        // Reuse existing plan
-        focusTopics = user.currentPlanTopics;
-    } else {
-        // Generate new plan
-        focusTopics = sortedByWeakness.slice(0, 2).map(([topic]) => topic);
-        if (focusTopics.length < 2) focusTopics = currentLevelTopics.slice(0, 2);
-        if (focusTopics.length === 1) focusTopics.push(currentLevelTopics[1] || currentLevelTopics[0]);
-        if (focusTopics.length === 0) focusTopics = currentLevelTopics.slice(0, 2);
-
-        // Save new plan to user
-        user.currentPlanTopics = focusTopics;
-        user.currentPlanGeneratedAt = Date.now();
-        await user.save();
+    if (user.currentPlanData && user.currentPlanData.length === 7 && user.currentPlanGeneratedAt > sevenDaysAgo) {
+        return {
+            plan: user.currentPlanData,
+            focusTopics: user.currentPlanTopics || [],
+            insight: "Continuing your 7-day journey."
+        };
     }
+
+    let focusTopics = sortedByWeakness.slice(0, 2).map(([topic]) => topic);
+    if (focusTopics.length < 2) focusTopics = currentLevelTopics.slice(0, 2);
+    if (focusTopics.length === 1) focusTopics.push(currentLevelTopics[1] || currentLevelTopics[0]);
+    if (focusTopics.length === 0) focusTopics = currentLevelTopics.slice(0, 2);
     // PERSISTENCE LOGIC END
 
     // 2. Determine Plan Strategy (Smart Engine)
@@ -1635,7 +1632,17 @@ const generatePlanForUser = async (userId) => {
         });
     }
 
-    return { plan: dailyTasks, focusTopics, planInsight }; // Added planInsight
+    // Save new plan to user
+    user.currentPlanData = dailyTasks;
+    user.currentPlanTopics = focusTopics;
+    user.currentPlanGeneratedAt = Date.now();
+    await user.save();
+
+    return {
+        plan: dailyTasks,
+        focusTopics,
+        insight: planInsight
+    };
 };
 
 // Helper to calculate test duration

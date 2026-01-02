@@ -74,6 +74,10 @@ const userSchema = new mongoose.Schema({
         type: [String],
         default: []
     },
+    currentPlanData: {
+        type: Array, // Stores the full 7-day structure
+        default: []
+    },
     currentPlanGeneratedAt: {
         type: Date
     }
