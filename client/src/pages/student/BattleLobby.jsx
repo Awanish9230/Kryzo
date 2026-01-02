@@ -120,7 +120,7 @@ const BattleLobby = () => {
                     >
                         <Swords size={48} className="text-white" />
                     </motion.div>
-                    <h1 className="text-5xl font-black text-white tracking-tighter mb-4">
+                    <h1 className="text-3xl md:text-5xl font-black text-white tracking-tighter mb-4">
                         1v1 <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-purple-500">Battle Arena</span>
                     </h1>
                     <p className="text-zinc-500 text-lg font-medium">
@@ -157,7 +157,7 @@ const BattleLobby = () => {
                             </div>
                         ) : (
                             <div className="text-center py-4">
-                                <div className="grid grid-cols-3 gap-4 mb-10 text-left">
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10 text-left">
                                     <div className="p-4 bg-zinc-900/50 rounded-2xl border border-white/5">
                                         <Zap className="text-amber-500 mb-2" size={24} />
                                         <div className="text-2xl font-black text-white">Fast</div>

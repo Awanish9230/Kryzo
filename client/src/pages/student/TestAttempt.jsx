@@ -44,6 +44,13 @@ const TestAttempt = () => {
     const [isReporting, setIsReporting] = useState(false);
     const [showSidebar, setShowSidebar] = useState(true);
     const [showQuestionPanel, setShowQuestionPanel] = useState(true);
+    const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+    useEffect(() => {
+        const handleResize = () => setIsMobile(window.innerWidth < 768);
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
 
     const handleRunCode = async () => {
         const currentQ = test.questions[currentIdx];
@@ -510,25 +517,25 @@ const TestAttempt = () => {
                             </div>
                         </div>
                     )}
-                    <footer className="h-20 border-t border-white/5 bg-zinc-950/80 backdrop-blur-md px-10 flex items-center justify-between shrink-0 absolute bottom-0 left-0 right-0">
+                    <footer className="h-16 md:h-20 border-t border-white/5 bg-zinc-950/80 backdrop-blur-md px-4 md:px-10 flex items-center justify-between shrink-0 absolute bottom-0 left-0 right-0">
                         <button
                             type="button"
                             disabled={currentIdx === 0}
                             onClick={() => setCurrentIdx(prev => prev - 1)}
-                            className="flex items-center gap-3 text-zinc-500 hover:text-white disabled:opacity-20 transition-all font-bold text-xs uppercase tracking-widest"
+                            className="flex items-center gap-2 md:gap-3 text-zinc-500 hover:text-white disabled:opacity-20 transition-all font-bold text-[10px] md:text-xs uppercase tracking-widest"
                         >
-                            <ChevronLeft size={18} />
-                            Previous
+                            <ChevronLeft size={16} />
+                            <span className="hidden md:inline">Previous</span>
                         </button>
 
-                        <div className="flex items-center gap-8">
+                        <div className="flex items-center gap-4 md:gap-8">
                             <button type="button" className="flex items-center gap-3 text-zinc-600 hover:text-amber-500 transition-all font-bold text-xs uppercase tracking-widest">
                                 <Flag size={14} />
-                                Flag
+                                <span className="hidden md:inline">Flag</span>
                             </button>
                             <div className="h-4 w-px bg-white/5" />
                             <div className="text-[10px] font-black text-zinc-600 uppercase tracking-widest">
-                                {currentIdx + 1} of {test.questions.length}
+                                {currentIdx + 1} / {test.questions.length}
                             </div>
                         </div>
 
@@ -536,10 +543,10 @@ const TestAttempt = () => {
                             type="button"
                             disabled={currentIdx === test.questions.length - 1}
                             onClick={() => setCurrentIdx(prev => prev + 1)}
-                            className="px-8 py-3 bg-white text-black font-black uppercase tracking-widest rounded-2xl hover:bg-zinc-200 disabled:opacity-20 transition-all flex items-center gap-4 text-xs shadow-xl shadow-white/5"
+                            className="px-6 md:px-8 py-2 md:py-3 bg-white text-black font-black uppercase tracking-widest rounded-2xl hover:bg-zinc-200 disabled:opacity-20 transition-all flex items-center gap-2 md:gap-4 text-[10px] md:text-xs shadow-xl shadow-white/5"
                         >
-                            Next
-                            <ChevronRight size={18} />
+                            <span className="hidden md:inline">Next</span>
+                            <ChevronRight size={16} />
                         </button>
                     </footer>
                 </div>

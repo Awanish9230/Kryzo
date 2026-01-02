@@ -2,7 +2,7 @@ import { useContext, useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import AuthContext from '../context/AuthContext';
 import { motion } from 'framer-motion';
-import { LogOut, LayoutDashboard, PlusCircle, BookOpen, Settings as SettingsIcon, Swords, Menu, X } from 'lucide-react';
+import { LogOut, LayoutDashboard, PlusCircle, BookOpen, Settings as SettingsIcon, Swords, Menu, X, User } from 'lucide-react';
 
 const Navbar = () => {
     const { user, logout } = useContext(AuthContext);
@@ -118,6 +118,7 @@ const Navbar = () => {
                             <NavLink to="/student/battle" icon={<Swords size={18} />} active={location.pathname.startsWith('/student/battle')} onClick={() => setIsMobileMenuOpen(false)}>Battle</NavLink>
                         </>
                     )}
+                    <NavLink to={isAdmin ? "/admin/profile" : "/student/profile"} icon={<User size={18} />} active={location.pathname.includes('/profile')} onClick={() => setIsMobileMenuOpen(false)}>Profile</NavLink>
                     <div className="h-px bg-white/5 my-2" />
                     <button
                         onClick={handleLogout}
