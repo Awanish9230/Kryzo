@@ -22,11 +22,13 @@ export const SocketProvider = ({ children }) => {
             const cleanUrl = socketUrl.replace('/api', '');
 
             const newSocket = io(cleanUrl, {
-                transports: ['websocket', 'polling'], // Try websocket first, fallback to polling
+                transports: ['websocket'], // Force websocket to prevent polling upgrades
                 reconnection: true,
                 reconnectionDelay: 1000,
                 reconnectionAttempts: 5
             });
+
+            console.log('Initializing socket connection for user:', user._id);
 
             socketRef.current = newSocket;
             setSocket(newSocket);
