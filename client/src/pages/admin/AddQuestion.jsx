@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import api from '../../utils/api';
 import TOPICS_DATA from '../../utils/topicsData';
 import { motion } from 'framer-motion';
+import toast from 'react-hot-toast';
 import {
     ArrowLeft,
     HelpCircle,
@@ -125,10 +126,6 @@ const AddQuestion = () => {
         const newArray = formData[field].filter((_, i) => i !== index);
         setFormData({ ...formData, [field]: newArray });
     };
-
-    import toast from 'react-hot-toast';
-
-    // ... (imports remain)
 
     const handleAIGenerate = async () => {
         if (!selectedTopic) {

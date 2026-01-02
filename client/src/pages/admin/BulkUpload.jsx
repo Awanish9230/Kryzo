@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import * as XLSX from 'xlsx';
 import api from '../../utils/api';
 import { motion, AnimatePresence } from 'framer-motion';
+import toast from 'react-hot-toast';
 import {
     Upload,
     FileSpreadsheet,
@@ -65,15 +66,17 @@ const BulkUpload = () => {
     const handleUpload = async () => {
         if (previewData.length === 0) return;
         setUploading(true);
+        const loadingToast = toast.loading('Uploading questions...');
         try {
             await api.post('/admin/questions/bulk', previewData);
-            alert('Bulk upload successful!');
             navigate('/admin/questions');
+            toast.success('Bulk upload successful!');
         } catch (err) {
             console.error(err);
-            alert(err.response?.data?.message || 'Failed to bulk upload');
+            toast.error(err.response?.data?.message || 'Failed to bulk upload');
         } finally {
             setUploading(false);
+            toast.dismiss(loadingToast);
         }
     };
 
@@ -215,7 +218,7 @@ const BulkUpload = () => {
                                             <td className="px-6 py-4 text-sm text-zinc-400">{q.topic}</td>
                                             <td className="px-6 py-4">
                                                 <span className={`text-[10px] font-bold uppercase tracking-wider ${q.difficulty === 'easy' ? 'text-green-500' :
-                                                        q.difficulty === 'medium' ? 'text-yellow-500' : 'text-red-500'
+                                                    q.difficulty === 'medium' ? 'text-yellow-500' : 'text-red-500'
                                                     }`}>
                                                     {q.difficulty}
                                                 </span>

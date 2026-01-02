@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../../utils/api';
 import { motion, AnimatePresence } from 'framer-motion';
+import toast from 'react-hot-toast';
 import {
     Timer,
     ChevronLeft,
@@ -46,7 +47,7 @@ const TestAttempt = () => {
     const handleRunCode = async () => {
         const currentQ = test.questions[currentIdx];
         if (!answers[currentQ._id]) {
-            alert('Please write some code first!');
+            toast.error('Please write some code first!');
             return;
         }
 
@@ -61,7 +62,7 @@ const TestAttempt = () => {
             setRunResults(data);
         } catch (err) {
             console.error(err);
-            alert('Compilation failed or server error');
+            toast.error('Compilation failed or server error');
         } finally {
             setIsRunning(false);
         }
@@ -80,7 +81,7 @@ const TestAttempt = () => {
                 setLoading(false);
             } catch (err) {
                 console.error(err);
-                alert('Could not start test. Please try again.');
+                toast.error('Could not start test. Please try again.');
                 navigate('/student/dashboard');
             }
         };
@@ -142,9 +143,10 @@ const TestAttempt = () => {
             };
             await api.post('/student/test/submit', submission);
             navigate('/student/test/result');
+            toast.success('Test submitted successfully!');
         } catch (err) {
             console.error(err);
-            alert('Failed to submit test');
+            toast.error('Failed to submit test');
         }
     };
 
@@ -158,10 +160,10 @@ const TestAttempt = () => {
             });
             setShowReportModal(false);
             setReportReason('');
-            alert('Question reported successfully. Thank you!');
+            toast.success('Question reported successfully. Thank you!');
         } catch (err) {
             console.error(err);
-            alert('Failed to report question');
+            toast.error('Failed to report question');
         } finally {
             setIsReporting(false);
         }
