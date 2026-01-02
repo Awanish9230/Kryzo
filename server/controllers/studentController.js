@@ -1486,6 +1486,7 @@ const generatePlanForUser = async (userId) => {
         const documentation = await Documentation.findOne({ topic: topicRegex }).select('_id title difficulty');
 
         const tasks = [];
+        const assignedQuestions = []; // NEW: Track questions for the daily test
 
         // --- PHASE 1: WARM-UP ---
         // 1 Easy MCQ or Concept Read
@@ -1512,6 +1513,7 @@ const generatePlanForUser = async (userId) => {
         ]);
 
         if (codingQ.length > 0) {
+            assignedQuestions.push(codingQ[0]._id); // TRACK
             tasks.push({
                 phase: 'Deep Work',
                 type: 'PRACTICE_CODING',
@@ -1528,6 +1530,7 @@ const generatePlanForUser = async (userId) => {
             // Pick 2 questions from pool
             const reviewIds = spacedRepetitionPool.splice(0, 2);
             if (reviewIds.length > 0) {
+                reviewIds.forEach(id => assignedQuestions.push(id)); // TRACK
                 tasks.push({
                     phase: 'Review',
                     type: 'SPACED_REPETITION',
@@ -1535,15 +1538,21 @@ const generatePlanForUser = async (userId) => {
                     count: reviewIds.length,
                     target: 'Fix Past Mistakes',
                     time: 15,
-                    questionIds: reviewIds // Frontend can use this to fetch specifics if needed, or link to "Mistakes" page
+                    questionIds: reviewIds
                 });
             } else {
-                // Fallback if no mistakes to review
+                // Fallback if no mistakes to review - Sample MCQs for the test
+                const fallbackMcqs = await Question.aggregate([
+                    { $match: { status: 'published', type: 'MCQ', difficulty: 'medium', $or: [{ topic: topicRegex }, { topics: topicRegex }] } },
+                    { $sample: { size: 5 } }
+                ]);
+                fallbackMcqs.forEach(q => assignedQuestions.push(q._id)); // TRACK
+
                 tasks.push({
                     phase: 'Review',
                     type: 'PRACTICE_MCQ',
-                    description: `Review 5 MCQs on ${topic}`,
-                    count: 5,
+                    description: `Review ${fallbackMcqs.length || 5} MCQs on ${topic}`,
+                    count: fallbackMcqs.length || 5,
                     target: 'Verify Retention',
                     time: 10
                 });
@@ -1557,13 +1566,14 @@ const generatePlanForUser = async (userId) => {
             ]);
 
             if (mcqQ.length > 0) {
+                mcqQ.forEach(q => assignedQuestions.push(q._id)); // TRACK
                 tasks.push({
                     phase: 'Review',
                     type: 'PRACTICE_MCQ',
-                    description: `Practice ${mcqCount} MCQs`,
-                    count: mcqCount,
+                    description: `Practice ${mcqQ.length} MCQs`,
+                    count: mcqQ.length,
                     target: 'Consolidate Knowledge',
-                    time: mcqCount * 2
+                    time: mcqQ.length * 2
                 });
             }
         }
@@ -1575,9 +1585,10 @@ const generatePlanForUser = async (userId) => {
             dayName: dayName,
             topic: topic,
             difficulty: codingDiff,
-            theme: dayTheme, // NEW FIELD
-            focusMode: mode, // NEW FIELD
+            theme: dayTheme,
+            focusMode: mode,
             tasks: tasks,
+            assignedQuestions: assignedQuestions, // PASS TO BACKEND PERSISTENCE
             link: `/student/test/daily/${i + 1}`
         });
     }
