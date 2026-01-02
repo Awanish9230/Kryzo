@@ -757,19 +757,19 @@ const generateQuestionAI = asyncHandler(async (req, res) => {
         const diff = validDifficulties.includes(difficulty) ? difficulty : 'medium';
 
         if (type === 'MCQ') {
-            prompt = `Act as a Senior Technical Interviewer or Professor. Generate ${numToGen} UNIQUE, HIGH-QUALITY, SCENARIO-BASED MCQ questions for Subject: "${topic}", Subtopic: "${sub}", Difficulty: ${diff}.
+            prompt = `Act as a Senior Technical Interviewer. Generate ${numToGen} UNIQUE, CONCISE, HUMAN-LIKE MCQ questions for Subject: "${topic}", Subtopic: "${sub}", Difficulty: ${diff}.
             
             GUIDELINES:
-            1. AVOID generic definition questions like "What is X?".
-            2. FOCUS on analyzing code snippets, predicting outputs, finding bugs, or real-world application scenarios.
-            3. Make questions sound natural and human-authored. Use phrases like "Consider the following code...", "You are building a system where...", "Which of the following best implements...".
-            4. Options should be plausible distractors.
+            1. **CONCISENESS IS KEY**: Keep Question Description SHORT (max 2-3 sentences). No long paragraphs.
+            2. **HUMAN TONE**: Write naturally. Avoid robotic phrasing like "What is the output...". Instead use "What happens when you run this?".
+            3. **NO MARKDOWN ARTIFACTS**: Do NOT use backticks (\`) or markdown symbols in the *title* or *description* text unless absolutely necessary for a code variable (e.g. \`x\`). Do NOT wrap the entire response in markdown.
+            4. **REAL SIMULATION**: Focus on debugging, predicting output, or concept application.
             
-            STRICTLY RETURN ONLY A JSON ARRAY. No markdown, no "json" label.
+            STRICTLY RETURN ONLY A JSON ARRAY.
             Format:
             [{
-                "title": "Scenario: [Brief Title related to ${sub}]",
-                "description": "Question text here. (Include code snippets if applicable)",
+                "title": "Brief Scenario Title",
+                "description": "Short question text. (Max 30-40 words).",
                 "difficulty": "${diff}",
                 "type": "MCQ",
                 "topic": "${topic}",
@@ -780,34 +780,33 @@ const generateQuestionAI = asyncHandler(async (req, res) => {
                     {"text": "Option C", "isCorrect": false},
                     {"text": "Option D", "isCorrect": false}
                 ],
-                "explanation": "Detailed explanation of why the correct answer is right and others are wrong."
+                "explanation": "Concise reason why A is correct."
             }]`;
         } else {
-            prompt = `Act as a Senior Technical Interviewer at a FAANG company. Generate ${numToGen} UNIQUE, REALISTIC CODING questions for Subject: "${topic}", Subtopic: "${sub}", Difficulty: ${diff}.
+            prompt = `Act as a Senior Lead Engineer. Generate ${numToGen} UNIQUE, REALISTIC CODING questions for Subject: "${topic}", Subtopic: "${sub}", Difficulty: ${diff}.
             
             GUIDELINES:
-            1. AVOID generic requests like "Write a program to do X".
-            2. FRAMING: Present the problem as a real-world scenario or a specific algorithmic challenge.
-            3. CODE SNIPPETS: You may include a starting snippet or context in the description.
-            4. Example Style: "You are designing a cache system...", "Given a stream of packets...", "Optimize the following function...".
+            1. **REAL WORLD**: Present a realistic engineering problem (e.g. "Optimize this API", "Fix the cache").
+            2. **HUMAN STYLE**: Use professional but natural language. Avoid "Write a program to...". Use "Design a function that...".
+            3. **CLEAN OUPUT**: Do NOT use markdown code blocks in the JSON values.
             
-            STRICTLY RETURN ONLY A JSON ARRAY. No markdown, no "json" label.
+            STRICTLY RETURN ONLY A JSON ARRAY.
             Format:
             [{
-                "title": "Problem: [Unique Title related to ${sub}]",
-                "description": "Detailed problem statement with context, input/output explanation and examples.",
+                "title": "Problem: [Unique Title]",
+                "description": "Problem statement. Input/Output requirements.",
                 "difficulty": "${diff}",
                 "type": "CODING",
                 "topic": "${topic}",
                 "subtopic": "${sub}",
-                "constraints": "Time Complexity: O(N), Space Complexity: O(1), etc.",
-                "inputFormat": "Description of input.",
-                "outputFormat": "Description of output.",
+                "constraints": "Time: O(N), Space: O(1)",
+                "inputFormat": "Input details",
+                "outputFormat": "Output details",
                 "testCases": [
-                    {"input": "Sample In 1", "output": "Sample Out 1", "isHidden": false},
-                    {"input": "Hidden In 1", "output": "Hidden Out 1", "isHidden": true}
+                    {"input": "Start Case", "output": "Start Out", "isHidden": false},
+                    {"input": "Edge Case", "output": "Edge Out", "isHidden": true}
                 ],
-                "explanation": "Optimal approach and logic explanation."
+                "explanation": "Logic summary."
             }]`;
         }
         try {
