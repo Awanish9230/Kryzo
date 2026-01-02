@@ -1085,52 +1085,76 @@ const getCodingPracticeQuestions = asyncHandler(async (req, res) => {
 // @route   GET /api/student/attempt/:attemptId
 // @access  Private/Student
 const getTestAttemptDetails = asyncHandler(async (req, res) => {
+    // 1. Fetch Attempt with Test Questions Populated
     const attempt = await UserAttempt.findById(req.params.attemptId)
         .populate({
-            path: 'answers.questionId',
-            select: 'title description type difficulty options explanation codeSnippet codeLanguage testCases inputFormat outputFormat constraints topic topics'
-        })
-        .populate('testId', 'type duration');
+            path: 'testId',
+            select: 'type duration questions',
+            populate: {
+                path: 'questions',
+                select: 'title description type difficulty options explanation codeSnippet codeLanguage testCases inputFormat outputFormat constraints topic topics'
+            }
+        });
 
     if (!attempt) {
         res.status(404);
         throw new Error('Test attempt not found');
     }
 
-    // Verify this attempt belongs to the requesting user
     if (attempt.userId.toString() !== req.user.id) {
         res.status(403);
         throw new Error('Not authorized to view this attempt');
     }
 
-    // Build detailed answers with correct answers and explanations
-    const detailedAnswers = attempt.answers.map(ans => {
-        const question = ans.questionId;
-        if (!question) {
-            return {
-                ...ans.toObject(),
-                questionNotFound: true
-            };
-        }
+    // 2. Create Map of User Answers for O(1) Lookup
+    const answerMap = new Map();
+    if (attempt.answers) {
+        attempt.answers.forEach(ans => {
+            if (ans.questionId) {
+                // Handle both populated object and direct ID
+                const qId = ans.questionId._id ? ans.questionId._id.toString() : ans.questionId.toString();
+                answerMap.set(qId, ans);
+            }
+        });
+    }
+
+    // 3. Merge All Questions with Answers
+    // If test is deleted (testId is null), fallback to existing answers only (legacy support)
+    const allQuestions = attempt.testId?.questions || attempt.answers?.map(a => a.questionId) || [];
+
+    const detailedAnswers = allQuestions.map(question => {
+        // If question is null (deleted), skip or handle gracefully
+        if (!question) return null;
+
+        const qId = question._id.toString();
+        const ans = answerMap.get(qId);
 
         let correctAnswer = null;
         let userAnswerText = null;
+        let status = 'skipped';
 
+        // Helper to format correct answer
         if (question.type === 'MCQ') {
-            // Find correct option
-            const correctIdx = question.options.findIndex(opt => opt.isCorrect);
-            correctAnswer = {
-                index: correctIdx,
-                text: question.options[correctIdx]?.text || 'N/A'
-            };
-
-            // Get user's answer text
-            if (ans.selectedOption !== undefined && ans.selectedOption !== null) {
-                userAnswerText = question.options[ans.selectedOption]?.text || 'Invalid option';
+            const correctIdx = question.options?.findIndex(opt => opt.isCorrect);
+            if (correctIdx !== -1) {
+                correctAnswer = {
+                    index: correctIdx,
+                    text: question.options[correctIdx]?.text || 'N/A'
+                };
             }
-        } else if (question.type === 'CODING') {
-            // For coding, we don't show a "correct answer" but show their code
-            userAnswerText = ans.userAnswer || ans.code || 'No code submitted';
+        }
+
+        // Helper to format user answer from 'ans' if exists
+        if (ans) {
+            status = ans.isCorrect ? 'correct' : 'incorrect';
+
+            if (question.type === 'MCQ') {
+                if (ans.selectedOption !== undefined && ans.selectedOption !== null) {
+                    userAnswerText = question.options[ans.selectedOption]?.text || 'Invalid option';
+                }
+            } else if (question.type === 'CODING') {
+                userAnswerText = ans.userAnswer || ans.code || 'No code submitted';
+            }
         }
 
         return {
@@ -1146,26 +1170,46 @@ const getTestAttemptDetails = asyncHandler(async (req, res) => {
             inputFormat: question.inputFormat,
             outputFormat: question.outputFormat,
             constraints: question.constraints,
-            userAnswer: userAnswerText,
-            userCode: ans.code,
-            selectedOption: ans.selectedOption,
-            correctAnswer,
-            isCorrect: ans.isCorrect,
-            score: ans.score,
-            maxScore: ans.maxScore,
-            timeTaken: ans.timeTaken,
-            explanation: question.explanation,
-            showExplanation: !ans.isCorrect && question.explanation, // Only show for wrong answers
-            executionResults: ans.executionResults
-        };
-    });
 
-    // Calculate overall stats
+            // User Data (or defaults if skipped)
+            userAnswer: userAnswerText || 'Not Attempted',
+            userCode: ans?.code || null,
+            selectedOption: ans?.selectedOption,
+            correctAnswer,
+            isCorrect: ans?.isCorrect || false,
+            score: ans?.score || 0,
+            maxScore: ans?.maxScore || 0,
+            timeTaken: ans?.timeTaken || 0,
+            status: status, // 'correct', 'incorrect', 'skipped'
+
+            explanation: question.explanation,
+            showExplanation: !!question.explanation, // Always show explanation in review if available
+            executionResults: ans?.executionResults || []
+        };
+    }).filter(q => q !== null); // Filter out any nulls from deleted questions
+
+    // Calculate overall stats (re-calculate based on full set)
     const totalQuestions = detailedAnswers.length;
     const correctCount = detailedAnswers.filter(a => a.isCorrect).length;
-    const wrongCount = totalQuestions - correctCount;
-    const maxScore = attempt.answers.reduce((acc, ans) => acc + (ans.maxScore || 0), 0);
-    const percentage = maxScore > 0 ? Math.round((attempt.score / maxScore) * 100) : 0;
+    const wrongCount = detailedAnswers.filter(a => a.status === 'incorrect').length;
+    const skippedCount = detailedAnswers.filter(a => a.status === 'skipped').length;
+
+    // Max Score might need to be calculated across ALL questions
+    // Assuming simple sum of potential max scores
+    // Or just use attempt.maxScore if accurate, but let's recalculate to include skipped
+    const calculatedMaxScore = detailedAnswers.reduce((acc, q) => {
+        let qMax = q.maxScore || 0;
+        if (qMax === 0) {
+            // Fallback logic
+            const diff = (q.difficulty || 'medium').toLowerCase();
+            if (q.type === 'MCQ') qMax = diff === 'easy' ? 1 : diff === 'medium' ? 2 : 3;
+            else qMax = diff === 'easy' ? 5 : diff === 'medium' ? 10 : 15;
+        }
+        return acc + qMax;
+    }, 0);
+
+    // If detailed calculation differs significantly from stored (due to skipped), use calculated
+    const percentage = calculatedMaxScore > 0 ? Math.round((attempt.score / calculatedMaxScore) * 100) : 0;
 
     res.json({
         attemptId: attempt._id,
@@ -1174,11 +1218,12 @@ const getTestAttemptDetails = asyncHandler(async (req, res) => {
         totalTime: attempt.totalTime,
         stats: {
             score: attempt.score,
-            maxScore,
+            maxScore: calculatedMaxScore,
             percentage,
             totalQuestions,
             correctCount,
-            wrongCount
+            wrongCount,
+            skippedCount
         },
         questions: detailedAnswers
     });

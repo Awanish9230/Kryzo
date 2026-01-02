@@ -130,7 +130,7 @@ const TestReviewDetail = () => {
                 </div>
 
                 {/* Stats Overview */}
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+                <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8">
                     <div className="bg-zinc-900 border border-white/5 rounded-2xl p-6">
                         <div className="flex items-center gap-3 mb-2">
                             <Award className="w-5 h-5 text-blue-500" />
@@ -160,6 +160,15 @@ const TestReviewDetail = () => {
 
                     <div className="bg-zinc-900 border border-white/5 rounded-2xl p-6">
                         <div className="flex items-center gap-3 mb-2">
+                            <ArrowLeft className="w-5 h-5 text-zinc-500" />
+                            <span className="text-sm font-bold text-zinc-500 uppercase tracking-wider">Skipped</span>
+                        </div>
+                        <div className="text-3xl font-black text-zinc-500">{review.stats.skippedCount || 0}</div>
+                        <div className="text-sm text-zinc-500 mt-1">not attempted</div>
+                    </div>
+
+                    <div className="bg-zinc-900 border border-white/5 rounded-2xl p-6">
+                        <div className="flex items-center gap-3 mb-2">
                             <Clock className="w-5 h-5 text-purple-500" />
                             <span className="text-sm font-bold text-zinc-500 uppercase tracking-wider">Time</span>
                         </div>
@@ -172,20 +181,28 @@ const TestReviewDetail = () => {
                 <div className="bg-zinc-900 border border-white/5 rounded-2xl p-6 mb-8">
                     <h3 className="text-sm font-bold text-zinc-500 uppercase tracking-wider mb-4">Question Navigator</h3>
                     <div className="flex flex-wrap gap-2">
-                        {review.questions.map((q, idx) => (
-                            <button
-                                key={idx}
-                                onClick={() => setCurrentQuestionIndex(idx)}
-                                className={`w-12 h-12 rounded-lg font-bold text-sm transition-all ${idx === currentQuestionIndex
-                                    ? 'bg-white text-black'
-                                    : q.isCorrect
-                                        ? 'bg-green-500/20 text-green-500 border border-green-500/30'
-                                        : 'bg-red-500/20 text-red-500 border border-red-500/30'
-                                    }`}
-                            >
-                                {idx + 1}
-                            </button>
-                        ))}
+                        {review.questions.map((q, idx) => {
+                            // Determine style based on status
+                            let styles = 'bg-zinc-800 text-zinc-500 border border-zinc-700'; // Default/Skipped
+
+                            if (idx === currentQuestionIndex) {
+                                styles = 'bg-white text-black border-white';
+                            } else if (q.status === 'correct' || q.isCorrect) {
+                                styles = 'bg-green-500/20 text-green-500 border border-green-500/30';
+                            } else if (q.status === 'incorrect' || (!q.isCorrect && q.status !== 'skipped')) {
+                                styles = 'bg-red-500/20 text-red-500 border border-red-500/30';
+                            }
+
+                            return (
+                                <button
+                                    key={idx}
+                                    onClick={() => setCurrentQuestionIndex(idx)}
+                                    className={`w-12 h-12 rounded-lg font-bold text-sm transition-all ${styles}`}
+                                >
+                                    {idx + 1}
+                                </button>
+                            );
+                        })}
                     </div>
                 </div>
 
@@ -212,7 +229,14 @@ const TestReviewDetail = () => {
                             }`}>
                             {currentQuestion.type}
                         </span>
-                        {currentQuestion.isCorrect ? (
+
+                        {/* Status Badge */}
+                        {currentQuestion.status === 'skipped' ? (
+                            <div className="ml-auto flex items-center gap-2 px-4 py-2 bg-zinc-500/10 border border-zinc-500/20 rounded-lg">
+                                <ArrowLeft className="w-5 h-5 text-zinc-500" />
+                                <span className="text-sm font-bold text-zinc-500">Skipped</span>
+                            </div>
+                        ) : currentQuestion.isCorrect ? (
                             <div className="ml-auto flex items-center gap-2 px-4 py-2 bg-green-500/10 border border-green-500/20 rounded-lg">
                                 <CheckCircle className="w-5 h-5 text-green-500" />
                                 <span className="text-sm font-bold text-green-500">Correct</span>
