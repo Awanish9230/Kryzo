@@ -64,6 +64,8 @@ const Layout = ({ children }) => {
   );
 };
 
+import { Toaster } from 'react-hot-toast';
+
 function App() {
   return (
     <AuthProvider>
@@ -122,6 +124,28 @@ function App() {
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </Layout>
+            <Toaster
+              position="top-right"
+              toastOptions={{
+                style: {
+                  background: '#18181b', // zinc-900
+                  color: '#fff',
+                  border: '1px solid #27272a', // zinc-800
+                },
+                success: {
+                  iconTheme: {
+                    primary: '#22c55e', // green-500
+                    secondary: '#fff',
+                  },
+                },
+                error: {
+                  iconTheme: {
+                    primary: '#ef4444', // red-500
+                    secondary: '#fff',
+                  },
+                },
+              }}
+            />
           </Router>
         </ErrorBoundary>
       </SocketProvider>

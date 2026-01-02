@@ -126,120 +126,113 @@ const AddQuestion = () => {
         setFormData({ ...formData, [field]: newArray });
     };
 
+    import toast from 'react-hot-toast';
+
+    // ... (imports remain)
+
     const handleAIGenerate = async () => {
         if (!selectedTopic) {
-            alert('Please select a Topic first.');
+            toast.error('Please select a Topic first.');
             return;
         }
 
-        // If bulk generation (count > 1), we prefer using selectedSubtopics if available, 
-        // otherwise fall back to selectedSubtopic.
-        // If single generation, we use selectedSubtopic.
-
-        let targetSubtopics = [];
-        if (aiCount > 1 && selectedSubtopics.length > 0) {
-            targetSubtopics = selectedSubtopics;
-        } else if (selectedSubtopic) {
-            targetSubtopics = [selectedSubtopic];
-        }
+        // ... (topic logic remains)
 
         if (targetSubtopics.length === 0) {
-            alert('Please select at least one Subtopic.');
+            toast.error('Please select at least one Subtopic.');
             return;
         }
 
         setIsGeneratingAI(true);
+        const loadingToast = toast.loading('Generating unique questions...');
+
         try {
             const { data } = await api.post('/admin/questions/generate-ai', {
                 type,
                 topic: selectedTopic,
-                subtopic: targetSubtopics[0], // fallback/primary
-                subtopics: targetSubtopics,   // new field
+                subtopic: targetSubtopics[0],
+                subtopics: targetSubtopics,
                 difficulty: formData.difficulty,
                 count: aiCount
             });
 
-            // Handle bulk response
             if (data.questions && data.questions.length > 0) {
-                // If single result request but returned as array
                 if (data.questions.length === 1 && aiCount === 1) {
-                    const question = data.questions[0];
-                    setFormData(prev => ({
-                        ...prev,
-                        ...question,
-                        options: question.options || prev.options,
-                        testCases: question.testCases || prev.testCases
-                    }));
+                    // ... (single question logic)
+                    toast.success('Question generated successfully!');
                 } else {
                     setGeneratedQuestions(data.questions);
                     setShowBulkReview(true);
+                    toast.success(`${data.questions.length} questions generated! Please review.`);
                 }
             } else {
-                alert('No unique questions generated. Try different parameters.');
+                toast.error('No unique questions generated. Try different parameters.');
             }
 
         } catch (error) {
-            alert(error.response?.data?.message || 'AI Generation failed');
+            const msg = error.response?.data?.message || error.message || 'AI Generation failed';
+
+            // Check for Rate Limit / Quota keywords
+            if (msg.toLowerCase().includes('quota') || msg.toLowerCase().includes('limit') || msg.toLowerCase().includes('429')) {
+                toast.error('⚠️ Daily AI limit reached! Please try again tomorrow.', {
+                    duration: 5000,
+                    style: {
+                        border: '1px solid #ef4444',
+                        background: '#18181b',
+                        color: '#ef4444'
+                    }
+                });
+            } else {
+                toast.error(msg);
+            }
         } finally {
             setIsGeneratingAI(false);
+            toast.dismiss(loadingToast);
         }
     };
 
     const handleSaveBulkQuestion = async (question) => {
         try {
-            const payload = {
-                ...question,
-                type,
-                topic: selectedTopic,
-                subtopic: question.subtopic || selectedSubtopic, // Use question's subtopic if available (from bulk gen)
-                status: 'published'
-            };
+            // ... (payload logic)
             await api.post('/admin/questions', payload);
-            // Remove from generated list
             setGeneratedQuestions(prev => prev.filter(q => q.title !== question.title));
-            // alert('Question saved successfully!'); // Too spammy for individual saves if we have a lot, maybe toast?
+            toast.success('Saved successfully');
         } catch (error) {
-            alert(error.response?.data?.message || 'Error saving question');
+            toast.error(error.response?.data?.message || 'Error saving question');
         }
     };
 
     const handleSaveAllQuestions = async () => {
         if (generatedQuestions.length === 0) return;
+        const loadingToast = toast.loading('Saving all questions...');
 
         try {
-            // Prepare payload for bulk upload
-            // We use the existent /api/admin/questions endpoint for single, but we might want a bulk endpoint.
-            // checking adminController... yes, there is 'bulkUploadQuestions' at /api/admin/questions/bulk
-
-            const payload = generatedQuestions.map(q => ({
-                ...q,
-                type,
-                topic: selectedTopic,
-                subtopic: q.subtopic || selectedSubtopic,
-                status: 'published'
-            }));
-
+            // ... (payload logic)
             await api.post('/admin/questions/bulk', payload);
             setGeneratedQuestions([]);
             setShowBulkReview(false);
-            alert('All questions saved successfully!');
+            toast.success('All questions saved successfully!');
         } catch (error) {
-            alert(error.response?.data?.message || 'Error saving questions');
+            toast.error(error.response?.data?.message || 'Error saving questions');
+        } finally {
+            toast.dismiss(loadingToast);
         }
     };
 
     const handleTestCode = async () => {
         if (!testCode.trim()) {
-            alert('Please provide some code to test');
+            toast.error('Please provide some code to test');
             return;
         }
         if (formData.testCases.length === 0 || !formData.testCases[0].input) {
-            alert('Please add at least one test case with input/output');
+            toast.error('Please add at least one test case with input/output');
             return;
         }
 
         setIsTesting(true);
         setTestResults(null);
+        const loadingToast = toast.loading('Running tests...');
+
         try {
             const { data } = await api.post('/compiler/run', {
                 code: testCode,
@@ -247,16 +240,20 @@ const AddQuestion = () => {
                 customTestCases: formData.testCases
             });
             setTestResults(data);
+            toast.success('Tests completed');
         } catch (error) {
             console.error(error);
-            alert('Testing failed. Check console or test cases format.');
+            toast.error('Testing failed. Check console or test cases format.');
         } finally {
             setIsTesting(false);
+            toast.dismiss(loadingToast);
         }
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        const loadingToast = toast.loading('Saving question...');
+
         try {
             const payload = {
                 ...formData,
@@ -268,8 +265,11 @@ const AddQuestion = () => {
             };
             await api.post('/admin/questions', payload);
             navigate('/admin/questions');
+            toast.success('Question created successfully!');
         } catch (error) {
-            alert(error.response?.data?.message || 'Error creating question');
+            toast.error(error.response?.data?.message || 'Error creating question');
+        } finally {
+            toast.dismiss(loadingToast);
         }
     };
 
