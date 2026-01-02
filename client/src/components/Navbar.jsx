@@ -1,18 +1,22 @@
-import { useContext } from 'react';
+import { useContext, useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import AuthContext from '../context/AuthContext';
 import { motion } from 'framer-motion';
-import { LogOut, LayoutDashboard, PlusCircle, BookOpen, Settings as SettingsIcon, Swords } from 'lucide-react';
+import { LogOut, LayoutDashboard, PlusCircle, BookOpen, Settings as SettingsIcon, Swords, Menu, X } from 'lucide-react';
 
 const Navbar = () => {
     const { user, logout } = useContext(AuthContext);
     const navigate = useNavigate();
     const location = useLocation();
 
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
     const handleLogout = () => {
         logout();
         navigate('/login');
     };
+
+    const toggleMobileMenu = () => setIsMobileMenuOpen(!isMobileMenuOpen);
 
     // Hide Navbar on Test Attempt pages (Diagnostic & Specific Test)
     // We keep it for 'custom' (builder) and 'result' (analytics)
@@ -76,20 +80,62 @@ const Navbar = () => {
                     </Link>
                     <button
                         onClick={handleLogout}
-                        className="p-2 hover:bg-white/5 rounded-full text-zinc-400 hover:text-white transition-all group relative"
+                        className="p-2 hover:bg-white/5 rounded-full text-zinc-400 hover:text-white transition-all group relative hidden md:block" // Hidden on mobile to save space
                         title="Logout"
                     >
                         <LogOut size={20} />
                     </button>
+
+                    {/* Mobile Menu Toggle */}
+                    <button
+                        onClick={toggleMobileMenu}
+                        className="md:hidden p-2 text-zinc-400 hover:text-white"
+                    >
+                        {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+                    </button>
                 </div>
             </div>
+
+            {/* Mobile Menu Drawer */}
+            {isMobileMenuOpen && (
+                <motion.div
+                    initial={{ opacity: 0, y: -20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="md:hidden absolute top-16 left-0 w-full bg-zinc-900 border-b border-white/5 p-4 flex flex-col gap-2 shadow-2xl"
+                >
+                    {isAdmin ? (
+                        <>
+                            <NavLink to="/admin/dashboard" icon={<LayoutDashboard size={18} />} active={location.pathname === '/admin/dashboard'} onClick={() => setIsMobileMenuOpen(false)}>Dashboard</NavLink>
+                            <NavLink to="/admin/questions" icon={<BookOpen size={18} />} active={location.pathname === '/admin/questions'} onClick={() => setIsMobileMenuOpen(false)}>Questions</NavLink>
+                            <NavLink to="/admin/documentation" icon={<BookOpen size={18} />} active={location.pathname === '/admin/documentation'} onClick={() => setIsMobileMenuOpen(false)}>Documentation</NavLink>
+                            <NavLink to="/admin/users" icon={<PlusCircle size={18} />} active={location.pathname === '/admin/users'} onClick={() => setIsMobileMenuOpen(false)}>Manage Users</NavLink>
+                            <NavLink to="/admin/settings" icon={<SettingsIcon size={18} />} active={location.pathname === '/admin/settings'} onClick={() => setIsMobileMenuOpen(false)}>Settings</NavLink>
+                        </>
+                    ) : (
+                        <>
+                            <NavLink to="/student/dashboard" icon={<LayoutDashboard size={18} />} active={location.pathname === '/student/dashboard'} onClick={() => setIsMobileMenuOpen(false)}>Dashboard</NavLink>
+                            <NavLink to="/student/test/custom" icon={<PlusCircle size={18} />} active={location.pathname === '/student/test/custom'} onClick={() => setIsMobileMenuOpen(false)}>Study</NavLink>
+                            <NavLink to="/student/battle" icon={<Swords size={18} />} active={location.pathname.startsWith('/student/battle')} onClick={() => setIsMobileMenuOpen(false)}>Battle</NavLink>
+                        </>
+                    )}
+                    <div className="h-px bg-white/5 my-2" />
+                    <button
+                        onClick={handleLogout}
+                        className="flex items-center gap-2 px-4 py-3 rounded-xl text-red-500 hover:bg-red-500/10 transition-colors w-full text-left font-medium text-sm"
+                    >
+                        <LogOut size={18} />
+                        Sign Out
+                    </button>
+                </motion.div>
+            )}
         </nav>
     );
 };
 
-const NavLink = ({ to, children, icon, active }) => (
+const NavLink = ({ to, children, icon, active, onClick }) => (
     <Link
         to={to}
+        onClick={onClick}
         className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all ${active ? 'bg-white/10 text-white' : 'text-zinc-500 hover:text-white hover:bg-white/5'
             }`}
     >
