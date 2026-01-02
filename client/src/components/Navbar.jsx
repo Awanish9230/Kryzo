@@ -2,7 +2,7 @@ import { useContext, useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import AuthContext from '../context/AuthContext';
 import { motion } from 'framer-motion';
-import { LogOut, LayoutDashboard, PlusCircle, BookOpen, Settings as SettingsIcon, Swords, Menu, X, User } from 'lucide-react';
+import { LogOut, LayoutDashboard, PlusCircle, BookOpen, Settings as SettingsIcon, Swords, Menu, X, User, Terminal } from 'lucide-react';
 
 const Navbar = () => {
     const { user, logout } = useContext(AuthContext);
@@ -59,6 +59,7 @@ const Navbar = () => {
                                 <NavLink to="/admin/documentation" icon={<BookOpen size={18} />} active={location.pathname === '/admin/documentation'}>Documentation</NavLink>
                                 <NavLink to="/admin/users" icon={<PlusCircle size={18} />} active={location.pathname === '/admin/users'}>Manage Users</NavLink>
                                 <NavLink to="/admin/settings" icon={<SettingsIcon size={18} />} active={location.pathname === '/admin/settings'}>Settings</NavLink>
+                                <NavLink to="/admin/logs" icon={<Terminal size={18} />} active={location.pathname === '/admin/logs'}>System Logs</NavLink>
                             </>
                         ) : (
                             <>
@@ -110,6 +111,7 @@ const Navbar = () => {
                             <NavLink to="/admin/documentation" icon={<BookOpen size={18} />} active={location.pathname === '/admin/documentation'} onClick={() => setIsMobileMenuOpen(false)}>Documentation</NavLink>
                             <NavLink to="/admin/users" icon={<PlusCircle size={18} />} active={location.pathname === '/admin/users'} onClick={() => setIsMobileMenuOpen(false)}>Manage Users</NavLink>
                             <NavLink to="/admin/settings" icon={<SettingsIcon size={18} />} active={location.pathname === '/admin/settings'} onClick={() => setIsMobileMenuOpen(false)}>Settings</NavLink>
+                            <NavLink to="/admin/logs" icon={<Terminal size={18} />} active={location.pathname === '/admin/logs'} onClick={() => setIsMobileMenuOpen(false)}>Logs</NavLink>
                         </>
                     ) : (
                         <>

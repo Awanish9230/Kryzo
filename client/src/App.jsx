@@ -33,6 +33,7 @@ import TestReviewList from './pages/student/TestReviewList';
 import TestReviewDetail from './pages/student/TestReviewDetail';
 import BattleLobby from './pages/student/BattleLobby';
 import BattleArena from './pages/student/BattleArena';
+import SystemLogs from './pages/admin/SystemLogs';
 
 // General Components
 import Login from './pages/Login';
@@ -124,6 +125,7 @@ function App() {
                 <Route path="/admin/reports" element={<PrivateRoute role="admin"><AdminReports /></PrivateRoute>} />
                 <Route path="/admin/questions/reports" element={<PrivateRoute role="admin"><ReportedQuestions /></PrivateRoute>} />
                 <Route path="/admin/settings" element={<PrivateRoute role="admin"><SettingsPage /></PrivateRoute>} />
+                <Route path="/admin/logs" element={<PrivateRoute role="admin"><SystemLogs /></PrivateRoute>} />
 
                 <Route path="*" element={<NotFound />} />
               </Routes>

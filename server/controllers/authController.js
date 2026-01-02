@@ -2,6 +2,7 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const asyncHandler = require('express-async-handler');
 const User = require('../models/User');
+const { logEvent } = require('../utils/logger');
 
 // @desc    Register new user
 // @route   POST /api/auth/register
@@ -60,6 +61,7 @@ const registerUser = asyncHandler(async (req, res) => {
             role: user.role,
             token: generateToken(user._id),
         });
+        logEvent(req.app.get('io'), 'AUTH', `New user registration: ${user.name}`, { userId: user._id, email: user.email, role: user.role });
     } else {
         res.status(400);
         throw new Error('Invalid user data');
@@ -85,7 +87,9 @@ const loginUser = asyncHandler(async (req, res) => {
             role: user.role,
             token: generateToken(user._id, expiresIn),
         });
+        logEvent(req.app.get('io'), 'AUTH', `User logged in: ${user.name}`, { userId: user._id, email: user.email, role: user.role });
     } else {
+        logEvent(req.app.get('io'), 'ERROR', `Failed login attempt: ${email}`, { email });
         res.status(401);
         throw new Error('Invalid credentials');
     }

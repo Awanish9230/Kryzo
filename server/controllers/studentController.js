@@ -6,6 +6,7 @@ const Documentation = require('../models/Documentation');
 const User = require('../models/User');
 const UserActivity = require('../models/UserActivity');
 const ReportedQuestion = require('../models/ReportedQuestion');
+const { logEvent } = require('../utils/logger');
 
 // DSA Topics in Progressive Order (1-20)
 // DSA Topics in Progressive Order (1-20)
@@ -201,6 +202,8 @@ const generateDiagnosticTest = asyncHandler(async (req, res) => {
     const populatedTest = await Test.findById(test._id)
         .populate('questions', '-options.isCorrect -testCases.output -testCases.isHidden');
 
+    logEvent(req.app.get('io'), 'TEST', `Diagnostic Test Started: ${user.name}`, { userId: user._id, testId: test._id });
+
     res.status(201).json(populatedTest);
 });
 
@@ -375,6 +378,10 @@ const submitTest = asyncHandler(async (req, res) => {
         totalTime: req.body.totalTime || answers.reduce((acc, curr) => acc + (curr.timeTaken || 0), 0),
         completedAt: Date.now()
     });
+
+
+
+    logEvent(req.app.get('io'), 'TEST', `Test Submitted by ${req.user.name} (Score: ${score})`, { userId: req.user.id, testId, score });
 
     res.status(201).json(attempt);
 });
@@ -647,6 +654,10 @@ const createCustomTest = asyncHandler(async (req, res) => {
         questions: questions.map(q => q._id),
         createdBy: req.user.id
     });
+
+
+
+    logEvent(req.app.get('io'), 'TEST', `Custom Test Started: ${req.user.name}`, { userId: req.user.id, testId: test._id });
 
     res.status(201).json(test);
 });

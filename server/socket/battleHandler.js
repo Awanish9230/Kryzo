@@ -1,5 +1,6 @@
 const Question = require('../models/Question');
 const { v4: uuidv4 } = require('uuid');
+const { logEvent } = require('../utils/logger');
 
 // In-memory state
 const waitingQueue = []; // Array of { socketId, userId, rating }
@@ -114,6 +115,9 @@ module.exports = (io) => {
             if (progress === 100) {
                 const winnerId = room.p1.socketId === socket.id ? room.p1.userId : room.p2.userId;
                 battleNamespace.to(roomId).emit('game_over', { winnerId });
+
+                logEvent(io, 'BATTLE', `Battle Finished: Winner ${winnerId}`, { roomId, winnerId });
+
                 activeRooms.delete(roomId);
             }
         });
