@@ -64,11 +64,21 @@ const generateDiagnosticTest = asyncHandler(async (req, res) => {
     const user = await User.findById(req.user.id);
     const userLevel = user.dsaProgressionLevel || 0;
 
-    // Get topics for current progression level (first 4 topics for level 0)
+    // Get topics for current progression level
     const DIAGNOSTIC_TOPICS = getTopicsForLevel(userLevel);
 
     // Create regex for case-insensitive matching
     const topicRegexes = DIAGNOSTIC_TOPICS.map(t => new RegExp(t, 'i'));
+
+    // 0. Fetch previously attempted questions (to avoid repeats)
+    const previousAttempts = await UserAttempt.find({ userId: req.user.id }).select('answers.questionId');
+    previousAttempts.forEach(att => {
+        if (att.answers) {
+            att.answers.forEach(ans => {
+                if (ans.questionId) selectedQuestionIds.add(ans.questionId.toString());
+            });
+        }
+    });
 
     // Helper to pick random questions
     const pickQuestions = async (type, difficulty, count) => {
@@ -110,9 +120,6 @@ const generateDiagnosticTest = asyncHandler(async (req, res) => {
         mediumMCQCount += await pickQuestions('MCQ', 'medium', needed);
     }
     // If Medium missing (or used for Hard fallback) -> Fill with Easy
-    // We wanted 15 Medium originally + any extras needed for Hard
-    // But pickQuestions already added them to selectedQuestions, so we check total count
-    // Just simple check: do we have 40 MCQs?
 
     const currentMCQCount = selectedQuestions.filter(q => q.type === 'MCQ').length;
     if (currentMCQCount < 40) {
@@ -139,6 +146,7 @@ const generateDiagnosticTest = asyncHandler(async (req, res) => {
     }
 
     // 3. Final Fallback: If still not 44, strict fill with any published question from topics
+    // NOTE: This fallback IGNORES unique check if desperate to fill test
     if (selectedQuestions.length < 44) {
         const needed = 44 - selectedQuestions.length;
         const extraQuestions = await Question.aggregate([
@@ -149,7 +157,7 @@ const generateDiagnosticTest = asyncHandler(async (req, res) => {
                         { topic: { $in: topicRegexes } },
                         { topics: { $in: topicRegexes } }
                     ],
-                    _id: { $nin: Array.from(selectedQuestionIds).map(id => new mongoose.Types.ObjectId(id)) }
+                    _id: { $nin: selectedQuestions.map(q => q._id) } // Only exclude CURRENTLY picked, allow repeats if desperate
                 }
             },
             { $sample: { size: needed } }
@@ -157,14 +165,35 @@ const generateDiagnosticTest = asyncHandler(async (req, res) => {
 
         extraQuestions.forEach(q => {
             selectedQuestions.push(q);
-            selectedQuestionIds.add(q._id.toString());
         });
+    }
+
+    // Determine Test Title
+    const attemptCount = await UserAttempt.countDocuments({
+        userId: req.user.id,
+        // You might want to filter by 'diagnostic' type implicitly or check Test type
+    });
+
+    // We need to check how many DIAGNOSTIC tests user has taken.
+    // Since UserAttempt links to Test, and Test has type, we do:
+    const diagnosticTests = await Test.find({ type: 'DIAGNOSTIC' }).select('_id');
+    const diagnosticIds = diagnosticTests.map(t => t._id);
+    const diagnosticAttempts = await UserAttempt.countDocuments({
+        userId: req.user.id,
+        testId: { $in: diagnosticIds }
+    });
+
+    let testTitle = 'Initial Diagnostic Assessment';
+    if (diagnosticAttempts > 0) {
+        const dateStr = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        testTitle = `Level ${userLevel} Progress Check - ${dateStr}`;
     }
 
     // 4. Create Test Record
     const test = await Test.create({
         type: 'DIAGNOSTIC',
-        duration: 130, // 40 MCQs * 1.5m + 2 Easy * 10m + 1 Medium * 20m + 1 Hard * 30m = 130m
+        title: testTitle,
+        duration: 130,
         questions: selectedQuestions.map(q => q._id),
         createdBy: req.user.id
     });

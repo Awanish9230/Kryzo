@@ -6,6 +6,10 @@ const testSchema = new mongoose.Schema({
         enum: ['DIAGNOSTIC', 'WEEKLY', 'CUSTOM'],
         required: true
     },
+    title: {
+        type: String,
+        required: false // Optional, can be auto-generated
+    },
     duration: {
         type: Number, // in minutes
         required: true
