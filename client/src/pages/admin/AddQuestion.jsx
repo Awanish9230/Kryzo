@@ -298,17 +298,17 @@ const AddQuestion = () => {
     return (
         <div className="min-h-screen bg-black pt-28 pb-20 px-6">
             <div className="max-w-5xl mx-auto">
-                <header className="mb-12 flex items-center justify-between">
+                <header className="mb-12 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                     <button onClick={() => navigate(-1)} className="p-2 text-zinc-500 hover:text-white bg-white/5 border border-white/5 rounded-xl transition-all">
                         <ArrowLeft size={20} />
                     </button>
-                    <div className="flex gap-2 p-1 bg-zinc-900 border border-white/5 rounded-2xl">
+                    <div className="flex flex-wrap gap-2 p-1 bg-zinc-900 border border-white/5 rounded-2xl">
                         {['MCQ', 'CODING', 'DEVELOPMENT', 'CODE_SNIPPET'].map(t => (
                             <button
                                 key={t}
                                 type="button"
                                 onClick={() => setType(t)}
-                                className={`px-6 py-2 rounded-xl text-sm font-bold transition-all ${type === t ? 'bg-white text-black' : 'text-zinc-500 hover:text-white'
+                                className={`px-4 md:px-6 py-2 rounded-xl text-xs md:text-sm font-bold transition-all flex-grow md:flex-grow-0 ${type === t ? 'bg-white text-black' : 'text-zinc-500 hover:text-white'
                                     }`}
                             >
                                 {t === 'CODE_SNIPPET' ? 'Code Snippet' : t}
@@ -327,11 +327,11 @@ const AddQuestion = () => {
                                 <h2 className="text-xl font-bold tracking-tight">Question Details</h2>
                             </div>
                             {(type === 'MCQ' || type === 'CODING') && (
-                                <div className="flex items-center gap-3">
+                                <div className="flex flex-col md:flex-row items-stretch md:items-center gap-3 w-full md:w-auto mt-4 md:mt-0">
                                     <select
                                         value={aiCount}
                                         onChange={(e) => setAiCount(parseInt(e.target.value))}
-                                        className="px-4 py-2.5 bg-zinc-950 border border-white/5 rounded-2xl text-xs font-bold text-zinc-400 focus:outline-none hover:border-white/10"
+                                        className="px-4 py-2.5 bg-zinc-950 border border-white/5 rounded-2xl text-xs font-bold text-zinc-400 focus:outline-none hover:border-white/10 w-full md:w-auto"
                                     >
                                         <option value={1}>1 Question</option>
                                         <option value={5}>5 Questions</option>
@@ -345,7 +345,7 @@ const AddQuestion = () => {
                                         type="button"
                                         onClick={handleAIGenerate}
                                         disabled={isGeneratingAI}
-                                        className="px-6 py-2.5 bg-zinc-950 border border-white/5 rounded-2xl text-[11px] font-black uppercase tracking-widest hover:bg-white hover:text-black transition-all flex items-center gap-3 disabled:opacity-50"
+                                        className="px-6 py-2.5 bg-zinc-950 border border-white/5 rounded-2xl text-[11px] font-black uppercase tracking-widest hover:bg-white hover:text-black transition-all flex items-center justify-center gap-3 disabled:opacity-50 w-full md:w-auto"
                                     >
                                         {isGeneratingAI ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} className="text-yellow-500" />}
                                         {isGeneratingAI ? 'Generating...' : 'Generate with AI'}

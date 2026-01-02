@@ -82,7 +82,7 @@ const QuestionList = () => {
                 </header>
 
                 <div className="flex flex-col gap-4 mb-8">
-                    <div className="flex gap-4">
+                    <div className="flex flex-col md:flex-row gap-4">
                         <div className="relative flex-1 group">
                             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-600 group-focus-within:text-white transition-colors" />
                             <input
@@ -98,7 +98,7 @@ const QuestionList = () => {
                         </div>
                         <button
                             onClick={() => setShowFilters(!showFilters)}
-                            className={`px-6 py-3 bg-zinc-900 border border-white/5 rounded-2xl font-medium transition-all flex items-center gap-2 ${showFilters ? 'text-white bg-zinc-800' : 'text-zinc-400 hover:text-white'}`}
+                            className={`px-6 py-3 bg-zinc-900 border border-white/5 rounded-2xl font-medium transition-all flex items-center justify-center gap-2 ${showFilters ? 'text-white bg-zinc-800' : 'text-zinc-400 hover:text-white'}`}
                         >
                             <Filter size={18} />
                             Filters
@@ -109,12 +109,12 @@ const QuestionList = () => {
                         <motion.div
                             initial={{ opacity: 0, y: -10 }}
                             animate={{ opacity: 1, y: 0 }}
-                            className="p-4 bg-zinc-900/50 border border-white/5 rounded-2xl flex flex-wrap gap-4"
+                            className="p-4 bg-zinc-900/50 border border-white/5 rounded-2xl grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4"
                         >
                             <select
                                 value={statusFilter}
                                 onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
-                                className="px-4 py-2 bg-zinc-900 border border-white/10 rounded-xl text-zinc-400 focus:text-white focus:outline-none focus:border-white/20"
+                                className="px-4 py-2.5 bg-zinc-900 border border-white/10 rounded-xl text-zinc-400 focus:text-white focus:outline-none focus:border-white/20 w-full"
                             >
                                 <option value="">All Status</option>
                                 <option value="published">Published</option>
@@ -124,7 +124,7 @@ const QuestionList = () => {
                             <select
                                 value={difficultyFilter}
                                 onChange={(e) => { setDifficultyFilter(e.target.value); setPage(1); }}
-                                className="px-4 py-2 bg-zinc-900 border border-white/10 rounded-xl text-zinc-400 focus:text-white focus:outline-none focus:border-white/20"
+                                className="px-4 py-2.5 bg-zinc-900 border border-white/10 rounded-xl text-zinc-400 focus:text-white focus:outline-none focus:border-white/20 w-full"
                             >
                                 <option value="">All Difficulties</option>
                                 <option value="easy">Easy</option>
@@ -135,7 +135,7 @@ const QuestionList = () => {
                             <select
                                 value={typeFilter}
                                 onChange={(e) => { setTypeFilter(e.target.value); setPage(1); }}
-                                className="px-4 py-2 bg-zinc-900 border border-white/10 rounded-xl text-zinc-400 focus:text-white focus:outline-none focus:border-white/20"
+                                className="px-4 py-2.5 bg-zinc-900 border border-white/10 rounded-xl text-zinc-400 focus:text-white focus:outline-none focus:border-white/20 w-full"
                             >
                                 <option value="">All Types</option>
                                 <option value="MCQ">MCQ</option>
@@ -149,7 +149,7 @@ const QuestionList = () => {
                                     setTypeFilter('');
                                     setPage(1);
                                 }}
-                                className="px-4 py-2 text-zinc-500 hover:text-white text-sm font-medium transition-colors ml-auto"
+                                className="px-4 py-2 text-zinc-500 hover:text-white text-sm font-medium transition-colors w-full text-center"
                             >
                                 Reset Filters
                             </button>
