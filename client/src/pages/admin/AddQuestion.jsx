@@ -135,6 +135,19 @@ const AddQuestion = () => {
 
         // ... (topic logic remains)
 
+        let targetSubtopics = [];
+        if (aiCount > 1) {
+            // Bulk mode: use the array
+            targetSubtopics = selectedSubtopics;
+        } else {
+            // Single mode: wrap the single selection in an array
+            // If the user hasn't selected a subtopic, we might want to allow it or not.
+            // Assuming subtopic is required for generation context:
+            if (selectedSubtopic) {
+                targetSubtopics = [selectedSubtopic];
+            }
+        }
+
         if (targetSubtopics.length === 0) {
             toast.error('Please select at least one Subtopic.');
             return;
@@ -190,7 +203,12 @@ const AddQuestion = () => {
 
     const handleSaveBulkQuestion = async (question) => {
         try {
-            // ... (payload logic)
+            const payload = {
+                ...question,
+                status: 'published',
+                topic: question.topic || selectedTopic,
+                subtopic: question.subtopic || (targetSubtopics && targetSubtopics[0]) || ''
+            };
             await api.post('/admin/questions', payload);
             setGeneratedQuestions(prev => prev.filter(q => q.title !== question.title));
             toast.success('Saved successfully');
@@ -204,8 +222,15 @@ const AddQuestion = () => {
         const loadingToast = toast.loading('Saving all questions...');
 
         try {
-            // ... (payload logic)
-            await api.post('/admin/questions/bulk', payload);
+            // Ensure all questions have the correct topic/subtopic if missing
+            const questionsToSave = generatedQuestions.map(q => ({
+                ...q,
+                status: 'published',
+                topic: q.topic || selectedTopic,
+                subtopic: q.subtopic || (targetSubtopics && targetSubtopics[0]) || ''
+            }));
+
+            await api.post('/admin/questions/bulk', questionsToSave);
             setGeneratedQuestions([]);
             setShowBulkReview(false);
             toast.success('All questions saved successfully!');
