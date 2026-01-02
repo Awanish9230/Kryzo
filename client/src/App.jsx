@@ -31,6 +31,8 @@ import StudyDocumentation from './pages/student/StudyDocumentation';
 import DailyTest from './pages/student/DailyTest';
 import TestReviewList from './pages/student/TestReviewList';
 import TestReviewDetail from './pages/student/TestReviewDetail';
+import BattleLobby from './pages/student/BattleLobby';
+import BattleArena from './pages/student/BattleArena';
 
 // General Components
 import Login from './pages/Login';
@@ -97,6 +99,8 @@ function App() {
                 <Route path="/student/dashboard" element={<PrivateRoute role="student"><StudentDashboard /></PrivateRoute>} />
                 <Route path="/student/profile" element={<PrivateRoute role="student"><Profile /></PrivateRoute>} />
                 <Route path="/student/practice/coding" element={<PrivateRoute role="student"><CodingPractice /></PrivateRoute>} />
+                <Route path="/student/battle" element={<PrivateRoute role="student"><BattleLobby /></PrivateRoute>} />
+                <Route path="/student/battle/:roomId" element={<PrivateRoute role="student"><BattleArena /></PrivateRoute>} />
                 <Route path="/student/test/diagnostic" element={<PrivateRoute role="student"><TestAttempt /></PrivateRoute>} />
                 <Route path="/student/test/custom" element={<PrivateRoute role="student"><CustomTestBuilder /></PrivateRoute>} />
                 <Route path="/student/test/daily/:dayNumber" element={<PrivateRoute role="student"><DailyTest /></PrivateRoute>} />

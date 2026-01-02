@@ -2,7 +2,7 @@ import { useContext } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import AuthContext from '../context/AuthContext';
 import { motion } from 'framer-motion';
-import { LogOut, LayoutDashboard, PlusCircle, BookOpen, Settings as SettingsIcon } from 'lucide-react';
+import { LogOut, LayoutDashboard, PlusCircle, BookOpen, Settings as SettingsIcon, Swords } from 'lucide-react';
 
 const Navbar = () => {
     const { user, logout } = useContext(AuthContext);
@@ -63,6 +63,7 @@ const Navbar = () => {
                                 <NavLink to="/contact" icon={<PlusCircle size={18} />} active={location.pathname === '/contact'}>Contact</NavLink>
                                 <NavLink to="/student/dashboard" icon={<LayoutDashboard size={18} />} active={location.pathname === '/student/dashboard'}>Dashboard</NavLink>
                                 <NavLink to="/student/test/custom" icon={<PlusCircle size={18} />} active={location.pathname === '/student/test/custom'}>Study</NavLink>
+                                <NavLink to="/student/battle" icon={<Swords size={18} />} active={location.pathname.startsWith('/student/battle')}>Battle</NavLink>
                             </>
                         )}
                     </div>

@@ -9,7 +9,10 @@ module.exports = (io) => {
     const battleNamespace = io.of('/battle');
 
     battleNamespace.on('connection', (socket) => {
-        console.log('User connected to battle namespace:', socket.id);
+        // console.log('User connected to battle namespace:', socket.id);
+
+        // Emit current count to all clients
+        battleNamespace.emit('battle_users_count', battleNamespace.sockets.size);
 
         // Join Queue
         socket.on('join_queue', async (userData) => {
@@ -117,6 +120,8 @@ module.exports = (io) => {
 
         // Disconnect
         socket.on('disconnect', () => {
+            battleNamespace.emit('battle_users_count', battleNamespace.sockets.size);
+
             // Remove from queue
             const qIndex = waitingQueue.findIndex(u => u.socketId === socket.id);
             if (qIndex !== -1) waitingQueue.splice(qIndex, 1);

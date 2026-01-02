@@ -11,6 +11,7 @@ const BattleLobby = () => {
     const [isSearching, setIsSearching] = useState(false);
     const [status, setStatus] = useState('Idle');
     const [queueTime, setQueueTime] = useState(0);
+    const [activeUsers, setActiveUsers] = useState(1);
 
     // Verify socket connection on mount
     useEffect(() => {
@@ -57,9 +58,14 @@ const BattleLobby = () => {
             }, 1500);
         });
 
+        socket.on('battle_users_count', (count) => {
+            setActiveUsers(count);
+        });
+
         return () => {
             socket.off('queue_joined');
             socket.off('match_found');
+            socket.off('battle_users_count');
         };
     }, [socket, navigate]);
 
@@ -164,8 +170,8 @@ const BattleLobby = () => {
                                     </div>
                                     <div className="p-4 bg-zinc-900/50 rounded-2xl border border-white/5">
                                         <Users className="text-purple-500 mb-2" size={24} />
-                                        <div className="text-2xl font-black text-white">Live</div>
-                                        <div className="text-[10px] text-zinc-500 uppercase font-bold">Updates</div>
+                                        <div className="text-2xl font-black text-white">{activeUsers}</div>
+                                        <div className="text-[10px] text-zinc-500 uppercase font-bold">Online Gladiators</div>
                                     </div>
                                 </div>
 
