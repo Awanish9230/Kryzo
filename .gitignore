@@ -33,3 +33,4 @@ Thumbs.db
 *.bak
 *.tmp
 .cache/
+server/temp_code/

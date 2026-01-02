@@ -12,6 +12,8 @@ const settingsSchema = new mongoose.Schema({
     },
     ai: {
         geminiApiKey: { type: String, default: '' },
+        judge0ApiKey: { type: String, default: '' },
+        judge0Host: { type: String, default: 'judge0-ce.p.rapidapi.com' },
         promptTemperature: { type: Number, default: 0.7, min: 0, max: 1 },
         weaknessSensitivity: { type: Number, default: 0.5, min: 0, max: 1 },
         autoGenerationEnabled: { type: Boolean, default: false },

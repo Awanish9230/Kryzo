@@ -87,12 +87,28 @@ const DailyTest = () => {
 
     const handleRunCode = async () => {
         if (isRunning) return;
+
+        const langMap = {
+            63: 'JavaScript',
+            71: 'Python',
+            62: 'Java',
+            54: 'C++'
+        };
+
+        const language = langMap[currentAnswer.languageId];
+        const code = currentAnswer.code;
+
+        if (!code || !language) {
+            alert('Please write some code and select a language first.');
+            return;
+        }
+
         setIsRunning(true);
         setRunResults(null);
         try {
             const { data } = await api.post('/compiler/run', {
-                code: currentAnswer.code,
-                languageId: currentAnswer.languageId,
+                code: code,
+                language: language,
                 questionId: currentQuestion._id
             });
             setRunResults(data);

@@ -179,6 +179,32 @@ const SettingsPage = () => {
                                             placeholder="sk-..."
                                         />
                                     </div>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <div className="space-y-2">
+                                            <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest ml-1 flex items-center gap-2">
+                                                <Lock size={10} /> Judge0 API Key
+                                            </label>
+                                            <input
+                                                type="password"
+                                                value={settings.ai.judge0ApiKey}
+                                                onChange={(e) => setSettings({ ...settings, ai: { ...settings.ai, judge0ApiKey: e.target.value } })}
+                                                className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500"
+                                                placeholder="RapidAPI Key"
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest ml-1 flex items-center gap-2">
+                                                <Globe size={10} /> Judge0 Host
+                                            </label>
+                                            <input
+                                                type="text"
+                                                value={settings.ai.judge0Host}
+                                                onChange={(e) => setSettings({ ...settings, ai: { ...settings.ai, judge0Host: e.target.value } })}
+                                                className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500"
+                                                placeholder="judge0-ce.p.rapidapi.com"
+                                            />
+                                        </div>
+                                    </div>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <Toggle
                                             label="Autonomous Generation"

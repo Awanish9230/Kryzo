@@ -1,16 +1,16 @@
 const asyncHandler = require('express-async-handler');
-const axios = require('axios');
 const Question = require('../models/Question');
+const { executeLocal } = require('../utils/localExecutor');
 
-// Language Config for Judge0
+// Language Mapping for convenience
 const LANGUAGE_CONFIG = {
-    'JavaScript': 63,
-    'Python': 71,
-    'Java': 62,
-    'C++': 54,
+    'JavaScript': 'JavaScript',
+    'Python': 'Python',
+    'Java': 'Java',
+    'C++': 'C++',
 };
 
-// @desc    Run Code against Test Cases
+// @desc    Run Code locally against Test Cases (No API Key)
 // @route   POST /api/compiler/run
 // @access  Private
 const runCode = asyncHandler(async (req, res) => {
@@ -19,12 +19,6 @@ const runCode = asyncHandler(async (req, res) => {
     if (!code || !language) {
         res.status(400);
         throw new Error('Code and language are required');
-    }
-
-    const langId = LANGUAGE_CONFIG[language];
-    if (!langId) {
-        res.status(400);
-        throw new Error('Unsupported language');
     }
 
     let testCases = [];
@@ -45,41 +39,32 @@ const runCode = asyncHandler(async (req, res) => {
     }
 
     const results = [];
-    const casesToRun = testCases.slice(0, 5);
+    const casesToRun = testCases.slice(0, 5); // Limit to 5 cases for local parity
 
     for (const tc of casesToRun) {
         try {
-            const response = await axios.post('https://judge0-ce.p.rapidapi.com/submissions?base64_encoded=false&wait=true', {
-                source_code: code,
-                language_id: langId,
-                stdin: tc.input || '',
-                expected_output: tc.output || ''
-            }, {
-                headers: {
-                    'x-rapidapi-key': process.env.JUDGE0_KEY || 'free_tier_key',
-                    'x-rapidapi-host': 'judge0-ce.p.rapidapi.com',
-                    'Content-Type': 'application/json'
-                }
-            });
+            const execResult = await executeLocal(code, language, tc.input || '');
 
-            const result = response.data;
-            const actualOutput = result.stdout ? result.stdout.trim() : '';
-            const passed = result.status.id === 3; // Accepted
+            const actualOutput = execResult.stdout ? execResult.stdout.trim() : '';
+            const expectedOutput = (tc.output || '').trim();
+
+            // Basic string comparison for equality
+            const passed = actualOutput === expectedOutput;
 
             results.push({
                 input: tc.input,
                 expectedOutput: tc.output,
                 actualOutput: actualOutput,
-                error: result.stderr || result.compile_output || (result.status.id !== 3 ? result.status.description : null),
+                error: execResult.stderr || (execResult.error ? 'Execution Error' : null),
                 passed: passed,
                 isHidden: tc.isHidden
             });
 
         } catch (error) {
-            console.error('Judge0 Error:', error.message);
+            console.error('Local Exec Error:', error.message);
             results.push({
                 input: tc.input,
-                error: 'Execution failed: ' + error.message,
+                error: 'Local execution failed: ' + error.message,
                 passed: false
             });
         }
