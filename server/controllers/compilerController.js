@@ -43,7 +43,11 @@ const runCode = asyncHandler(async (req, res) => {
 
     for (const tc of casesToRun) {
         try {
-            const execResult = await executeLocal(code, language, tc.input || '');
+            // Clean input: remove common labels like "n = ", "input: ", "n - ", etc.
+            let rawInput = (tc.input || '').trim();
+            rawInput = rawInput.replace(/^[a-zA-Z]\s*[-=:]\s*/, '').replace(/^[a-zA-Z]+:\s*/, '');
+
+            const execResult = await executeLocal(code, language, rawInput);
 
             const actualOutput = execResult.stdout ? execResult.stdout.trim() : '';
             const expectedOutput = (tc.output || '').trim();

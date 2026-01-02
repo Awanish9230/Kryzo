@@ -77,6 +77,40 @@ const TestAttempt = () => {
         }
     };
 
+    const handleSubmitCoding = async () => {
+        const currentQ = test.questions[currentIdx];
+        if (!answers[currentQ._id]) {
+            toast.error('Please write some code first!');
+            return;
+        }
+
+        setIsRunning(true);
+        setRunResults(null);
+        try {
+            const { data } = await api.post('/compiler/run', {
+                code: answers[currentQ._id],
+                language: selectedLanguage === 'javascript' ? 'JavaScript' : selectedLanguage.charAt(0).toUpperCase() + selectedLanguage.slice(1),
+                questionId: currentQ._id
+            });
+            setRunResults(data);
+
+            const allPassed = data.results && data.results.length > 0 && data.results.every(r => r.passed);
+            if (allPassed) {
+                toast.success('All test cases passed! Solution locked.');
+                // In TestAttempt, answers are already saved in state via onChange of Editor.
+                // We don't need to call a separate practice submit here as it's a TEST.
+                // But we can mark it as visited/answered.
+            } else {
+                toast.error('Some test cases failed. Solution saved but not perfect!');
+            }
+        } catch (err) {
+            console.error(err);
+            toast.error('Compilation failed or server error');
+        } finally {
+            setIsRunning(false);
+        }
+    };
+
     useEffect(() => {
         const fetchTest = async () => {
             try {
@@ -87,7 +121,22 @@ const TestAttempt = () => {
                 const { data } = await api.get(endpoint);
                 setTest(data);
                 setTimeLeft(data.duration * 60);
+
+                // Load saved answers from localStorage
+                const savedAnswers = {};
+                data.questions.forEach(q => {
+                    const saved = localStorage.getItem(`test_answer_${data._id}_${q._id}`);
+                    if (saved) savedAnswers[q._id] = q.type === 'MCQ' ? parseInt(saved) : saved;
+                });
+                if (Object.keys(savedAnswers).length > 0) {
+                    setAnswers(prev => ({ ...prev, ...savedAnswers }));
+                }
+
                 setLoading(false);
+
+                // Load preferred language
+                const prefLang = localStorage.getItem('preferred_language');
+                if (prefLang) setSelectedLanguage(prefLang);
             } catch (err) {
                 console.error(err);
                 toast.error('Could not start test. Please try again.');
@@ -127,6 +176,10 @@ const TestAttempt = () => {
 
     const handleAnswer = (questionId, value) => {
         setAnswers({ ...answers, [questionId]: value });
+        // Persist to localStorage
+        if (test) {
+            localStorage.setItem(`test_answer_${test._id}_${questionId}`, value);
+        }
     };
 
     const handleSubmit = async () => {
@@ -147,13 +200,18 @@ const TestAttempt = () => {
                     return {
                         questionId: qId,
                         [q.type === 'MCQ' ? 'selectedOption' : 'code']: val,
-                        userAnswer: val
-                        // Note: we can't easily track per-question time without significant UI changes, 
-                        // so backend will just use totalTime / answered_count if needed or just track global time.
+                        userAnswer: val,
+                        language: (q.type === 'CODING' || q.type === 'DEVELOPMENT') ? (selectedLanguage === 'javascript' ? 'JavaScript' : selectedLanguage.charAt(0).toUpperCase() + selectedLanguage.slice(1)) : undefined
                     };
                 })
             };
             await api.post('/student/test/submit', submission);
+
+            // Clear localStorage on success
+            test.questions.forEach(q => {
+                localStorage.removeItem(`test_answer_${test._id}_${q._id}`);
+            });
+
             navigate('/student/test/result');
             toast.success('Test submitted successfully!');
         } catch (err) {
@@ -441,7 +499,11 @@ const TestAttempt = () => {
                                         <select
                                             className="bg-black border border-white/10 text-[10px] font-black text-zinc-400 rounded-xl px-4 py-1.5 focus:outline-none hover:text-white cursor-pointer transition-colors appearance-none uppercase tracking-widest"
                                             value={selectedLanguage}
-                                            onChange={(e) => setSelectedLanguage(e.target.value)}
+                                            onChange={(e) => {
+                                                const newLang = e.target.value;
+                                                setSelectedLanguage(newLang);
+                                                localStorage.setItem('preferred_language', newLang);
+                                            }}
                                         >
                                             <option value="javascript">JavaScript</option>
                                             <option value="python">Python</option>
@@ -449,14 +511,24 @@ const TestAttempt = () => {
                                             <option value="cpp">C++</option>
                                         </select>
                                     </div>
-                                    <button
-                                        onClick={handleRunCode}
-                                        disabled={isRunning}
-                                        className="px-5 py-1.5 bg-blue-600 text-[10px] font-black text-white uppercase tracking-widest rounded-xl hover:bg-blue-500 transition-all shadow-lg shadow-blue-500/20 flex items-center gap-3 disabled:opacity-50"
-                                    >
-                                        {isRunning ? <Loader size="small" showText={false} /> : <Play size={10} fill="currentColor" />}
-                                        Run Code
-                                    </button>
+                                    <div className="flex items-center gap-2">
+                                        <button
+                                            onClick={handleRunCode}
+                                            disabled={isRunning}
+                                            className="px-5 py-1.5 bg-zinc-800 text-[10px] font-black text-white uppercase tracking-widest rounded-xl hover:bg-zinc-700 transition-all flex items-center gap-3 disabled:opacity-50"
+                                        >
+                                            {isRunning ? <Loader size="small" showText={false} /> : <Play size={10} fill="currentColor" />}
+                                            Run
+                                        </button>
+                                        <button
+                                            onClick={handleSubmitCoding}
+                                            disabled={isRunning}
+                                            className="px-5 py-1.5 bg-blue-600 text-[10px] font-black text-white uppercase tracking-widest rounded-xl hover:bg-blue-500 transition-all shadow-lg shadow-blue-500/20 flex items-center gap-3 disabled:opacity-50"
+                                        >
+                                            {isRunning ? <Loader size="small" showText={false} /> : <Check size={12} />}
+                                            Submit
+                                        </button>
+                                    </div>
                                 </div>
 
                                 <div className="flex-1">

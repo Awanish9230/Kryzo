@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import api from '../../utils/api';
 import Loader from '../../components/Loader';
+import toast from 'react-hot-toast';
 
 const CodingPractice = () => {
     const [searchParams] = useSearchParams();
@@ -35,6 +36,7 @@ const CodingPractice = () => {
     const [consoleOutput, setConsoleOutput] = useState('');
     const [activeTab, setActiveTab] = useState('description'); // 'description' or 'testcases'
     const [selectedLanguage, setSelectedLanguage] = useState('javascript');
+    const [solvedQuestions, setSolvedQuestions] = useState(new Set());
 
     useEffect(() => {
         fetchQuestions();
@@ -49,14 +51,26 @@ const CodingPractice = () => {
         try {
             const { data } = await api.get(`/student/practice/coding?topic=${topic}`);
             setTest(data);
-            // Initialize codes
+            // Initialize codes and solved status
             const initialCodes = {};
+            const solvedIdxs = new Set();
             data.questions.forEach((q, idx) => {
-                initialCodes[idx] = q.codeSnippet || '// Write your code here...';
+                const savedCode = localStorage.getItem(`practice_code_${q._id}`);
+                initialCodes[idx] = savedCode || q.codeSnippet || '// Write your code here...';
+                if (q.isSolved) solvedIdxs.add(idx);
             });
             setCodes(initialCodes);
-            if (data.questions.length > 0) {
+            setSolvedQuestions(solvedIdxs);
+
+            // Load preferred language
+            const prefLang = localStorage.getItem('preferred_language');
+            if (prefLang) {
+                setSelectedLanguage(prefLang);
+            } else if (data.questions.length > 0) {
                 setSelectedLanguage(data.questions[0].codeLanguage?.toLowerCase() || 'javascript');
+            }
+            if (data.questions.length > 1) {
+                setLoading(false);
             }
             setLoading(false);
         } catch (err) {
@@ -67,6 +81,11 @@ const CodingPractice = () => {
 
     const handleCodeChange = (value) => {
         setCodes(prev => ({ ...prev, [currentQuestionIdx]: value }));
+        // Persist to localStorage
+        const question = test.questions[currentQuestionIdx];
+        if (question) {
+            localStorage.setItem(`practice_code_${question._id}`, value);
+        }
     };
 
     const togglePanel = () => {
@@ -89,6 +108,43 @@ const CodingPractice = () => {
         } catch (err) {
             console.error(err);
             setConsoleOutput('Error running code: ' + (err.response?.data?.message || err.message));
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
+    const handleSubmitCode = async () => {
+        setSubmitting(true);
+        try {
+            const question = test.questions[currentQuestionIdx];
+            const { data } = await api.post('/compiler/run', {
+                code: codes[currentQuestionIdx],
+                language: selectedLanguage.charAt(0).toUpperCase() + selectedLanguage.slice(1),
+                questionId: question._id
+            });
+            setResults(prev => ({ ...prev, [currentQuestionIdx]: data.results }));
+            setActiveTab('testcases');
+
+            // Find if all test cases passed
+            const allPassed = data.results && data.results.length > 0 && data.results.every(r => r.passed);
+
+            if (allPassed) {
+                await api.post('/student/practice/submit', {
+                    questionId: question._id,
+                    isCorrect: true
+                });
+                setSolvedQuestions(prev => new Set([...prev, currentQuestionIdx]));
+                toast.success('Congratulations! Question solved and submitted.');
+                // Redirect to dashboard after a short delay
+                setTimeout(() => {
+                    navigate('/student/dashboard');
+                }, 1500);
+            } else {
+                toast.error('Some test cases failed. Keep trying!');
+            }
+        } catch (err) {
+            console.error(err);
+            toast.error('Error submitting code: ' + (err.response?.data?.message || err.message));
         } finally {
             setSubmitting(false);
         }
@@ -127,12 +183,17 @@ const CodingPractice = () => {
                         <button
                             key={idx}
                             onClick={() => setCurrentQuestionIdx(idx)}
-                            className={`w-8 h-8 rounded-lg text-xs font-bold transition-all ${currentQuestionIdx === idx
+                            className={`w-8 h-8 rounded-lg text-xs font-bold transition-all relative ${currentQuestionIdx === idx
                                 ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/20'
                                 : 'bg-white/5 text-zinc-500 hover:bg-white/10 hover:text-zinc-300'
                                 }`}
                         >
                             {idx + 1}
+                            {solvedQuestions.has(idx) && (
+                                <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full flex items-center justify-center border-2 border-[#0a0a0a]">
+                                    <CheckCircle2 size={6} className="text-white" />
+                                </div>
+                            )}
                         </button>
                     ))}
                 </div>
@@ -141,7 +202,11 @@ const CodingPractice = () => {
                     <div className="flex items-center gap-2 mr-2">
                         <select
                             value={selectedLanguage}
-                            onChange={(e) => setSelectedLanguage(e.target.value)}
+                            onChange={(e) => {
+                                const newLang = e.target.value;
+                                setSelectedLanguage(newLang);
+                                localStorage.setItem('preferred_language', newLang);
+                            }}
                             className="bg-black/40 border border-white/10 text-[10px] font-black text-zinc-400 rounded-xl px-4 py-1.5 focus:outline-none hover:text-white cursor-pointer transition-colors appearance-none uppercase tracking-widest"
                         >
                             <option value="javascript">JavaScript</option>
@@ -160,10 +225,18 @@ const CodingPractice = () => {
                     <button
                         onClick={handleRunCode}
                         disabled={submitting}
-                        className="flex items-center gap-2 px-5 py-2 bg-blue-500 hover:bg-blue-600 disabled:opacity-50 text-white text-sm font-bold rounded-lg transition-all"
+                        className="flex items-center gap-2 px-5 py-2 bg-zinc-800 hover:bg-zinc-700 disabled:opacity-50 text-white text-sm font-bold rounded-lg transition-all"
                     >
                         {submitting ? <Loader size="small" showText={false} /> : <Play size={16} fill="currentColor" />}
-                        Run Code
+                        Run
+                    </button>
+                    <button
+                        onClick={handleSubmitCode}
+                        disabled={submitting}
+                        className="flex items-center gap-2 px-5 py-2 bg-blue-500 hover:bg-blue-600 disabled:opacity-50 text-white text-sm font-bold rounded-lg transition-all"
+                    >
+                        {submitting ? <Loader size="small" showText={false} /> : <Send size={16} />}
+                        Submit
                     </button>
                 </div>
             </div>

@@ -7,6 +7,7 @@ const User = require('../models/User');
 const UserActivity = require('../models/UserActivity');
 const ReportedQuestion = require('../models/ReportedQuestion');
 const { logEvent } = require('../utils/logger');
+const { executeLocal } = require('../utils/localExecutor');
 
 // DSA Topics in Progressive Order (1-20)
 // DSA Topics in Progressive Order (1-20)
@@ -229,7 +230,6 @@ const submitTest = asyncHandler(async (req, res) => {
     const gradedAnswers = [];
     let score = 0;
     let maxPossibleScore = 0;
-    const axios = require('axios');
 
     // Calculate maxPossibleScore based on all questions in the test
     const Settings = require('../models/Settings');
@@ -284,34 +284,30 @@ const submitTest = asyncHandler(async (req, res) => {
             } else if (question.type === 'CODING') {
                 if (ans.code && question.testCases && question.testCases.length > 0) {
                     let passedCount = 0;
+                    const language = ans.language || 'JavaScript';
+
                     for (const tc of question.testCases) {
                         try {
-                            const response = await axios.post('https://judge0-ce.p.rapidapi.com/submissions?base64_encoded=false&wait=true', {
-                                source_code: ans.code,
-                                language_id: ans.languageId || 63,
-                                stdin: tc.input || '',
-                                expected_output: tc.output || ''
-                            }, {
-                                headers: {
-                                    'x-rapidapi-key': process.env.JUDGE0_KEY || 'free_tier_key',
-                                    'x-rapidapi-host': 'judge0-ce.p.rapidapi.com',
-                                    'Content-Type': 'application/json'
-                                }
-                            });
+                            // Clean input: remove common labels
+                            let rawInput = (tc.input || '').trim();
+                            rawInput = rawInput.replace(/^[a-zA-Z]\s*[-=:]\s*/, '').replace(/^[a-zA-Z]+:\s*/, '');
 
-                            const result = response.data;
-                            const isPassing = (result.status && result.status.id === 3);
+                            const execResult = await executeLocal(ans.code, language, rawInput);
+                            const actualOutput = execResult.stdout ? execResult.stdout.trim() : '';
+                            const expectedOutput = (tc.output || '').trim();
+
+                            const isPassing = (actualOutput === expectedOutput) && !execResult.error && !execResult.timeout;
                             if (isPassing) passedCount++;
 
                             executionResults.push({
                                 input: tc.input,
                                 expected: tc.output,
-                                actual: result.stdout,
-                                status: result.status?.description || 'Unknown',
+                                actual: actualOutput,
+                                status: execResult.error ? 'Error' : (execResult.timeout ? 'Timeout' : (isPassing ? 'Passed' : 'Failed')),
                                 passed: isPassing
                             });
                         } catch (err) {
-                            console.error('Judge0 Error:', err.message);
+                            console.error('Local Execution Error during grading:', err.message);
                             executionResults.push({ status: 'Platform Error', passed: false });
                         }
                     }
@@ -1020,6 +1016,61 @@ const updateActivityStats = asyncHandler(async (req, res) => {
     res.json(activity);
 });
 
+// @desc    Submit Individual Practice Question
+// @route   POST /api/student/practice/submit
+// @access  Private/Student
+const submitPracticeQuestion = asyncHandler(async (req, res) => {
+    const { questionId, isCorrect } = req.body;
+    const userId = req.user.id;
+    const todayStr = new Date().toISOString().split('T')[0];
+
+    if (!questionId) {
+        res.status(400);
+        throw new Error('Question ID is required');
+    }
+
+    // Update Activity Logic
+    let dailyActivity = await UserActivity.findOne({ userId, date: todayStr });
+    if (!dailyActivity) dailyActivity = new UserActivity({ userId, date: todayStr });
+
+    if (isCorrect) {
+        // Increment solved count for today
+        dailyActivity.questionsSolved += 1;
+
+        // Persist to user's lifelong solved list
+        const user = await User.findById(userId);
+        if (user && !user.solvedQuestions.some(id => id.toString() === questionId)) {
+            user.solvedQuestions.push(questionId);
+            await user.save();
+        }
+    }
+
+    if (!dailyActivity.isCompleted && (dailyActivity.timeSpent >= 1800 || dailyActivity.questionsSolved >= 2)) {
+        dailyActivity.isCompleted = true;
+
+        // Update User Streak
+        const userObj = await User.findById(userId);
+        if (userObj.lastActivityDate !== todayStr) {
+            const yest = new Date();
+            yest.setDate(yest.getDate() - 1);
+            const yestStr = yest.toISOString().split('T')[0];
+
+            if (userObj.lastActivityDate === yestStr) {
+                userObj.currentStreak += 1;
+            } else {
+                userObj.currentStreak = 1;
+            }
+
+            if (userObj.currentStreak > userObj.longestStreak) userObj.longestStreak = userObj.currentStreak;
+            userObj.lastActivityDate = todayStr;
+            await userObj.save();
+        }
+    }
+    await dailyActivity.save();
+
+    res.json({ success: true, activity: dailyActivity });
+});
+
 // @desc    Get All Test Attempts for User
 // @route   GET /api/student/attempts
 // @access  Private/Student
@@ -1105,13 +1156,20 @@ const getCodingPracticeQuestions = asyncHandler(async (req, res) => {
         ]
     }).select('-testCases.output -testCases.isHidden');
 
+    // Get user's solved questions
+    const user = await User.findById(req.user.id).select('solvedQuestions');
+    const solvedIds = user ? user.solvedQuestions.map(id => id.toString()) : [];
+
     // Create a temporary test object to reuse TestAttempt UI
     const test = {
         _id: 'practice_' + Date.now(),
         type: 'PRACTICE',
         title: `Practice: ${topic}`,
         duration: questions.length * 15, // 15 mins per coding problem
-        questions: questions
+        questions: questions.map(q => ({
+            ...q.toObject(),
+            isSolved: solvedIds.includes(q._id.toString())
+        }))
     };
 
     res.json(test);
@@ -1842,5 +1900,6 @@ module.exports = {
     getTestAttemptDetails,
     getCodingPracticeQuestions,
     generateQuestionExplanation,
-    advanceDSAProgression
+    advanceDSAProgression,
+    submitPracticeQuestion
 };

@@ -15,7 +15,8 @@ const {
     getTestAttemptDetails,
     getCodingPracticeQuestions,
     generateQuestionExplanation,
-    advanceDSAProgression
+    advanceDSAProgression,
+    submitPracticeQuestion
 } = require('../controllers/studentController');
 const { protect } = require('../middleware/authMiddleware');
 const { trackActivity } = require('../middleware/activityTracker'); // New
@@ -34,6 +35,7 @@ router.get('/plan/day/:dayNumber/questions', getDayQuestions);
 router.get('/attempts', getUserAttempts);
 router.get('/attempt/:attemptId', getTestAttemptDetails);
 router.get('/practice/coding', getCodingPracticeQuestions);
+router.post('/practice/submit', submitPracticeQuestion);
 router.post('/question/report', reportQuestion);
 router.post('/question/:id/explain', generateQuestionExplanation);
 router.get('/documentation/:id', require('../controllers/studentController').getDocumentationById);

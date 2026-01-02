@@ -80,7 +80,11 @@ const userSchema = new mongoose.Schema({
     },
     currentPlanGeneratedAt: {
         type: Date
-    }
+    },
+    solvedQuestions: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Question'
+    }]
 }, {
     timestamps: true
 });
