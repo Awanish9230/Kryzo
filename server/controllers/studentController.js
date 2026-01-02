@@ -97,23 +97,54 @@ const generateDiagnosticTest = asyncHandler(async (req, res) => {
         return questions.length;
     };
 
-    // 1. Pick MCQs: Focus heavily on EASY
-    // 15 Easy, 5 Medium (Total 20)
-    await pickQuestions('MCQ', 'easy', 15);
-    await pickQuestions('MCQ', 'medium', 5);
+    // 1. Pick MCQs (Total 40)
+    // Target: 15 Easy, 15 Medium, 10 Hard
+    let easyMCQCount = await pickQuestions('MCQ', 'easy', 15);
+    let mediumMCQCount = await pickQuestions('MCQ', 'medium', 15);
+    let hardMCQCount = await pickQuestions('MCQ', 'hard', 10);
 
-    // 2. Pick Coding: 2 Easy, 1 Medium (Total 3)
-    await pickQuestions('CODING', 'easy', 2);
-    await pickQuestions('CODING', 'medium', 1);
+    // Fallback Logic for MCQs
+    // If Hard missing -> Fill with Medium
+    if (hardMCQCount < 10) {
+        let needed = 10 - hardMCQCount;
+        mediumMCQCount += await pickQuestions('MCQ', 'medium', needed);
+    }
+    // If Medium missing (or used for Hard fallback) -> Fill with Easy
+    // We wanted 15 Medium originally + any extras needed for Hard
+    // But pickQuestions already added them to selectedQuestions, so we check total count
+    // Just simple check: do we have 40 MCQs?
 
-    // 3. Fallback: If total is less than target (23), fill with ANY 'easy' published questions from current topics
-    if (selectedQuestions.length < 23) {
-        const needed = 23 - selectedQuestions.length;
+    const currentMCQCount = selectedQuestions.filter(q => q.type === 'MCQ').length;
+    if (currentMCQCount < 40) {
+        const needed = 40 - currentMCQCount;
+        await pickQuestions('MCQ', 'easy', needed);
+    }
+
+    // 2. Pick Coding (Total 4)
+    // Target: 2 Easy, 1 Medium, 1 Hard
+    let easyCodingCount = await pickQuestions('CODING', 'easy', 2);
+    let mediumCodingCount = await pickQuestions('CODING', 'medium', 1);
+    let hardCodingCount = await pickQuestions('CODING', 'hard', 1);
+
+    // Fallback Logic for Coding
+    // Hard -> Medium
+    if (hardCodingCount < 1) {
+        mediumCodingCount += await pickQuestions('CODING', 'medium', 1);
+    }
+    // Medium -> Easy
+    const currentCodingCount = selectedQuestions.filter(q => q.type === 'CODING').length;
+    if (currentCodingCount < 4) {
+        const needed = 4 - currentCodingCount;
+        await pickQuestions('CODING', 'easy', needed);
+    }
+
+    // 3. Final Fallback: If still not 44, strict fill with any published question from topics
+    if (selectedQuestions.length < 44) {
+        const needed = 44 - selectedQuestions.length;
         const extraQuestions = await Question.aggregate([
             {
                 $match: {
                     status: 'published',
-                    difficulty: 'easy',
                     $or: [
                         { topic: { $in: topicRegexes } },
                         { topics: { $in: topicRegexes } }
@@ -133,7 +164,7 @@ const generateDiagnosticTest = asyncHandler(async (req, res) => {
     // 4. Create Test Record
     const test = await Test.create({
         type: 'DIAGNOSTIC',
-        duration: 60, // 60 mins for predominantly easy questions
+        duration: 130, // 40 MCQs * 1.5m + 2 Easy * 10m + 1 Medium * 20m + 1 Hard * 30m = 130m
         questions: selectedQuestions.map(q => q._id),
         createdBy: req.user.id
     });
