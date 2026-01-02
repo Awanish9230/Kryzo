@@ -385,7 +385,7 @@ const TestAttempt = () => {
                                         exit={{ width: 0, opacity: 0 }}
                                         className="h-full border-r border-white/5 bg-zinc-950/30 overflow-y-auto custom-scrollbar"
                                     >
-                                        <div className="p-8">
+                                        <div className="p-8 pb-32">
                                             <div className="flex items-center gap-2 mb-6">
                                                 <span className="px-3 py-1 bg-white/5 border border-white/10 rounded-lg text-[9px] font-black text-zinc-400 uppercase tracking-[0.2em]">Question {currentIdx + 1}</span>
                                                 <span className={`px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-[0.2em] ${currentQuestion.difficulty === 'hard' ? 'bg-red-500/10 text-red-500 border border-red-500/20' : currentQuestion.difficulty === 'medium' ? 'bg-yellow-500/10 text-yellow-500 border border-yellow-500/20' : 'bg-green-500/10 text-green-500 border border-green-500/20'
@@ -446,7 +446,7 @@ const TestAttempt = () => {
                                         exit={{ width: 0, opacity: 0 }}
                                         className="h-full border-r border-white/5 bg-zinc-950/30 overflow-y-auto custom-scrollbar"
                                     >
-                                        <div className="p-8">
+                                        <div className="p-8 pb-32">
                                             <div className="flex items-center gap-2 mb-6 text-zinc-500">
                                                 <span className="text-[10px] font-black uppercase tracking-widest border border-white/10 px-2 py-0.5 rounded">Question {currentIdx + 1}</span>
                                                 <span className={`text-[10px] font-black uppercase tracking-widest border px-2 py-0.5 rounded ${currentQuestion.difficulty === 'hard' ? 'bg-red-500/10 text-red-500 border-red-500/20' : currentQuestion.difficulty === 'medium' ? 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20' : 'bg-green-500/10 text-green-500 border-green-500/20'}`}>
@@ -588,7 +588,7 @@ const TestAttempt = () => {
                             </div>
                         </div>
                     )}
-                    <footer className="h-16 md:h-20 border-t border-white/5 bg-zinc-950/80 backdrop-blur-md px-4 md:px-10 flex items-center justify-between shrink-0 absolute bottom-0 left-0 right-0">
+                    <footer className="h-16 md:h-20 border-t border-white/5 bg-zinc-950/80 backdrop-blur-md px-4 md:px-10 flex items-center justify-between shrink-0">
                         <button
                             type="button"
                             disabled={currentIdx === 0}

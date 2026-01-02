@@ -253,7 +253,7 @@ const CodingPractice = () => {
                             transition={{ duration: 0.3, ease: 'easeInOut' }}
                             className="h-full border-r border-white/5 bg-zinc-900/30 overflow-y-auto"
                         >
-                            <div className="p-8">
+                            <div className="p-8 pb-32">
                                 <div className="flex items-center gap-2 mb-6">
                                     <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-widest ${question.difficulty === 'easy' ? 'bg-green-500/10 text-green-500 border border-green-500/20' :
                                         question.difficulty === 'medium' ? 'bg-yellow-500/10 text-yellow-500 border border-yellow-500/20' :
