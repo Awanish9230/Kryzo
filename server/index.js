@@ -46,6 +46,9 @@ const io = new Server(server, {
 // Track online users
 const onlineUsers = new Map(); // socketId -> userId
 
+// Initialize Battle Handler
+require('./socket/battleHandler')(io);
+
 io.on('connection', (socket) => {
     // console.log('New client connected:', socket.id);
 
