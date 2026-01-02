@@ -28,14 +28,11 @@ export const SocketProvider = ({ children }) => {
                 reconnectionAttempts: 5
             });
 
-            console.log('Initializing socket connection for user:', user._id);
-
             socketRef.current = newSocket;
             setSocket(newSocket);
 
             // Connect event
             newSocket.on('connect', () => {
-                console.log('Socket connected:', newSocket.id);
                 // Send user_connected event
                 newSocket.emit('user_connected', user._id);
             });
