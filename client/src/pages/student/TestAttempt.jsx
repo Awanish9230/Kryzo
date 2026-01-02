@@ -594,6 +594,7 @@ const TestAttempt = () => {
 
                             <div className="flex flex-col gap-3">
                                 <button
+                                    onClick={handleSubmit}
                                     disabled={isSubmitting}
                                     className="w-full py-5 bg-blue-600 text-white font-black uppercase tracking-[0.2em] rounded-2xl hover:bg-blue-500 transition-all shadow-xl shadow-blue-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
