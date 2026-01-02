@@ -217,6 +217,12 @@ const submitTest = asyncHandler(async (req, res) => {
         throw new Error('Test not found');
     }
 
+    // Check for existing attempt to prevent duplicates
+    const existingAttempt = await UserAttempt.findOne({ userId: req.user.id, testId });
+    if (existingAttempt) {
+        return res.status(200).json(existingAttempt);
+    }
+
     const gradedAnswers = [];
     let score = 0;
     let maxPossibleScore = 0;
