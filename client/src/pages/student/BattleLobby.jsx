@@ -104,14 +104,14 @@ const BattleLobby = () => {
     };
 
     return (
-        <div className="min-h-screen bg-black flex items-center justify-center relative overflow-hidden">
+        <div className="min-h-screen bg-black flex flex-col items-center pt-24 pb-12 relative overflow-hidden">
             {/* Background Effects */}
             <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0">
                 <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-600/10 rounded-full blur-[128px]" />
                 <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-600/10 rounded-full blur-[128px]" />
             </div>
 
-            <div className="relative z-10 w-full max-w-2xl px-6">
+            <div className="relative z-10 w-full max-w-2xl px-6 flex-grow flex flex-col justify-center">
                 <div className="text-center mb-12">
                     <motion.div
                         initial={{ scale: 0.9, opacity: 0 }}
