@@ -379,6 +379,16 @@ const submitTest = asyncHandler(async (req, res) => {
 
     logEvent(req.app.get('io'), 'TEST', `Test Submitted by ${req.user.name} (Score: ${score})`, { userId: req.user.id, testId, score });
 
+    // Trigger Plan Regeneration ONLY for Diagnostic or Weekly Day 7
+    if (test.type === 'DIAGNOSTIC' || (test.type === 'WEEKLY' && test.dayNumber === 7)) {
+        try {
+            await generatePlanForUser(req.user.id, true);
+            console.log(`Plan regenerated for user ${req.user.id} after ${test.type} test.`);
+        } catch (planErr) {
+            console.error('Error generating plan after test submission:', planErr);
+        }
+    }
+
     res.status(201).json(attempt);
 });
 
@@ -434,7 +444,18 @@ const getImprovementPlan = asyncHandler(async (req, res) => {
     const focusTopics = planData ? planData.focusTopics : ["General Aptitude", "Programming Basics"];
 
     const isDiagnostic = lastAttempt.testId?.type === 'DIAGNOSTIC';
+    const isWeeklyDay7 = lastAttempt.testId?.type === 'WEEKLY' && lastAttempt.testId?.dayNumber === 7;
     const lastTestType = lastAttempt.testId?.type || 'UNKNOWN';
+
+    // Hide plan on results page for non-trigger tests
+    // Requested: "at each test only give result not 7 day plan"
+    // We use a query param 'view=result' from TestResult.jsx to identify this case.
+    const isResultView = req.query.view === 'result';
+
+    let displayPlan = dailyTasks;
+    if (isResultView && !isDiagnostic && !isWeeklyDay7) {
+        displayPlan = []; // Mask plan for normal test results
+    }
 
     // Analyze Weak & Strong Areas based on the AGGREGATED stats from the plan generator (re-deriving or passing them would be better, but we can re-calc for display quickly or just trust the focus topics as weak)
     // To be cleaner, we should probably have generatePlanForUser return the full stats. 
@@ -551,8 +572,9 @@ const getImprovementPlan = asyncHandler(async (req, res) => {
             weak: weakTopics,
             strong: strongTopics
         },
-        plan: dailyTasks,
+        plan: displayPlan,
         isDiagnostic,
+        isWeeklyDay7, // Also helpful for frontend
         lastTestType,
         insight: planData.insight,
         questions: lastAttempt.answers.map(ans => {
@@ -1423,7 +1445,10 @@ const getDayQuestions = asyncHandler(async (req, res) => {
 });
 
 // Helper function to generate plan (extracted logic)
-const generatePlanForUser = async (userId) => {
+const generatePlanForUser = async (userId, force = false) => {
+    // Fetch User
+    const user = await User.findById(userId);
+    if (!user) return null;
     // 1. Fetch Data & Analyze Performance
     const lastAttempt = await UserAttempt.findOne({ userId })
         .sort({ createdAt: -1 })
@@ -1468,7 +1493,6 @@ const generatePlanForUser = async (userId) => {
     };
 
     // Get user's DSA progression level and topics
-    const user = await User.findById(userId);
     const userLevel = user.dsaProgressionLevel || 0;
     const currentLevelTopics = getTopicsForLevel(userLevel);
 
@@ -1518,10 +1542,7 @@ const generatePlanForUser = async (userId) => {
         .sort((a, b) => b[1].weaknessScore - a[1].weaknessScore);
 
     // PERSISTENCE LOGIC START
-    const sevenDaysAgo = new Date();
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-
-    if (user.currentPlanData && user.currentPlanData.length === 7 && user.currentPlanGeneratedAt > sevenDaysAgo) {
+    if (!force && user.currentPlanData && user.currentPlanData.length === 7) {
         return {
             plan: user.currentPlanData,
             focusTopics: user.currentPlanTopics || [],

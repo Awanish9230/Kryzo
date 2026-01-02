@@ -30,7 +30,7 @@ const TestResult = () => {
     const fetchResult = async () => {
         try {
             setError(null);
-            const { data } = await api.get('/student/plan');
+            const { data } = await api.get('/student/plan?view=result');
             setResult(data);
             setLoading(false);
         } catch (err) {
