@@ -65,7 +65,7 @@ const DailyTest = () => {
                 testId: test._id,
                 answers: answersArray
             });
-            navigate('/student/results');
+            navigate('/student/test/result');
         } catch (err) {
             alert('Failed to submit test: ' + (err.response?.data?.message || err.message));
             setSubmitting(false);

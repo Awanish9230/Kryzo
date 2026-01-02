@@ -415,7 +415,26 @@ const getImprovementPlan = asyncHandler(async (req, res) => {
     // 1. Identify Unattempted Questions
     // Generate Plan (which now uses aggregated stats)
     const planData = await generatePlanForUser(req.user.id);
-    const dailyTasks = planData ? planData.plan : [];
+    // 2. Identify Completed Days
+    const completedAttempts = await UserAttempt.find({ userId: req.user.id })
+        .populate({
+            path: 'testId',
+            match: { type: 'WEEKLY' },
+            select: 'dayNumber'
+        });
+
+    const completedDays = new Set();
+    completedAttempts.forEach(attempt => {
+        if (attempt.testId && attempt.testId.dayNumber) {
+            completedDays.add(attempt.testId.dayNumber);
+        }
+    });
+
+    const dailyTasks = planData ? planData.plan.map(day => ({
+        ...day,
+        isCompleted: completedDays.has(day.dayNumber)
+    })) : [];
+
     const focusTopics = planData ? planData.focusTopics : ["General Aptitude", "Programming Basics"];
 
     // Analyze Weak & Strong Areas based on the AGGREGATED stats from the plan generator (re-deriving or passing them would be better, but we can re-calc for display quickly or just trust the focus topics as weak)
@@ -1329,7 +1348,8 @@ const getDayQuestions = asyncHandler(async (req, res) => {
         type: 'WEEKLY',
         duration: calculateDuration(questions),
         questions: questionIds,
-        createdBy: req.user.id
+        createdBy: req.user.id,
+        dayNumber: day
     });
 
     const populatedTest = await Test.findById(test._id)

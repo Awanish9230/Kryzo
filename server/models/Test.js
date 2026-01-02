@@ -22,6 +22,10 @@ const testSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
         required: false // System generated might not have a user, or will be admin
+    },
+    dayNumber: {
+        type: Number,
+        required: false
     }
 }, {
     timestamps: true

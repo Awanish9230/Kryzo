@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import api from '../../utils/api';
 import { motion } from 'framer-motion';
-import { BookOpen, ArrowRight, Zap, History, Code, FileText } from 'lucide-react';
+import { BookOpen, ArrowRight, Zap, History, Code, FileText, CheckCircle } from 'lucide-react';
 import Loader from '../../components/Loader';
 
 const StudentDashboard = () => {
@@ -159,13 +159,20 @@ const StudentDashboard = () => {
 
                                         {/* Actions - Unified & Elegant */}
                                         <div className="lg:w-48 shrink-0 flex flex-col gap-3 justify-center">
-                                            <Link
-                                                to={day.link}
-                                                className="w-full flex items-center justify-between px-6 py-4 bg-white text-black font-black rounded-2xl hover:bg-zinc-200 transition-all text-[11px] uppercase tracking-widest group/btn shadow-[0_10px_20px_rgba(255,255,255,0.05)]"
-                                            >
-                                                Start Session
-                                                <ArrowRight size={14} className="group-hover/btn:translate-x-1 transition-transform" />
-                                            </Link>
+                                            {day.isCompleted ? (
+                                                <div className="w-full flex items-center justify-center gap-2 px-6 py-4 bg-green-500/10 text-green-500 font-black rounded-2xl border border-green-500/20 text-[11px] uppercase tracking-widest cursor-default">
+                                                    <CheckCircle size={14} />
+                                                    Completed
+                                                </div>
+                                            ) : (
+                                                <Link
+                                                    to={day.link}
+                                                    className="w-full flex items-center justify-between px-6 py-4 bg-white text-black font-black rounded-2xl hover:bg-zinc-200 transition-all text-[11px] uppercase tracking-widest group/btn shadow-[0_10px_20px_rgba(255,255,255,0.05)]"
+                                                >
+                                                    Start Session
+                                                    <ArrowRight size={14} className="group-hover/btn:translate-x-1 transition-transform" />
+                                                </Link>
+                                            )}
                                             {day.tasks.some(t => t.type === 'PRACTICE_CODING') && (
                                                 <Link
                                                     to={`/student/practice/coding?topic=${day.topic}`}
