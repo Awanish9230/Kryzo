@@ -1,16 +1,8 @@
 const asyncHandler = require('express-async-handler');
 const Question = require('../models/Question');
-const { executeLocal } = require('../utils/localExecutor');
+const { executePiston } = require('../utils/pistonExecutor');
 
-// Language Mapping for convenience
-const LANGUAGE_CONFIG = {
-    'JavaScript': 'JavaScript',
-    'Python': 'Python',
-    'Java': 'Java',
-    'C++': 'C++',
-};
-
-// @desc    Run Code locally against Test Cases (No API Key)
+// @desc    Run Code via Cloud API (Piston)
 // @route   POST /api/compiler/run
 // @access  Private
 const runCode = asyncHandler(async (req, res) => {
@@ -39,7 +31,8 @@ const runCode = asyncHandler(async (req, res) => {
     }
 
     const results = [];
-    const casesToRun = testCases.slice(0, 5); // Limit to 5 cases for local parity
+    // Limit test cases to avoid hitting API rate limits excessively
+    const casesToRun = testCases.length > 10 ? testCases.slice(0, 10) : testCases;
 
     for (const tc of casesToRun) {
         try {
@@ -47,7 +40,7 @@ const runCode = asyncHandler(async (req, res) => {
             let rawInput = (tc.input || '').trim();
             rawInput = rawInput.replace(/^[a-zA-Z]\s*[-=:]\s*/, '').replace(/^[a-zA-Z]+:\s*/, '');
 
-            const execResult = await executeLocal(code, language, rawInput);
+            const execResult = await executePiston(code, language, rawInput);
 
             const actualOutput = execResult.stdout ? execResult.stdout.trim() : '';
             const expectedOutput = (tc.output || '').trim();
@@ -55,20 +48,26 @@ const runCode = asyncHandler(async (req, res) => {
             // Basic string comparison for equality
             const passed = actualOutput === expectedOutput;
 
+            // Clean up error message if it's just a runtime error
+            let errorMsg = execResult.error;
+            if (errorMsg === true || errorMsg === 'Runtime Error') {
+                errorMsg = execResult.stderr || 'Runtime Error';
+            }
+
             results.push({
                 input: tc.input,
                 expectedOutput: tc.output,
                 actualOutput: actualOutput,
-                error: execResult.stderr || (execResult.error ? 'Execution Error' : null),
+                error: errorMsg,
                 passed: passed,
                 isHidden: tc.isHidden
             });
 
         } catch (error) {
-            console.error('Local Exec Error:', error.message);
+            console.error('Controller Logic Error:', error.message);
             results.push({
                 input: tc.input,
-                error: 'Local execution failed: ' + error.message,
+                error: 'Internal Server Error: ' + error.message,
                 passed: false
             });
         }
