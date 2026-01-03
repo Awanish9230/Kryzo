@@ -12,6 +12,7 @@ const BattleLobby = () => {
     const [status, setStatus] = useState('Idle');
     const [queueTime, setQueueTime] = useState(0);
     const [activeUsers, setActiveUsers] = useState(1);
+    const [selectedLanguage, setSelectedLanguage] = useState(localStorage.getItem('battle_preferred_language') || 'javascript');
 
     // Verify socket connection on mount
     useEffect(() => {
@@ -68,7 +69,14 @@ const BattleLobby = () => {
             setStatus('Match Found! Redirecting...');
             toast.success('Match Found! Entering Arena...');
             setTimeout(() => {
-                navigate(`/student/battle/${data.roomId}`, { state: { battleData: data } });
+                navigate(`/student/battle/${data.roomId}`, {
+                    state: {
+                        battleData: {
+                            ...data,
+                            selectedLanguage: selectedLanguage
+                        }
+                    }
+                });
             }, 1500);
         });
 
@@ -200,9 +208,33 @@ const BattleLobby = () => {
                                     </div>
                                 </div>
 
+                                <div className="space-y-4 mb-8">
+                                    <div className="flex items-center justify-between px-2">
+                                        <span className="text-[10px] font-black text-zinc-600 uppercase tracking-widest">Select Duel Language</span>
+                                        <span className="text-[9px] font-bold text-blue-500/80 bg-blue-500/5 px-2 py-0.5 rounded border border-blue-500/10">Required</span>
+                                    </div>
+                                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                                        {['javascript', 'python', 'java', 'cpp'].map((lang) => (
+                                            <button
+                                                key={lang}
+                                                onClick={() => {
+                                                    setSelectedLanguage(lang);
+                                                    localStorage.setItem('battle_preferred_language', lang);
+                                                }}
+                                                className={`py-3 px-4 rounded-2xl border transition-all text-[10px] font-black uppercase tracking-widest ${selectedLanguage === lang
+                                                    ? 'bg-blue-600 border-blue-500 text-white shadow-lg shadow-blue-500/25 scale-95'
+                                                    : 'bg-zinc-900/50 border-white/5 text-zinc-500 hover:border-white/20 hover:text-zinc-300'
+                                                    }`}
+                                            >
+                                                {lang === 'cpp' ? 'C++' : lang}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
                                 <button
                                     onClick={handleFindMatch}
-                                    className="w-full py-6 bg-white text-black text-xl font-black uppercase tracking-widest rounded-2xl hover:bg-zinc-200 transition-all shadow-xl shadow-white/10 relative overflow-hidden group"
+                                    className="w-full py-6 bg-white text-black text-xl font-black uppercase tracking-widest rounded-3xl hover:bg-zinc-200 transition-all shadow-xl shadow-white/10 relative overflow-hidden group active:scale-[0.98]"
                                 >
                                     <span className="relative z-10 flex items-center justify-center gap-3">
                                         <Swords size={24} />

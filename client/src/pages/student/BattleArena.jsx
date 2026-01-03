@@ -32,8 +32,8 @@ const BattleArena = () => {
         cpp: `#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    cout << "Hello" << endl;\n    return 0;\n}\n`
     };
 
-    const [selectedLanguage, setSelectedLanguage] = useState('javascript');
-    const [code, setCode] = useState(BOILERPLATES.javascript);
+    const [selectedLanguage, setSelectedLanguage] = useState(matchingData.selectedLanguage || 'javascript');
+    const [code, setCode] = useState(BOILERPLATES[matchingData.selectedLanguage || 'javascript']);
     const [myProgress, setMyProgress] = useState(0); // 0 to 100
     const [opponentProgress, setOpponentProgress] = useState(0);
     const [isRunning, setIsRunning] = useState(false);
@@ -179,19 +179,6 @@ const BattleArena = () => {
                     </div>
 
                     <div className="h-8 w-px bg-white/10 mx-2" />
-
-                    <div className="flex items-center gap-3">
-                        <select
-                            value={selectedLanguage}
-                            onChange={(e) => handleLanguageChange(e.target.value)}
-                            className="bg-zinc-800 border border-white/10 text-[10px] font-black text-zinc-300 rounded-lg px-3 py-1.5 focus:outline-none focus:border-blue-500/50 transition-all uppercase tracking-widest cursor-pointer"
-                        >
-                            <option value="javascript">JavaScript</option>
-                            <option value="python">Python</option>
-                            <option value="java">Java</option>
-                            <option value="cpp">C++</option>
-                        </select>
-                    </div>
                 </div>
 
                 <div className="flex items-center gap-6">
@@ -306,7 +293,20 @@ const BattleArena = () => {
                     {/* Editor Footer / Console */}
                     <div className="h-64 bg-zinc-950 border-t border-white/5 flex flex-col">
                         <div className="px-6 py-3 border-b border-white/5 flex items-center justify-between bg-zinc-900/20">
-                            <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Execution Console</span>
+                            <div className="flex items-center gap-2">
+                                <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest pl-1">Execution Console</span>
+                                <div className="h-4 w-px bg-white/10 mx-2" />
+                                <select
+                                    value={selectedLanguage}
+                                    onChange={(e) => handleLanguageChange(e.target.value)}
+                                    className="bg-black/40 border border-white/10 text-[9px] font-black text-zinc-400 rounded-lg px-3 py-1 focus:outline-none focus:border-blue-500/30 transition-all uppercase tracking-widest cursor-pointer hover:text-white"
+                                >
+                                    <option value="javascript">JavaScript</option>
+                                    <option value="python">Python</option>
+                                    <option value="java">Java</option>
+                                    <option value="cpp">C++</option>
+                                </select>
+                            </div>
                             <div className="flex items-center gap-2">
                                 <button
                                     onClick={() => executeCode(false)}
