@@ -38,7 +38,7 @@ const { Server } = require('socket.io');
 const server = http.createServer(app);
 const io = new Server(server, {
     cors: {
-        origin: [process.env.FRONTEND_URL, 'http://localhost:5173', 'http://localhost:5174'],
+        origin: [process.env.FRONTEND_URL, 'http://localhost:5173', 'http://127.0.0.1:5173', 'http://localhost:5174'],
         credentials: true
     }
 });
@@ -76,7 +76,7 @@ app.set('io', io);
 // Error Handling Middleware
 app.use(errorHandler);
 
-server.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
+server.listen(PORT, '0.0.0.0', () => {
+    console.log(`Server running on port ${PORT} (Bound to 0.0.0.0)`);
 });
 

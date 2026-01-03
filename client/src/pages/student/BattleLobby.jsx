@@ -43,7 +43,17 @@ const BattleLobby = () => {
     useEffect(() => {
         if (!socket) return;
 
-        console.log('BattleLobby: Socket connected, setting up listeners...');
+        socket.on('connect', () => {
+            console.log('BattleLobby: Connected to server!');
+            setIsSearching(false);
+            setStatus('Idle');
+        });
+
+        socket.on('disconnect', () => {
+            console.log('BattleLobby: Disconnected from server');
+            setIsSearching(false);
+            setStatus('Offline');
+        });
 
         socket.on('queue_joined', (data) => {
             console.log('BattleLobby: queue_joined received', data);

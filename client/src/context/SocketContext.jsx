@@ -22,7 +22,6 @@ export const SocketProvider = ({ children }) => {
             const cleanUrl = socketUrl.replace('/api', '');
 
             const newSocket = io(cleanUrl, {
-                transports: ['websocket'], // Force websocket to prevent polling upgrades
                 reconnection: true,
                 reconnectionDelay: 1000,
                 reconnectionAttempts: 5
@@ -31,9 +30,8 @@ export const SocketProvider = ({ children }) => {
             socketRef.current = newSocket;
             setSocket(newSocket);
 
-            // Connect event
             newSocket.on('connect', () => {
-                // Send user_connected event
+                console.log('Global Socket: Connected!', newSocket.id);
                 newSocket.emit('user_connected', user._id);
             });
 
