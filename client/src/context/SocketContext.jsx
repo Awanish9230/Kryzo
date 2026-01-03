@@ -16,18 +16,24 @@ export const SocketProvider = ({ children }) => {
         // Only connect if user exists and socket doesn't already exist
         if (user?._id && !socketRef.current) {
             // Initialize socket connection
-            // Use environment variable for URL if available, else standard logic
             const backendUrl = import.meta.env.VITE_BACKEND_URL || import.meta.env.VITE_API_URL;
             let cleanUrl;
 
             if (backendUrl) {
                 cleanUrl = backendUrl.replace('/api', '').replace(/\/$/, '');
             } else {
-                // Dynamic fallback for local testing on other devices (e.g. mobile)
-                // If accessed via 192.168.x.x, connect to the same IP on port 5000
+                // Dynamic fallback
                 const protocol = window.location.protocol;
                 const hostname = window.location.hostname;
-                cleanUrl = `${protocol}//${hostname}:5000`;
+                const port = window.location.port;
+
+                // If on Vite dev port, assume backend is at :5000
+                if (port === '5173' || port === '5174') {
+                    cleanUrl = `${protocol}//${hostname}:5000`;
+                } else {
+                    // In production (Render/etc), use the current origin
+                    cleanUrl = window.location.origin;
+                }
             }
 
             const newSocket = io(cleanUrl, {

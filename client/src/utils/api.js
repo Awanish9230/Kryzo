@@ -17,7 +17,8 @@ const getBaseURL = () => {
         }
     }
 
-    return '/api';
+    // In production (Render/etc), use the same domain with /api
+    return window.location.origin + '/api';
 };
 
 const api = axios.create({
