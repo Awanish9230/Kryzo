@@ -1114,5 +1114,155 @@ module.exports = {
         };
 
         res.json({ logs: logs.reverse(), stats });
+    }),
+
+    // @desc    Get detailed question stats by topic
+    // @route   GET /api/admin/detailed-stats
+    // @access  Private/Admin
+    getDetailedStats: asyncHandler(async (req, res) => {
+        const topics = await Question.aggregate([
+            { $match: { status: 'published' } },
+            {
+                $group: {
+                    _id: '$topic',
+                    stats: {
+                        $push: {
+                            type: '$type',
+                            difficulty: '$difficulty'
+                        }
+                    },
+                    total: { $sum: 1 }
+                }
+            },
+            { $sort: { _id: 1 } }
+        ]);
+
+        res.json(topics);
+    }),
+
+    // @desc    Get pain point analytics
+    // @route   GET /api/admin/analytics/pain-points
+    // @access  Private/Admin
+    getPainPointAnalytics: asyncHandler(async (req, res) => {
+        // Hardest questions (highest failure rate)
+        const hardestQuestions = await UserAttempt.aggregate([
+            { $unwind: '$answers' },
+            {
+                $group: {
+                    _id: '$answers.questionId',
+                    totalAttempts: { $sum: 1 },
+                    failedAttempts: {
+                        $sum: {
+                            $cond: [{ $eq: ['$answers.isCorrect', false] }, 1, 0]
+                        }
+                    }
+                }
+            },
+            {
+                $match: {
+                    totalAttempts: { $gte: 3 } // At least 3 attempts
+                }
+            },
+            {
+                $project: {
+                    questionId: '$_id',
+                    failureRate: {
+                        $multiply: [
+                            { $divide: ['$failedAttempts', '$totalAttempts'] },
+                            100
+                        ]
+                    }
+                }
+            },
+            { $sort: { failureRate: -1 } },
+            { $limit: 10 }
+        ]);
+
+        // Populate question details
+        const questionIds = hardestQuestions.map(q => q.questionId);
+        const questions = await Question.find({ _id: { $in: questionIds } }).select('title type difficulty');
+
+        const hardestQuestionsWithDetails = hardestQuestions.map(hq => {
+            const q = questions.find(question => question._id.toString() === hq.questionId.toString());
+            return {
+                ...hq,
+                title: q?.title || 'Unknown',
+                type: q?.type || 'Unknown',
+                difficulty: q?.difficulty || 'Unknown'
+            };
+        });
+
+        // Weak topics (lowest accuracy)
+        const weakTopics = await UserAttempt.aggregate([
+            { $unwind: '$answers' },
+            {
+                $lookup: {
+                    from: 'questions',
+                    localField: 'answers.questionId',
+                    foreignField: '_id',
+                    as: 'questionData'
+                }
+            },
+            { $unwind: '$questionData' },
+            {
+                $group: {
+                    _id: '$questionData.topic',
+                    totalQuestions: { $sum: 1 },
+                    correctAnswers: {
+                        $sum: {
+                            $cond: [{ $eq: ['$answers.isCorrect', true] }, 1, 0]
+                        }
+                    }
+                }
+            },
+            {
+                $match: {
+                    totalQuestions: { $gte: 5 } // At least 5 questions attempted
+                }
+            },
+            {
+                $project: {
+                    topic: '$_id',
+                    totalQuestions: 1,
+                    accuracy: {
+                        $multiply: [
+                            { $divide: ['$correctAnswers', '$totalQuestions'] },
+                            100
+                        ]
+                    }
+                }
+            },
+            { $sort: { accuracy: 1 } },
+            { $limit: 5 }
+        ]);
+
+        res.json({
+            hardestQuestions: hardestQuestionsWithDetails,
+            weakTopics
+        });
+    }),
+
+    // @desc    Get user activity stats (DAU, WAU, MAU)
+    // @route   GET /api/admin/analytics/users
+    // @access  Private/Admin
+    getUserActivityStats: asyncHandler(async (req, res) => {
+        const now = new Date();
+        const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+        const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+        const oneMonthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+
+        const dau = await User.countDocuments({
+            lastActive: { $gte: oneDayAgo }
+        });
+
+        const wau = await User.countDocuments({
+            lastActive: { $gte: oneWeekAgo }
+        });
+
+        const mau = await User.countDocuments({
+            lastActive: { $gte: oneMonthAgo }
+        });
+
+        res.json({ dau, wau, mau });
     })
 };

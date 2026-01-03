@@ -14,6 +14,7 @@ import {
     Flag
 } from 'lucide-react';
 import Loader from '../../components/Loader';
+import toast from 'react-hot-toast';
 
 const Reports = () => {
     const navigate = useNavigate();
@@ -28,11 +29,17 @@ const Reports = () => {
                     api.get('/admin/detailed-stats'),
                     api.get('/admin/analytics/pain-points')
                 ]);
-                setReportData(statsRes.data);
-                setPainPoints(analyticsRes.data);
+                setReportData(statsRes.data || []);
+                setPainPoints({
+                    hardestQuestions: analyticsRes.data?.hardestQuestions || [],
+                    weakTopics: analyticsRes.data?.weakTopics || []
+                });
                 setLoading(false);
             } catch (err) {
                 console.error(err);
+                toast.error('Failed to load reports data');
+                setReportData([]);
+                setPainPoints({ hardestQuestions: [], weakTopics: [] });
                 setLoading(false);
             }
         };
