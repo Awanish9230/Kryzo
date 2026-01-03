@@ -56,7 +56,7 @@ const Layout = ({ children }) => {
     !location.pathname.includes('/custom') &&
     !location.pathname.includes('/result')) ||
     location.pathname.includes('/student/practice/coding') ||
-    location.pathname.includes('/student/battle/');
+    location.pathname.match(/\/student\/battle\/.+/);
 
   return (
     <div className="flex flex-col min-h-screen bg-black text-white">

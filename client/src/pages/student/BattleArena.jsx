@@ -176,7 +176,7 @@ const BattleArena = () => {
                 <div className="flex items-center gap-6">
                     <div className="flex items-center gap-4">
                         <div className="flex flex-col">
-                            <span className="text-[10px] text-zinc-500 uppercase font-black tracking-widest">{matchingData.myName || 'You'}</span>
+                            <span className="text-[10px] text-zinc-500 uppercase font-black tracking-widest">{matchingData.myName || JSON.parse(localStorage.getItem('user'))?.name || 'You'}</span>
                             <div className="w-32 h-1.5 bg-zinc-800 rounded-full overflow-hidden mt-1">
                                 <motion.div
                                     initial={{ width: 0 }}
@@ -276,7 +276,7 @@ const BattleArena = () => {
                                     initial={{ opacity: 0 }}
                                     animate={{ opacity: 1 }}
                                     exit={{ opacity: 0 }}
-                                    className="absolute inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-6"
+                                    className="absolute inset-0 z-[100] bg-black/90 backdrop-blur-md flex items-center justify-center p-6"
                                 >
                                     <div className="text-center max-w-md w-full">
                                         <motion.div
