@@ -797,7 +797,10 @@ const generateQuestionAI = asyncHandler(async (req, res) => {
             - ALL test cases must have PROPER, VALID, and ACCURATE expected outputs.
             - CLEAN DATA: The 'input' and 'output' fields MUST contain ONLY raw data (Standard Stdin/Stdout). NO labels like "Input:" or "Output:", no backticks, and no variable names.
             
-            JSON FORMAT:
+            HUMAN-ONLY CONTENT:
+            - NO LATEX: Never use '$' or double '$$' for math or variables. Use plain text or bolding.
+            - NO ROBOTIC SYMBOLS: Avoid using symbols like 'S', 'T', 'L' for string variables unless it's in a code block. Write 'the string' or 'the length' instead.
+            - NATURAL FLOW: Write like a human mentor, not a textbook.
             [{
                 "title": "[Engaging, Human-Like Title]",
                 "description": "# [Problem Summary]\\nWrite a natural, engaging description. Avoid over-using backticks for every variable unless it simplifies reading code.\\n\\n### Examples\\n**Example 1:**\\n\`\`\`\\nInput: [Raw Input Description]\\nOutput: [Raw Output Description]\\n\`\`\`\\n**Explanation:** A simple, human explanation...\\n\\n### Constraints\\n- [Constraint 1]",
@@ -930,6 +933,8 @@ const autoFillQuestions = asyncHandler(async (req, res) => {
                 - EXACTLY 10 test cases total (3 public, 7 hidden).
                 - CLEAN DATA: 'input' and 'output' fields MUST be RAW DATA. No labels, no backticks, no variable names.
                 - Description must be HUMAN-LIKE and professional. Use minimal markdown.
+                - NO LATEX: Absolutely NO '$' symbols. Use plain text.
+                - NO ROBOTIC SYMBOLS: Avoid 'S', 'T' notation. Use 'the string', 'the length'.
                 Structure: {"title":"","description":"# ...\n\n### Examples\n...","constraints":"","inputFormat":"","outputFormat":"","testCases":[{"input":"","output":"","isHidden":false},...],"explanation":""}`;
             }
 
@@ -1022,10 +1027,11 @@ module.exports = {
                     Difficulty: ${q.difficulty}
                     
                      TASKS:
-                    1. The "description" should be HUMAN-LIKE and professional. Avoid robotic phrasing.
-                    2. Use the following Markdown structure, but keep it natural:
+                    1. The "description" should be HUMAN-LIKE and professional. Write like a mentor.
+                    2. NO LATEX: Strictly forbid '$' or '$$' symbols. Use standard text.
+                    3. Use the following Markdown structure, but keep it natural:
                        # [Problem Summary]
-                       A clear, engaging explanation of the problem. Use minimal backticks for variables if it makes the text look cluttered.
+                       A clear, engaging explanation. Use minimal backticks for variables. Prefer 'the string' over '$S$'.
                        
                        ### Examples
                        **Example 1:**

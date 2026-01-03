@@ -20,6 +20,8 @@ import {
     X as CloseIcon
 } from 'lucide-react';
 import Loader from '../../components/Loader';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 const AddQuestion = () => {
     const navigate = useNavigate();
@@ -127,6 +129,28 @@ const AddQuestion = () => {
         setFormData({ ...formData, [field]: newArray });
     };
 
+    const handleApplySingleQuestion = (question) => {
+        setFormData({
+            ...formData,
+            title: question.title,
+            description: question.description,
+            constraints: question.constraints || '',
+            inputFormat: question.inputFormat || '',
+            outputFormat: question.outputFormat || '',
+            testCases: question.testCases || [{ input: '', output: '', isHidden: false }],
+            options: question.options || [
+                { text: '', isCorrect: false },
+                { text: '', isCorrect: false },
+                { text: '', isCorrect: false },
+                { text: '', isCorrect: false }
+            ],
+            explanation: question.explanation || ''
+        });
+        setGeneratedQuestions([]);
+        setShowBulkReview(false);
+        toast.success('Applied to editor! You can now refine it.');
+    };
+
     const handleAIGenerate = async () => {
         if (!selectedTopic) {
             toast.error('Please select a Topic first.');
@@ -167,12 +191,11 @@ const AddQuestion = () => {
             });
 
             if (data.questions && data.questions.length > 0) {
+                setGeneratedQuestions(data.questions);
+                setShowBulkReview(true);
                 if (data.questions.length === 1 && aiCount === 1) {
-                    // ... (single question logic)
-                    toast.success('Question generated successfully!');
+                    toast.success('Question generated! Please review.');
                 } else {
-                    setGeneratedQuestions(data.questions);
-                    setShowBulkReview(true);
                     toast.success(`${data.questions.length} questions generated! Please review.`);
                 }
             } else {
@@ -814,67 +837,139 @@ const AddQuestion = () => {
 
                 {/* Bulk Review Modal */}
                 {showBulkReview && (
-                    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-6">
+                    <div className="fixed inset-0 bg-black/90 backdrop-blur-md z-50 flex items-center justify-center p-4 md:p-10">
                         <motion.div
-                            initial={{ opacity: 0, scale: 0.95 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            className="bg-zinc-900 border border-white/10 rounded-[2.5rem] p-8 max-w-4xl w-full max-h-[80vh] overflow-y-auto"
+                            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            className="bg-zinc-900 border border-white/10 rounded-[3rem] p-8 md:p-12 max-w-5xl w-full max-h-[90vh] overflow-hidden flex flex-col shadow-2xl shadow-blue-500/10"
                         >
-                            <div className="flex items-center justify-between mb-6">
-                                <h2 className="text-2xl font-bold">Review Generated Questions ({generatedQuestions.length})</h2>
-                                <div className="flex gap-3">
-                                    <button
-                                        onClick={handleSaveAllQuestions}
-                                        className="px-4 py-2 bg-white text-black font-bold rounded-xl hover:bg-zinc-200 transition-all flex items-center gap-2"
-                                    >
-                                        <CheckCircle2 size={16} />
-                                        Save All
-                                    </button>
+                            <div className="flex items-center justify-between mb-8">
+                                <div>
+                                    <h2 className="text-3xl font-black tracking-tight mb-2">
+                                        {aiCount === 1 ? 'Preview AI Question' : `Review Generated Questions (${generatedQuestions.length})`}
+                                    </h2>
+                                    <p className="text-zinc-500 text-sm font-medium">Verify the content before applying it to your database.</p>
+                                </div>
+                                <div className="flex gap-4">
+                                    {generatedQuestions.length > 1 && (
+                                        <button
+                                            onClick={handleSaveAllQuestions}
+                                            className="px-6 py-3 bg-white text-black font-black text-xs uppercase tracking-widest rounded-2xl hover:bg-zinc-200 transition-all flex items-center gap-2"
+                                        >
+                                            <CheckCircle2 size={18} />
+                                            Save All
+                                        </button>
+                                    )}
                                     <button
                                         onClick={() => {
                                             setShowBulkReview(false);
                                             setGeneratedQuestions([]);
                                         }}
-                                        className="p-2 hover:bg-white/10 rounded-xl transition-all"
+                                        className="p-3 bg-white/5 hover:bg-white/10 border border-white/5 rounded-2xl transition-all"
                                     >
                                         <CloseIcon size={20} />
                                     </button>
                                 </div>
                             </div>
 
-                            <div className="space-y-4">
+                            <div className="flex-1 overflow-y-auto custom-scrollbar pr-4 -mr-4 space-y-8">
                                 {generatedQuestions.map((question, idx) => (
-                                    <div key={idx} className="bg-zinc-950 border border-white/5 rounded-2xl p-6">
-                                        <div className="flex items-start justify-between gap-4">
-                                            <div className="flex-1">
-                                                <h3 className="font-bold text-lg mb-2">{question.title}</h3>
-                                                <p className="text-zinc-400 text-sm mb-3">{question.description}</p>
-                                                <div className="flex gap-2 text-xs">
-                                                    <span className="px-3 py-1 bg-blue-500/10 text-blue-500 rounded-full">{question.type}</span>
-                                                    <span className="px-3 py-1 bg-yellow-500/10 text-yellow-500 rounded-full">{question.difficulty}</span>
+                                    <div key={idx} className="bg-zinc-950 border border-white/5 rounded-[2rem] p-8 relative group hover:border-white/10 transition-all">
+                                        <div className="flex flex-col lg:flex-row gap-10">
+                                            <div className="flex-1 space-y-6">
+                                                <div>
+                                                    <div className="flex items-center gap-3 mb-3">
+                                                        <span className="px-3 py-1 bg-blue-500/10 text-blue-500 text-[10px] font-black uppercase tracking-wider rounded-full">{question.difficulty}</span>
+                                                        <span className="px-3 py-1 bg-zinc-800 text-zinc-400 text-[10px] font-black uppercase tracking-wider rounded-full">{question.type}</span>
+                                                    </div>
+                                                    <h3 className="text-2xl font-bold text-white mb-4">{question.title}</h3>
                                                 </div>
+
+                                                <div className="prose prose-invert prose-blue max-w-none">
+                                                    <div className="text-zinc-400 text-sm leading-relaxed question-markdown">
+                                                        <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                                                            {question.description}
+                                                        </ReactMarkdown>
+                                                    </div>
+                                                </div>
+
+                                                {question.type === 'MCQ' && question.options && (
+                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-6 border-t border-white/5">
+                                                        {question.options.map((opt, oIdx) => (
+                                                            <div key={oIdx} className={`p-4 rounded-2xl border ${opt.isCorrect ? 'bg-green-500/10 border-green-500/20 text-green-400' : 'bg-zinc-900/50 border-white/5 text-zinc-500'}`}>
+                                                                <span className="text-[10px] font-black uppercase mr-2 opacity-50">{String.fromCharCode(65 + oIdx)}.</span>
+                                                                <span className="text-sm font-medium">{opt.text}</span>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                )}
+
+                                                {question.testCases && (
+                                                    <div className="pt-6 border-t border-white/5">
+                                                        <h4 className="text-xs font-black uppercase tracking-widest text-zinc-500 mb-4">Sample Test Cases</h4>
+                                                        <div className="space-y-3">
+                                                            {question.testCases.filter(tc => !tc.isHidden).slice(0, 2).map((tc, tcIdx) => (
+                                                                <div key={tcIdx} className="bg-zinc-900/50 rounded-2xl p-4 font-mono text-xs border border-white/5">
+                                                                    <div className="grid grid-cols-2 gap-4">
+                                                                        <div>
+                                                                            <span className="text-zinc-600 block mb-1 uppercase text-[8px]">Input</span>
+                                                                            <pre className="text-zinc-400 whitespace-pre-wrap">{tc.input}</pre>
+                                                                        </div>
+                                                                        <div>
+                                                                            <span className="text-zinc-600 block mb-1 uppercase text-[8px]">Output</span>
+                                                                            <pre className="text-zinc-400 whitespace-pre-wrap">{tc.output}</pre>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                )}
                                             </div>
-                                            <button
-                                                onClick={() => handleSaveBulkQuestion(question)}
-                                                className="px-4 py-2 bg-white text-black font-bold rounded-xl hover:bg-zinc-200 transition-all flex items-center gap-2"
-                                            >
-                                                <Check size={16} />
-                                                Save
-                                            </button>
+
+                                            <div className="lg:w-48 flex flex-col gap-3">
+                                                {aiCount === 1 ? (
+                                                    <button
+                                                        onClick={() => handleApplySingleQuestion(question)}
+                                                        className="w-full py-4 bg-blue-600 text-white font-black text-[10px] uppercase tracking-widest rounded-2xl hover:bg-blue-500 transition-all flex items-center justify-center gap-2 shadow-lg shadow-blue-600/20"
+                                                    >
+                                                        <Check size={16} />
+                                                        Apply to Form
+                                                    </button>
+                                                ) : (
+                                                    <button
+                                                        onClick={() => handleSaveBulkQuestion(question)}
+                                                        className="w-full py-4 bg-white text-black font-black text-[10px] uppercase tracking-widest rounded-2xl hover:bg-zinc-200 transition-all flex items-center justify-center gap-2"
+                                                    >
+                                                        <Save size={16} />
+                                                        Save to DB
+                                                    </button>
+                                                )}
+                                                <button
+                                                    onClick={() => setGeneratedQuestions(prev => prev.filter((_, i) => i !== idx))}
+                                                    className="w-full py-4 bg-zinc-900 border border-white/5 text-zinc-500 font-black text-[10px] uppercase tracking-widest rounded-2xl hover:bg-red-500/10 hover:text-red-500 hover:border-red-500/20 transition-all flex items-center justify-center gap-2"
+                                                >
+                                                    <Trash2 size={16} />
+                                                    Discard
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
                                 ))}
                             </div>
 
                             {generatedQuestions.length === 0 && (
-                                <div className="text-center py-12">
-                                    <CheckCircle2 size={48} className="mx-auto mb-4 text-green-500" />
-                                    <p className="text-zinc-400">All questions saved!</p>
+                                <div className="text-center py-20">
+                                    <div className="w-20 h-20 bg-green-500/10 rounded-[2rem] flex items-center justify-center mx-auto mb-6">
+                                        <CheckCircle2 size={40} className="text-green-500" />
+                                    </div>
+                                    <h3 className="text-2xl font-bold mb-2">All Set!</h3>
+                                    <p className="text-zinc-500 mb-8">All generated questions have been processed.</p>
                                     <button
                                         onClick={() => setShowBulkReview(false)}
-                                        className="mt-4 px-6 py-2 bg-white text-black font-bold rounded-xl hover:bg-zinc-200 transition-all"
+                                        className="px-10 py-4 bg-white text-black font-black text-xs uppercase tracking-widest rounded-2xl hover:bg-zinc-200 transition-all"
                                     >
-                                        Close
+                                        Return to Editor
                                     </button>
                                 </div>
                             )}
