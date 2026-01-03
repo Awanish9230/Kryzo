@@ -116,6 +116,17 @@ module.exports = (io) => {
             // console.log(`User ${socket.id} left battle ${roomId}. Winner: ${winnerId}`);
         });
 
+        socket.on('join_battle_room', ({ roomId }) => {
+            const room = activeRooms.get(roomId);
+            if (!room) return;
+
+            // Ensure the user actually belongs to this room
+            // Note: We don't have userId here easily unless we passed it or have it on socket
+            // For now, let's just allow them to join the socket room so they get events
+            socket.join(roomId);
+            // console.log(`User ${socket.id} (re)joined battle room ${roomId}`);
+        });
+
         socket.on('disconnect', () => {
             io.emit('battle_users_count', io.sockets.size);
 

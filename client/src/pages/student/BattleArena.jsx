@@ -55,13 +55,19 @@ const BattleArena = () => {
     useEffect(() => {
         if (!socket) return;
 
+        // Ensure we are in the socket room for this battle
+        socket.emit('join_battle_room', { roomId });
+
         socket.on('opponent_progress', (data) => {
             setOpponentProgress(data.progress);
         });
 
         socket.on('game_over', (data) => {
+            console.log('BattleArena: game_over received', data);
             const myUserId = JSON.parse(localStorage.getItem('user'))._id;
-            if (data.winnerId === myUserId) {
+
+            // Robust comparison (ensure both are strings)
+            if (String(data.winnerId) === String(myUserId)) {
                 setGameResult('WIN');
                 if (data.reason === 'opponent_left') {
                     toast.success('🏆 VICTORY! Opponent fled the arena.', { duration: 6000 });

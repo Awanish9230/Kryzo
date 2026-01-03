@@ -50,32 +50,33 @@ const runCode = asyncHandler(async (req, res) => {
             rawInput = rawInput.replace(/^Input:\s*/i, '');
 
             // 4. Handle brackets and separators for numerical input (common in AI-gen questions)
-            // If the input contains brackets/commas, we'll try to be smart about providing the count
-            // many users (Java/C++) expect the first input to be the count 'n'.
             let elementCount = 0;
             let isArrayInput = false;
+            let trimmed = rawInput.trim();
 
-            if (rawInput.trim().startsWith('[') && rawInput.trim().endsWith(']')) {
+            // More aggressive array detection: if it contains [ and ] and some content
+            if (trimmed.includes('[') && trimmed.includes(']')) {
                 isArrayInput = true;
-                // Simple comma-based split to count elements
-                const contents = rawInput.trim().slice(1, -1);
-                if (contents.trim() === '') {
+                // Extract everything between the first [ and last ]
+                const firstBracket = trimmed.indexOf('[');
+                const lastBracket = trimmed.lastIndexOf(']');
+                const contents = trimmed.slice(firstBracket + 1, lastBracket).trim();
+
+                if (contents === '') {
                     elementCount = 0;
                 } else {
-                    // Split by comma, but handle potential spaces
-                    elementCount = contents.split(',').length;
+                    // Split by comma OR space, and filter out empty strings to get true count
+                    elementCount = contents.split(/[\s,]+/).filter(x => x.length > 0).length;
                 }
             }
 
-            if (rawInput.includes('[') || rawInput.includes(']')) {
-                rawInput = rawInput.replace(/[\[\],]/g, ' ');
-            }
+            // Clean brackets and commas
+            rawInput = rawInput.replace(/[\[\],]/g, ' ');
 
             // Final trim and whitespace normalization
             let sanitizedInput = rawInput.replace(/\s+/g, ' ').trim();
 
-            // Smart Prepend: If we detected an array, prepend the count 'n'
-            // This fixes InputMismatchException for users doing sc.nextInt() then Loop
+            // Prepend count if we think it's an array
             if (isArrayInput) {
                 sanitizedInput = `${elementCount} ${sanitizedInput}`;
             }
