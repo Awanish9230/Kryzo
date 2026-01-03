@@ -60,10 +60,11 @@ const AdminDashboard = () => {
     };
 
     const handleStandardize = async () => {
-        if (!window.confirm('This will use AI to restructure test cases for ALL improper coding questions. Continue?')) return;
+        const choice = window.confirm('Deep Audit Mode?\n\nOK: AI will REWRITE unclear descriptions and FIX all test cases for ALL questions (Aggressive).\nCancel: AI will only fix questions with WRONG test case counts (Safe).');
+
         setIsStandardizing(true);
         try {
-            const { data } = await api.post('/admin/questions/standardize');
+            const { data } = await api.post('/admin/questions/standardize', { force: choice });
             alert(data.message);
             fetchStats();
         } catch (err) {

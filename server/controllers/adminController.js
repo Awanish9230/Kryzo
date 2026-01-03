@@ -997,34 +997,51 @@ module.exports = {
     autoFillQuestions,
     standardizeCodingQuestions: async (req, res) => {
         try {
-            const improperQuestions = await Question.find({ type: 'CODING' });
+            const { force = false } = req.body;
+            // If force is true, we audit ALL coding questions. Otherwise, only those with wrong counts.
+            const query = { type: 'CODING' };
+            const questions = await Question.find(query);
+
             let fixedCount = 0;
+            let skippedCount = 0;
             const apiKeys = process.env.GEMINI_API_KEYS ? process.env.GEMINI_API_KEYS.split(',') : [process.env.GEMINI_API_KEY];
 
-            for (const q of improperQuestions) {
+            for (const q of questions) {
                 const counts = { public: 0, hidden: 0 };
                 q.testCases.forEach(tc => {
                     if (tc.isHidden) counts.hidden++;
                     else counts.public++;
                 });
 
-                if (q.testCases.length !== 10 || counts.public !== 3 || counts.hidden !== 7) {
-                    const prompt = `Act as a Senior Lead Engineer. Standardize the test cases for this CODING question:
+                const needsFix = force || q.testCases.length !== 10 || counts.public !== 3 || counts.hidden !== 7;
+
+                if (needsFix) {
+                    const prompt = `Act as a Senior Lead Engineer & Algo Expert. 
+                    AUDIT and REPAIR this CODING question to ensure absolute perfection.
+                    
+                    CURRENT DATA:
                     Title: "${q.title}"
                     Description: "${q.description}"
                     Constraints: "${q.constraints}"
-                    Current Difficulty: ${q.difficulty}
+                    Input Format: "${q.inputFormat}"
+                    Output Format: "${q.outputFormat}"
+                    Difficulty: ${q.difficulty}
                     
-                    STRICT REQUIREMENTS:
-                    1. Return EXACTLY 10 test cases.
-                    2. Exactly 3 PUBLIC (isHidden: false) and 7 HIDDEN (isHidden: true).
-                    3. Ensure expected outputs are 100% accurate.
+                    TASKS:
+                    1. If the description is ambiguous, poorly formatted, or logically broken, REWRITE it to be clear and professional.
+                    2. If the constraints are missing or unrealistic, fix them.
+                    3. Generate EXACTLY 10 test cases:
+                       - 3 PUBLIC (isHidden: false): Standard cases, readable.
+                       - 7 HIDDEN (isHidden: true): Edge cases, large numbers, empty inputs, etc.
+                    4. ENSURE ALL test case outputs are 100% CORRECT based on the logic.
                     
-                    RETURN ONLY VALID JSON matching this structure:
+                    RETURN ONLY JSON in this format:
                     {
+                        "description": "Revised description text",
+                        "constraints": "Revised constraints",
                         "testCases": [
                             {"input": "...", "output": "...", "isHidden": false},
-                            ... (exactly 10 total)
+                            ... (exactly 10)
                         ]
                     }`;
 
@@ -1035,16 +1052,28 @@ module.exports = {
                         const parsed = JSON.parse(text);
 
                         if (parsed.testCases && parsed.testCases.length === 10) {
+                            if (parsed.description) q.description = parsed.description;
+                            if (parsed.constraints) q.constraints = parsed.constraints;
                             q.testCases = parsed.testCases;
                             await q.save();
                             fixedCount++;
+                        } else {
+                            skippedCount++;
                         }
                     } catch (e) {
-                        console.error(`Failed to standardize "${q.title}":`, e.message);
+                        console.error(`Failed to audit "${q.title}":`, e.message);
+                        skippedCount++;
                     }
+                } else {
+                    skippedCount++;
                 }
             }
-            res.json({ message: `Successfully standardized ${fixedCount} questions.`, totalChecked: improperQuestions.length });
+            res.json({
+                message: `Audit complete. Successfully repaired ${fixedCount} questions.`,
+                totalChecked: questions.length,
+                fixed: fixedCount,
+                skipped: skippedCount
+            });
         } catch (err) {
             res.status(500).json({ message: err.message });
         }
