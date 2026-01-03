@@ -124,11 +124,14 @@ module.exports = (io) => {
             const room = activeRooms.get(roomId);
             if (!room) return;
 
-            // Ensure the user actually belongs to this room
-            // Note: We don't have userId here easily unless we passed it or have it on socket
-            // For now, let's just allow them to join the socket room so they get events
             socket.join(roomId);
-            // console.log(`User ${socket.id} (re)joined battle room ${roomId}`);
+
+            // Sync names and progress back to the rejoining client
+            socket.emit('room_sync', {
+                p1: { userId: room.p1.userId, userName: room.p1.userName, progress: room.p1.progress },
+                p2: { userId: room.p2.userId, userName: room.p2.userName, progress: room.p2.progress },
+                question: room.question
+            });
         });
 
         socket.on('disconnect', () => {

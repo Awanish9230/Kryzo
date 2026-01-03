@@ -39,6 +39,10 @@ const BattleArena = () => {
     const [isRunning, setIsRunning] = useState(false);
     const [logs, setLogs] = useState([]);
     const [gameResult, setGameResult] = useState(null); // 'WIN' | 'LOSS'
+    const [names, setNames] = useState({
+        me: matchingData.myName || JSON.parse(localStorage.getItem('user'))?.name || 'You',
+        opponent: matchingData.opponentName || 'Opponent'
+    });
 
     // Reset code when language changes if it's still the boilerplate
     const handleLanguageChange = (newLang) => {
@@ -57,6 +61,18 @@ const BattleArena = () => {
 
         // Ensure we are in the socket room for this battle
         socket.emit('join_battle_room', { roomId });
+
+        socket.on('room_sync', (data) => {
+            console.log('BattleArena: room_sync received', data);
+            const myId = JSON.parse(localStorage.getItem('user'))._id;
+            const isP1 = String(data.p1.userId) === String(myId);
+            setNames({
+                me: isP1 ? data.p1.userName : data.p2.userName,
+                opponent: isP1 ? data.p2.userName : data.p1.userName
+            });
+            setOpponentProgress(isP1 ? data.p2.progress : data.p1.progress);
+            setMyProgress(isP1 ? data.p1.progress : data.p2.progress);
+        });
 
         socket.on('opponent_progress', (data) => {
             setOpponentProgress(data.progress);
@@ -176,7 +192,7 @@ const BattleArena = () => {
                 <div className="flex items-center gap-6">
                     <div className="flex items-center gap-4">
                         <div className="flex flex-col">
-                            <span className="text-[10px] text-zinc-500 uppercase font-black tracking-widest">{matchingData.myName || JSON.parse(localStorage.getItem('user'))?.name || 'You'}</span>
+                            <span className="text-[10px] text-zinc-500 uppercase font-black tracking-widest">{names.me}</span>
                             <div className="w-32 h-1.5 bg-zinc-800 rounded-full overflow-hidden mt-1">
                                 <motion.div
                                     initial={{ width: 0 }}
@@ -187,7 +203,7 @@ const BattleArena = () => {
                         </div>
                         <div className="text-xl font-black italic text-zinc-800 tracking-tighter">VS</div>
                         <div className="flex flex-col items-end">
-                            <span className="text-[10px] text-zinc-500 uppercase font-black tracking-widest">{matchingData.opponentName || 'Opponent'}</span>
+                            <span className="text-[10px] text-zinc-500 uppercase font-black tracking-widest">{names.opponent}</span>
                             <div className="w-32 h-1.5 bg-zinc-800 rounded-full overflow-hidden mt-1">
                                 <motion.div
                                     initial={{ width: 0 }}
