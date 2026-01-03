@@ -11,8 +11,14 @@ module.exports = (io) => {
     io.on('connection', (socket) => {
         // console.log('Battle system attached to socket:', socket.id);
 
-        // Initial broadcast of count
+        // Initial broadcast of count to everyone
         io.emit('battle_users_count', io.sockets.size);
+        // Also send specifically to this connected socket
+        socket.emit('battle_users_count', io.sockets.size);
+
+        socket.on('get_users_count', () => {
+            socket.emit('battle_users_count', io.sockets.size);
+        });
 
         // Join Queue
         socket.on('join_queue', async (userData) => {

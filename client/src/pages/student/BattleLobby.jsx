@@ -14,32 +14,12 @@ const BattleLobby = () => {
     const [activeUsers, setActiveUsers] = useState(1);
     const [selectedLanguage, setSelectedLanguage] = useState(localStorage.getItem('battle_preferred_language') || 'javascript');
 
-    // Verify socket connection on mount
+    // Verify socket connection and request initial counts
     useEffect(() => {
-        if (!socket) return;
-
-        // Custom namespace socket might be needed if we used /battle namespace
-        // For simplicity in V1, let's assume we are using the main socket or handle namespace in context.
-        // Wait! The backend used io.of('/battle').
-        // The standard useSocket() might return the default '/' namespace socket.
-        // We might need to connect to the battle namespace specifically here or update SocketContext.
-
-        // Let's assume for now we need a specific connection.
-        // ACTUALLY, checking SocketContext.jsx, it connects to '/' by default.
-        // We should probably create a specific socket for battle or update context to support multiple namespaces.
-        // Or, simpler for V1: Just use the main namespace in backend too? 
-        // No, namespaces are cleaner. Let's create a temporary socket here for /battle.
-
-        // HOWEVER, to keep it fast, let's handle the namespace logic inside the component 
-        // using a separate io connection if needed, OR just update the backend to use the main namespace for now
-        // to avoid Context refactoring complexity.
-
-        // DECISION: I will update the backend handler to use the ROOT namespace for V1 
-        // to save time on refactoring the client context. Use `io.on` instead of `io.of`.
-
+        if (socket) {
+            socket.emit('get_users_count');
+        }
     }, [socket]);
-
-    // ... (Wait, I'll update the backend handle in the next step to user root namespace for simplicity)
 
     useEffect(() => {
         if (!socket) return;
