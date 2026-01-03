@@ -14,6 +14,8 @@ import {
     FileText
 } from 'lucide-react';
 import Loader from '../../components/Loader';
+import toast from 'react-hot-toast';
+import { AlertCircle } from 'lucide-react';
 
 const QuestionList = () => {
     const [questions, setQuestions] = useState([]);
@@ -49,14 +51,45 @@ const QuestionList = () => {
     };
 
     const handleDelete = async (id) => {
-        if (window.confirm('Are you sure you want to delete this question?')) {
-            try {
-                await api.delete(`/admin/questions/${id}`);
-                setQuestions(questions.filter(q => q._id !== id));
-            } catch (err) {
-                console.error(err);
-            }
-        }
+        toast.custom((t) => (
+            <div className={`${t.visible ? 'animate-enter' : 'animate-leave'} max-w-sm w-full bg-zinc-900 border border-white/10 shadow-2xl rounded-3xl pointer-events-auto flex flex-col overflow-hidden`}>
+                <div className="p-6">
+                    <div className="flex items-center gap-4 mb-4">
+                        <div className="p-3 bg-red-500/10 rounded-2xl text-red-500">
+                            <AlertCircle size={24} />
+                        </div>
+                        <div>
+                            <h3 className="text-lg font-bold text-white">Delete Question?</h3>
+                            <p className="text-zinc-500 text-xs">This action is irreversible.</p>
+                        </div>
+                    </div>
+                </div>
+                <div className="bg-zinc-950 p-4 flex gap-3">
+                    <button
+                        onClick={() => toast.dismiss(t.id)}
+                        className="flex-1 px-4 py-2 bg-zinc-800 text-white rounded-xl text-xs font-bold hover:bg-zinc-700 transition-all"
+                    >
+                        Cancel
+                    </button>
+                    <button
+                        onClick={async () => {
+                            toast.dismiss(t.id);
+                            const loadingToast = toast.loading('Deleting question...');
+                            try {
+                                await api.delete(`/admin/questions/${id}`);
+                                setQuestions(questions.filter(q => q._id !== id));
+                                toast.success('Question deleted', { id: loadingToast });
+                            } catch (err) {
+                                toast.error('Failed to delete', { id: loadingToast });
+                            }
+                        }}
+                        className="flex-1 px-4 py-2 bg-red-600 text-white rounded-xl text-xs font-bold hover:bg-red-500 transition-all"
+                    >
+                        Delete
+                    </button>
+                </div>
+            </div>
+        ), { duration: 5000 });
     };
 
     if (loading) return (

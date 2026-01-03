@@ -61,15 +61,68 @@ const AdminDashboard = () => {
     };
 
     const handleStandardize = async () => {
-        const choice = window.confirm('Deep Audit Mode?\n\nOK: AI will REWRITE unclear descriptions and FIX all test cases for ALL questions (Aggressive).\nCancel: AI will only fix questions with WRONG test case counts (Safe).');
+        toast.custom((t) => (
+            <div className={`${t.visible ? 'animate-enter' : 'animate-leave'} max-w-md w-full bg-zinc-900 border border-white/10 shadow-2xl rounded-[2rem] pointer-events-auto flex flex-col overflow-hidden`}>
+                <div className="p-8">
+                    <div className="flex items-center gap-4 mb-4">
+                        <div className="p-3 bg-blue-500/10 rounded-2xl text-blue-500">
+                            <Zap size={24} />
+                        </div>
+                        <div>
+                            <h3 className="text-xl font-bold text-white">Neural Standardization</h3>
+                            <p className="text-zinc-500 text-sm">Choose audit intensity for the question bank.</p>
+                        </div>
+                    </div>
+                    <div className="space-y-3">
+                        <button
+                            onClick={async () => {
+                                toast.dismiss(t.id);
+                                runStandardization(true);
+                            }}
+                            className="w-full p-4 bg-white/5 border border-white/5 rounded-2xl text-left hover:bg-blue-500/10 hover:border-blue-500/20 transition-all group"
+                        >
+                            <div className="flex justify-between items-center mb-1">
+                                <span className="font-bold text-white group-hover:text-blue-400">Deep Audit (Aggressive)</span>
+                                <TrendingUp size={14} className="text-zinc-600" />
+                            </div>
+                            <p className="text-[10px] text-zinc-500 uppercase tracking-widest leading-relaxed">Rewrites descriptions & fixes all test cases (3 Public / 7 Hidden).</p>
+                        </button>
+                        <button
+                            onClick={async () => {
+                                toast.dismiss(t.id);
+                                runStandardization(false);
+                            }}
+                            className="w-full p-4 bg-white/5 border border-white/5 rounded-2xl text-left hover:bg-green-500/10 hover:border-green-500/20 transition-all group"
+                        >
+                            <div className="flex justify-between items-center mb-1">
+                                <span className="font-bold text-white group-hover:text-green-400">Quick Repair (Safe)</span>
+                                <CheckCircle2 size={14} className="text-zinc-600" />
+                            </div>
+                            <p className="text-[10px] text-zinc-500 uppercase tracking-widest leading-relaxed">Only fixes questions with incorrect test case counts.</p>
+                        </button>
+                    </div>
+                </div>
+                <div className="bg-zinc-950 p-4 flex justify-end">
+                    <button
+                        onClick={() => toast.dismiss(t.id)}
+                        className="px-6 py-2 text-xs font-bold text-zinc-500 hover:text-white transition-colors"
+                    >
+                        Cancel
+                    </button>
+                </div>
+            </div>
+        ), { duration: 6000 });
+    };
 
+    const runStandardization = async (deepAudit) => {
         setIsStandardizing(true);
+        const loadingToast = toast.loading(`${deepAudit ? 'Deep Audit' : 'Quick Repair'} in progress...`);
         try {
-            const { data } = await api.post('/admin/questions/standardize', { force: choice });
-            toast.success(data.message);
+            const { data } = await api.post('/admin/questions/standardize', { force: deepAudit });
+            toast.success(data.message, { id: loadingToast });
             fetchStats();
         } catch (err) {
-            toast.error(err.response?.data?.message || 'Standardization failed');
+            toast.error(err.response?.data?.message || 'Standardization failed', { id: loadingToast });
         } finally {
             setIsStandardizing(false);
         }

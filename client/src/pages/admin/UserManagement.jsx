@@ -41,15 +41,45 @@ const UserManagement = () => {
     };
 
     const handleDelete = async (id, name) => {
-        if (window.confirm(`Are you sure you want to delete user "${name}"? This will permanently remove all their data.`)) {
-            try {
-                await api.delete(`/admin/users/${id}`);
-                setUsers(users.filter(u => u._id !== id));
-                toast.success(`User "${name}" deleted`);
-            } catch (err) {
-                toast.error(err.response?.data?.message || 'Failed to delete user');
-            }
-        }
+        toast.custom((t) => (
+            <div className={`${t.visible ? 'animate-enter' : 'animate-leave'} max-w-sm w-full bg-zinc-900 border border-white/10 shadow-2xl rounded-3xl pointer-events-auto flex flex-col overflow-hidden`}>
+                <div className="p-6">
+                    <div className="flex items-center gap-4 mb-4">
+                        <div className="p-3 bg-red-500/10 rounded-2xl text-red-500">
+                            <Trash2 size={24} />
+                        </div>
+                        <div>
+                            <h3 className="text-lg font-bold text-white">Delete User?</h3>
+                            <p className="text-zinc-500 text-xs">Removing <span className="text-zinc-300 font-bold">"{name}"</span> is permanent.</p>
+                        </div>
+                    </div>
+                </div>
+                <div className="bg-zinc-950 p-4 flex gap-3">
+                    <button
+                        onClick={() => toast.dismiss(t.id)}
+                        className="flex-1 px-4 py-2 bg-zinc-800 text-white rounded-xl text-xs font-bold hover:bg-zinc-700 transition-all"
+                    >
+                        Cancel
+                    </button>
+                    <button
+                        onClick={async () => {
+                            toast.dismiss(t.id);
+                            const loadingToast = toast.loading(`Deleting ${name}...`);
+                            try {
+                                await api.delete(`/admin/users/${id}`);
+                                setUsers(users.filter(u => u._id !== id));
+                                toast.success(`User "${name}" removed`, { id: loadingToast });
+                            } catch (err) {
+                                toast.error(err.response?.data?.message || 'Failed to delete user', { id: loadingToast });
+                            }
+                        }}
+                        className="flex-1 px-4 py-2 bg-red-600 text-white rounded-xl text-xs font-bold hover:bg-red-500 transition-all font-mono"
+                    >
+                        PERFORM_DELETE
+                    </button>
+                </div>
+            </div>
+        ), { duration: 5000 });
     };
 
     const handleEdit = (user) => {

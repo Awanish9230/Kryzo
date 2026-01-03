@@ -218,10 +218,40 @@ const BattleArena = () => {
             return;
         }
 
-        if (window.confirm('Are you sure you want to exit? You will forfeit the match.')) {
-            socket.emit('leave_battle', { roomId });
-            navigate('/student/battle');
-        }
+        toast.custom((t) => (
+            <div className={`${t.visible ? 'animate-enter' : 'animate-leave'} max-w-sm w-full bg-zinc-900 border border-red-500/20 shadow-[0_0_50px_rgba(239,68,68,0.1)] rounded-3xl pointer-events-auto flex flex-col overflow-hidden`}>
+                <div className="p-6">
+                    <div className="flex items-center gap-4 mb-4">
+                        <div className="p-3 bg-red-500/10 rounded-2xl text-red-500">
+                            <AlertTriangle size={24} />
+                        </div>
+                        <div>
+                            <h3 className="text-lg font-bold text-white uppercase tracking-tight">Forfeit Match?</h3>
+                            <p className="text-zinc-500 text-[10px] font-black uppercase tracking-widest">Victory is still within reach.</p>
+                        </div>
+                    </div>
+                </div>
+                <div className="bg-zinc-950 p-4 flex gap-3">
+                    <button
+                        onClick={() => toast.dismiss(t.id)}
+                        className="flex-1 px-4 py-2 bg-zinc-800 text-zinc-400 rounded-xl text-[10px] font-black uppercase tracking-widest hover:text-white transition-all"
+                    >
+                        Stay & Fight
+                    </button>
+                    <button
+                        onClick={() => {
+                            toast.dismiss(t.id);
+                            socket.emit('leave_battle', { roomId });
+                            toast.error('Match Forfeited');
+                            navigate('/student/battle');
+                        }}
+                        className="flex-1 px-4 py-2 bg-red-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-red-500 transition-all shadow-lg shadow-red-500/20"
+                    >
+                        Abanon Arena
+                    </button>
+                </div>
+            </div>
+        ), { duration: 5000 });
     };
 
     const handleRematch = () => {
