@@ -43,13 +43,17 @@ const BattleLobby = () => {
     useEffect(() => {
         if (!socket) return;
 
+        console.log('BattleLobby: Socket connected, setting up listeners...');
+
         socket.on('queue_joined', (data) => {
+            console.log('BattleLobby: queue_joined received', data);
             setIsSearching(true);
             setStatus('Searching for opponent...');
             setQueueTime(0);
         });
 
         socket.on('match_found', (data) => {
+            console.log('BattleLobby: match_found received', data);
             setIsSearching(false);
             setStatus('Match Found! Redirecting...');
             toast.success('Match Found! Entering Arena...');
@@ -59,13 +63,22 @@ const BattleLobby = () => {
         });
 
         socket.on('battle_users_count', (count) => {
+            console.log('BattleLobby: battle_users_count', count);
             setActiveUsers(count);
+        });
+
+        socket.on('error', (err) => {
+            console.error('BattleLobby: Socket error', err);
+            toast.error(err.message || 'An error occurred');
+            setIsSearching(false);
+            setStatus('Idle');
         });
 
         return () => {
             socket.off('queue_joined');
             socket.off('match_found');
             socket.off('battle_users_count');
+            socket.off('error');
         };
     }, [socket, navigate]);
 
@@ -81,11 +94,13 @@ const BattleLobby = () => {
 
     const handleFindMatch = () => {
         if (!socket) {
+            console.error('BattleLobby: No socket instance found');
             toast.error('Connection lost. Reloading...');
             window.location.reload();
             return;
         }
         const user = JSON.parse(localStorage.getItem('user'));
+        console.log('BattleLobby: Emitting join_queue for user', user._id);
         socket.emit('join_queue', { userId: user._id });
         setStatus('Connecting to queue...');
     };

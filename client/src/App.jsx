@@ -52,7 +52,9 @@ import NotFound from './pages/NotFound';
 
 const Layout = ({ children }) => {
   const location = useLocation();
-  const isTestRoute = location.pathname.includes('/student/test/') ||
+  const isTestRoute = (location.pathname.includes('/student/test/') &&
+    !location.pathname.includes('/custom') &&
+    !location.pathname.includes('/result')) ||
     location.pathname.includes('/student/practice/coding');
 
   return (
