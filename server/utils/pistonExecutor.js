@@ -7,10 +7,13 @@ const PISTON_API = 'https://emkc.org/api/v2/piston/execute';
  * These were verified from https://emkc.org/api/v2/piston/runtimes
  */
 const LANGUAGE_CONFIG = {
-    'JavaScript': { language: 'javascript', version: '18.15.0' },
-    'Python': { language: 'python', version: '3.10.0' },
-    'Java': { language: 'java', version: '15.0.2' },
-    'C++': { language: 'c++', version: '10.2.0' },
+    'javascript': { language: 'javascript', version: '18.15.0' },
+    'js': { language: 'javascript', version: '18.15.0' },
+    'python': { language: 'python', version: '3.10.0' },
+    'py': { language: 'python', version: '3.10.0' },
+    'java': { language: 'java', version: '15.0.2' },
+    'c++': { language: 'c++', version: '10.2.0' },
+    'cpp': { language: 'c++', version: '10.2.0' },
 };
 
 /**
@@ -22,7 +25,10 @@ const LANGUAGE_CONFIG = {
  * @returns {Promise<Object>} - Format: { stdout, stderr, error, timeout }
  */
 const executePiston = async (code, language, input = '') => {
-    const config = LANGUAGE_CONFIG[language];
+    // Normalize language key: lowercase and trim
+    const normalizedLang = language.toLowerCase().trim();
+    const config = LANGUAGE_CONFIG[normalizedLang];
+
     if (!config) {
         return {
             stdout: '',

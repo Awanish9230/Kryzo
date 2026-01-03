@@ -325,24 +325,59 @@ const CodingPractice = () => {
 
                     {/* Console / Test Results */}
                     <div className="h-64 border-t border-white/5 bg-[#0d0d0d] flex flex-col shrink-0">
-                        <div className="flex items-center gap-6 px-6 h-12 border-b border-white/5 shrink-0">
-                            <button
-                                onClick={() => setActiveTab('description')}
-                                className={`text-[10px] font-black uppercase tracking-widest h-full border-b-2 transition-all ${activeTab === 'description' ? 'text-blue-500 border-blue-500' : 'text-zinc-600 border-transparent'
-                                    }`}
-                            >
-                                Output
-                            </button>
-                            <button
-                                onClick={() => setActiveTab('testcases')}
-                                className={`text-[10px] font-black uppercase tracking-widest h-full border-b-2 transition-all flex items-center gap-2 ${activeTab === 'testcases' ? 'text-blue-500 border-blue-500' : 'text-zinc-600 border-transparent'
-                                    }`}
-                            >
-                                Test Cases
-                                {currentResults.length > 0 && (
-                                    <span className={`w-1.5 h-1.5 rounded-full ${currentResults.every(r => r.passed) ? 'bg-green-500' : 'bg-red-500'}`}></span>
-                                )}
-                            </button>
+                        <div className="flex items-center justify-between px-6 h-12 border-b border-white/5 shrink-0">
+                            <div className="flex items-center gap-6 h-full">
+                                <button
+                                    onClick={() => setActiveTab('description')}
+                                    className={`text-[10px] font-black uppercase tracking-widest h-full border-b-2 transition-all ${activeTab === 'description' ? 'text-blue-500 border-blue-500' : 'text-zinc-600 border-transparent'
+                                        }`}
+                                >
+                                    Output
+                                </button>
+                                <button
+                                    onClick={() => setActiveTab('testcases')}
+                                    className={`text-[10px] font-black uppercase tracking-widest h-full border-b-2 transition-all flex items-center gap-2 ${activeTab === 'testcases' ? 'text-blue-500 border-blue-500' : 'text-zinc-600 border-transparent'
+                                        }`}
+                                >
+                                    Test Cases
+                                    {currentResults.length > 0 && (
+                                        <span className={`w-1.5 h-1.5 rounded-full ${currentResults.every(r => r.passed) ? 'bg-green-500' : 'bg-red-500'}`}></span>
+                                    )}
+                                </button>
+                            </div>
+
+                            <div className="flex items-center gap-2 ml-auto pr-6">
+                                <select
+                                    value={selectedLanguage}
+                                    onChange={(e) => {
+                                        const newLang = e.target.value;
+                                        setSelectedLanguage(newLang);
+                                        localStorage.setItem('preferred_language', newLang);
+                                    }}
+                                    className="bg-zinc-800 border border-white/5 text-[10px] font-bold text-zinc-300 rounded-lg px-3 py-1.5 focus:outline-none hover:text-white cursor-pointer transition-colors appearance-none uppercase tracking-wider mr-2"
+                                >
+                                    <option value="javascript">JavaScript</option>
+                                    <option value="python">Python</option>
+                                    <option value="java">Java</option>
+                                    <option value="cpp">C++</option>
+                                </select>
+                                <button
+                                    onClick={handleRunCode}
+                                    disabled={submitting}
+                                    className="flex items-center gap-2 px-4 py-1.5 bg-zinc-800 hover:bg-zinc-700 disabled:opacity-50 text-white text-xs font-bold rounded-lg transition-all"
+                                >
+                                    {submitting ? <Loader size="small" showText={false} /> : <Play size={14} fill="currentColor" />}
+                                    Run
+                                </button>
+                                <button
+                                    onClick={handleSubmitCode}
+                                    disabled={submitting}
+                                    className="flex items-center gap-2 px-4 py-1.5 bg-blue-500 hover:bg-blue-600 disabled:opacity-50 text-white text-xs font-bold rounded-lg transition-all"
+                                >
+                                    {submitting ? <Loader size="small" showText={false} /> : <Send size={14} />}
+                                    Submit
+                                </button>
+                            </div>
                         </div>
 
                         <div className="flex-grow overflow-y-auto p-6 font-mono text-sm">
@@ -394,7 +429,7 @@ const CodingPractice = () => {
                     </div>
                 </div>
             </div>
-        </div>
+        </div >
     );
 };
 

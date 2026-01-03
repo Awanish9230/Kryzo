@@ -36,9 +36,18 @@ const runCode = asyncHandler(async (req, res) => {
 
     for (const tc of casesToRun) {
         try {
-            // Clean input: remove common labels like "n = ", "input: ", "n - ", etc.
+            // Clean input logic
             let rawInput = (tc.input || '').trim();
-            rawInput = rawInput.replace(/^[a-zA-Z]\s*[-=:]\s*/, '').replace(/^[a-zA-Z]+:\s*/, '');
+
+            // 1. Handle "key = value, key2 = value2" format (LeetCode style)
+            // Replace ", key =" with "\n" to separate arguments onto new lines
+            rawInput = rawInput.replace(/,\s*[a-zA-Z0-9_]+\s*=\s*/g, '\n');
+
+            // 2. Remove leading "key =" from the first line (and subsequent lines if missed)
+            rawInput = rawInput.replace(/^[a-zA-Z0-9_]+\s*=\s*/gm, '');
+
+            // 3. Remove "Input:" prefix if present
+            rawInput = rawInput.replace(/^Input:\s*/i, '');
 
             const execResult = await executePiston(code, language, rawInput);
 
