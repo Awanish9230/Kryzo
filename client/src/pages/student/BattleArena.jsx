@@ -63,7 +63,11 @@ const BattleArena = () => {
             const myUserId = JSON.parse(localStorage.getItem('user'))._id;
             if (data.winnerId === myUserId) {
                 setGameResult('WIN');
-                toast.success('🏆 VICTORY!', { duration: 5000 });
+                if (data.reason === 'opponent_left') {
+                    toast.success('🏆 VICTORY! Opponent fled the arena.', { duration: 6000 });
+                } else {
+                    toast.success('🏆 VICTORY!', { duration: 5000 });
+                }
             } else {
                 setGameResult('LOSS');
                 toast.error('💀 DEFEAT', { duration: 5000 });
@@ -145,8 +149,16 @@ const BattleArena = () => {
         }
     };
 
-    const handleLeave = () => {
-        navigate('/student/battle');
+    const handleExit = () => {
+        if (gameResult) {
+            navigate('/student/battle');
+            return;
+        }
+
+        if (window.confirm('Are you sure you want to exit? You will forfeit the match.')) {
+            socket.emit('leave_battle', { roomId });
+            navigate('/student/battle');
+        }
     };
 
     return (
@@ -189,10 +201,10 @@ const BattleArena = () => {
                     </div>
 
                     <button
-                        onClick={handleLeave}
+                        onClick={handleExit}
                         className="px-5 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-red-500/20 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
                     >
-                        Surrender
+                        Exit Battle
                     </button>
                 </div>
             </div>
@@ -279,7 +291,7 @@ const BattleArena = () => {
                                             )}
                                         </motion.div>
                                         <button
-                                            onClick={handleLeave}
+                                            onClick={handleExit}
                                             className="w-full py-4 bg-white text-black font-black text-xs uppercase tracking-[0.3em] rounded-2xl hover:bg-zinc-200 transition-all shadow-xl shadow-white/5 active:scale-95"
                                         >
                                             Return to Lobby

@@ -101,6 +101,21 @@ module.exports = (io) => {
             }
         });
 
+        socket.on('leave_battle', ({ roomId }) => {
+            const room = activeRooms.get(roomId);
+            if (!room) return;
+
+            const winnerId = room.p1.socketId === socket.id ? room.p2.userId : room.p1.userId;
+
+            io.to(roomId).emit('game_over', {
+                winnerId,
+                reason: 'opponent_left'
+            });
+
+            activeRooms.delete(roomId);
+            // console.log(`User ${socket.id} left battle ${roomId}. Winner: ${winnerId}`);
+        });
+
         socket.on('disconnect', () => {
             io.emit('battle_users_count', io.sockets.size);
 
