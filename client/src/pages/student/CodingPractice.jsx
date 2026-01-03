@@ -1,4 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import Editor from '@monaco-editor/react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -295,35 +297,37 @@ int main() {
 
                                     <h1 className="text-2xl font-bold text-white mb-6 leading-tight">{question.title}</h1>
 
-                                    <div className="prose prose-invert prose-sm max-w-none text-zinc-400 space-y-6 leading-relaxed">
-                                        <div className="whitespace-pre-wrap">{question.description}</div>
-
-                                        {question.constraints && (
-                                            <div className="mt-8">
-                                                <h3 className="text-sm font-bold text-white uppercase tracking-widest mb-3 flex items-center gap-2">
-                                                    <Info size={14} className="text-blue-500" />
-                                                    Constraints
-                                                </h3>
-                                                <pre className="bg-black/50 p-4 rounded-2xl border border-white/5 text-xs text-zinc-500 font-mono">
-                                                    {question.constraints}
-                                                </pre>
-                                            </div>
-                                        )}
-
-                                        {question.inputFormat && (
-                                            <div>
-                                                <h3 className="text-sm font-bold text-white uppercase tracking-widest mb-3">Input Format</h3>
-                                                <div className="text-zinc-500 text-xs italic">{question.inputFormat}</div>
-                                            </div>
-                                        )}
-
-                                        {question.outputFormat && (
-                                            <div>
-                                                <h3 className="text-sm font-bold text-white uppercase tracking-widest mb-3">Output Format</h3>
-                                                <div className="text-zinc-500 text-xs italic">{question.outputFormat}</div>
-                                            </div>
-                                        )}
+                                    <div className="prose prose-invert prose-blue prose-sm max-w-none text-zinc-400 space-y-6 leading-relaxed">
+                                        <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                                            {question.description}
+                                        </ReactMarkdown>
                                     </div>
+
+                                    {question.constraints && (
+                                        <div className="mt-8">
+                                            <h3 className="text-sm font-bold text-white uppercase tracking-widest mb-3 flex items-center gap-2">
+                                                <Info size={14} className="text-blue-500" />
+                                                Constraints
+                                            </h3>
+                                            <pre className="bg-black/50 p-4 rounded-2xl border border-white/5 text-xs text-zinc-500 font-mono">
+                                                {question.constraints}
+                                            </pre>
+                                        </div>
+                                    )}
+
+                                    {question.inputFormat && (
+                                        <div>
+                                            <h3 className="text-sm font-bold text-white uppercase tracking-widest mb-3">Input Format</h3>
+                                            <div className="text-zinc-500 text-xs italic">{question.inputFormat}</div>
+                                        </div>
+                                    )}
+
+                                    {question.outputFormat && (
+                                        <div>
+                                            <h3 className="text-sm font-bold text-white uppercase tracking-widest mb-3">Output Format</h3>
+                                            <div className="text-zinc-500 text-xs italic">{question.outputFormat}</div>
+                                        </div>
+                                    )}
                                 </div>
                             </Panel>
                             <PanelResizeHandle className="w-1.5 bg-black hover:bg-blue-500/50 transition-colors flex flex-col justify-center items-center group cursor-col-resize z-50">
@@ -501,7 +505,7 @@ int main() {
                     </Panel>
                 </PanelGroup>
             </div>
-        </div>
+        </div >
     );
 };
 

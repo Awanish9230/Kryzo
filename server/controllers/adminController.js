@@ -799,14 +799,14 @@ const generateQuestionAI = asyncHandler(async (req, res) => {
             JSON FORMAT:
             [{
                 "title": "Problem: [Clear Title]",
-                "description": "Clear problem statement. Include 1-2 examples in text.",
+                "description": "# [Problem Summary]\\nDetailed text...\\n\\n### Examples\\n**Example 1:**\\n\`\`\`\\nInput: s = \\\"a\\\", t = \\\"a\\\"\\nOutput: \\\"a\\\"\\n\`\`\`\\n**Explanation:** Explains why...\\n\\n### Constraints\\n- n <= 10^5",
                 "difficulty": "${diff}",
                 "type": "CODING",
                 "topic": "${topic}",
                 "subtopic": "${sub}",
-                "constraints": "Example: n <= 10^5, Time: O(n log n)",
-                "inputFormat": "Explain how the input is provided.",
-                "outputFormat": "Explain the expected output.",
+                "constraints": "n <= 10^5",
+                "inputFormat": "Explain how the input is provided clearly.",
+                "outputFormat": "Explain the expected output clearly.",
                 "testCases": [
                     {"input": "3\\n1 2 3", "output": "6", "isHidden": false},
                     {"input": "2\\n10 20", "output": "30", "isHidden": false},
@@ -935,8 +935,10 @@ const autoFillQuestions = asyncHandler(async (req, res) => {
                 STRICT TEST CASE REQUIREMENTS:
                 - 3 PUBLIC CASES (isHidden: false)
                 - 7 HIDDEN CASES (isHidden: true)
-                - EXACTLY 10 test cases total.
-                Structure: {"title":"","description":"","constraints":"","inputFormat":"","outputFormat":"","testCases":[{"input":"","output":"","isHidden":false},...],"explanation":""}`;
+                - EXACTLY 10 test cases total (3 public, 7 hidden).
+                - Description must be RICH MARKDOWN with Examples (Input/Output/Explanation) and Constraints internal to the text.
+                - MUST include clear inputFormat and outputFormat.
+                Structure: {"title":"","description":"# ...\n\n### Examples\n...","constraints":"","inputFormat":"","outputFormat":"","testCases":[{"input":"","output":"","isHidden":false},...],"explanation":""}`;
             }
 
             try {
@@ -1028,17 +1030,37 @@ module.exports = {
                     Difficulty: ${q.difficulty}
                     
                     TASKS:
-                    1. If the description is ambiguous, poorly formatted, or logically broken, REWRITE it to be clear and professional.
-                    2. If the constraints are missing or unrealistic, fix them.
+                    1. The "description" MUST follow this EXACT structure (Markdown):
+                       # [Problem Summary]
+                       Detailed explanation...
+                       
+                       ### Examples
+                       **Example 1:**
+                       \`\`\`
+                       Input: input_data
+                       Output: output_data
+                       \`\`\`
+                       **Explanation:** Why this is the output.
+                       
+                       **Example 2:**
+                       ...
+                       
+                       ### Constraints
+                       - [Constraint 1]
+                       - [Constraint 2]
+                       
+                    2. If constraints are missing or unrealistic, fix them.
                     3. Generate EXACTLY 10 test cases:
                        - 3 PUBLIC (isHidden: false): Standard cases, readable.
                        - 7 HIDDEN (isHidden: true): Edge cases, large numbers, empty inputs, etc.
-                    4. ENSURE ALL test case outputs are 100% CORRECT based on the logic.
+                    4. ENSURE ALL test case outputs are 100% CORRECT.
                     
                     RETURN ONLY JSON in this format:
                     {
-                        "description": "Revised description text",
-                        "constraints": "Revised constraints",
+                        "description": "The rich markdown description as specified above",
+                        "constraints": "Single line or concise list of constraints (for the 'Constraints' field)",
+                        "inputFormat": "...",
+                        "outputFormat": "...",
                         "testCases": [
                             {"input": "...", "output": "...", "isHidden": false},
                             ... (exactly 10)

@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../../utils/api';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -392,8 +394,10 @@ const TestAttempt = () => {
                                                 <h1 className="text-2xl font-black tracking-tight text-white mb-6 leading-tight">
                                                     {currentQuestion.title}
                                                 </h1>
-                                                <div className="text-zinc-400 text-sm leading-relaxed whitespace-pre-wrap prose prose-invert max-w-none">
-                                                    {currentQuestion.description}
+                                                <div className="text-zinc-400 text-sm leading-relaxed prose prose-invert prose-blue max-w-none">
+                                                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                                                        {currentQuestion.description}
+                                                    </ReactMarkdown>
                                                 </div>
                                             </div>
                                         </Panel>
@@ -457,8 +461,10 @@ const TestAttempt = () => {
                                                 <h2 className="text-xl font-black tracking-tight text-white mb-6 leading-tight">
                                                     {currentQuestion.title}
                                                 </h2>
-                                                <div className="text-zinc-400 text-sm leading-relaxed whitespace-pre-wrap prose prose-invert max-w-none mb-8">
-                                                    {currentQuestion.description}
+                                                <div className="text-zinc-400 text-sm leading-relaxed prose prose-invert prose-blue max-w-none mb-8">
+                                                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                                                        {currentQuestion.description}
+                                                    </ReactMarkdown>
                                                 </div>
 
                                                 {currentQuestion.constraints && (
