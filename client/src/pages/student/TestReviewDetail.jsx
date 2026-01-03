@@ -6,6 +6,7 @@ import { CheckCircle, XCircle, Clock, Calendar, Award, Lightbulb, Code2, ArrowLe
 import Loader from '../../components/Loader';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import toast from 'react-hot-toast';
 
 const TestReviewDetail = () => {
     const { attemptId } = useParams();
@@ -41,7 +42,7 @@ const TestReviewDetail = () => {
         } catch (err) {
             console.error(err);
             const msg = err.response?.data?.error || err.response?.data?.message || 'Failed to generate explanation';
-            alert(`Error: ${msg}. Please try again.`);
+            toast.error(msg);
         } finally {
             setGeneratingId(null);
         }

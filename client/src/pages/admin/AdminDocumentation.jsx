@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import api from '../../utils/api';
 import TOPICS_DATA from '../../utils/topicsData';
@@ -46,11 +47,12 @@ const AdminDocumentation = () => {
         e.preventDefault();
         try {
             await api.post('/admin/documentation', formData);
+            toast.success('Documentation saved');
             fetchDocs();
             setIsEditing(false);
             resetForm();
         } catch (err) {
-            alert('Failed to save documentation');
+            toast.error('Failed to save documentation');
         }
     };
 
@@ -59,8 +61,9 @@ const AdminDocumentation = () => {
         try {
             await api.delete(`/admin/documentation/${id}`);
             setDocs(docs.filter(d => d._id !== id));
+            toast.success('Deleted successfully');
         } catch (err) {
-            alert('Failed to delete');
+            toast.error('Failed to delete');
         }
     };
 

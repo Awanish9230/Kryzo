@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import toast from 'react-hot-toast';
 import api from '../../utils/api';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -37,9 +38,10 @@ const ReportedQuestions = () => {
         try {
             await api.put(`/admin/questions/reports/${id}`, { status });
             setReports(reports.map(r => r._id === id ? { ...r, status } : r));
+            toast.success(`Report ${status}`);
         } catch (err) {
             console.error(err);
-            alert('Failed to update status');
+            toast.error('Failed to update status');
         }
     };
 

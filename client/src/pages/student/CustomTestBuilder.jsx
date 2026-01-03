@@ -13,6 +13,7 @@ import {
     AlertCircle
 } from 'lucide-react';
 import Loader from '../../components/Loader';
+import toast from 'react-hot-toast';
 
 const CustomTestBuilder = () => {
     const navigate = useNavigate();
@@ -65,7 +66,7 @@ const CustomTestBuilder = () => {
 
     const handleCreate = async () => {
         if (selectedTopics.length === 0) {
-            alert('Please select at least one topic');
+            toast.error('Please select at least one topic');
             return;
         }
         try {
@@ -77,7 +78,7 @@ const CustomTestBuilder = () => {
         } catch (err) {
             console.error(err);
             const message = err.response?.data?.message || 'Failed to generate test. Make sure enough questions exist for selected topics.';
-            alert(message);
+            toast.error(message);
         }
     };
 
