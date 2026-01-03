@@ -119,8 +119,12 @@ const BattleLobby = () => {
         }
         const user = JSON.parse(localStorage.getItem('user'));
         console.log('BattleLobby: Emitting join_queue for user', user._id);
-        socket.emit('join_queue', { userId: user._id });
-        setStatus('Connecting to queue...');
+        socket.emit('join_queue', {
+            userId: user._id,
+            userName: user.name,
+            rating: user.rating || 1000,
+            selectedLanguage
+        });
     };
 
     const handleCancel = () => {

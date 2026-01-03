@@ -16,8 +16,8 @@ module.exports = (io) => {
 
         // Join Queue
         socket.on('join_queue', async (userData) => {
-            const { userId, rating = 1000 } = userData;
-            // console.log('Join queue request from:', userId);
+            const { userId, userName, rating = 1000 } = userData;
+            // console.log('Join queue request from:', userId, userName);
 
             // Check if already in queue
             const existingIndex = waitingQueue.findIndex(u => u.socketId === socket.id);
@@ -44,8 +44,8 @@ module.exports = (io) => {
 
                 const roomData = {
                     id: roomId,
-                    p1: { socketId: opponent.socketId, userId: opponent.userId, progress: 0 },
-                    p2: { socketId: socket.id, userId: userId, progress: 0 },
+                    p1: { socketId: opponent.socketId, userId: opponent.userId, userName: opponent.userName, progress: 0 },
+                    p2: { socketId: socket.id, userId: userId, userName: userName, progress: 0 },
                     question,
                     startTime: Date.now(),
                     status: 'active'
@@ -57,11 +57,15 @@ module.exports = (io) => {
                 io.to(opponent.socketId).emit('match_found', {
                     roomId,
                     opponentId: userId,
+                    opponentName: userName,
+                    myName: opponent.userName,
                     question
                 });
                 socket.emit('match_found', {
                     roomId,
                     opponentId: opponent.userId,
+                    opponentName: opponent.userName,
+                    myName: userName,
                     question
                 });
 
@@ -71,7 +75,7 @@ module.exports = (io) => {
                 socket.join(roomId);
 
             } else {
-                waitingQueue.push({ socketId: socket.id, userId, rating });
+                waitingQueue.push({ socketId: socket.id, userId, userName, rating });
                 socket.emit('queue_joined', { message: 'Looking for opponent...' });
             }
         });

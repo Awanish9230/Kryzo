@@ -176,7 +176,7 @@ const BattleArena = () => {
                 <div className="flex items-center gap-6">
                     <div className="flex items-center gap-4">
                         <div className="flex flex-col">
-                            <span className="text-[10px] text-zinc-500 uppercase font-black tracking-widest">You</span>
+                            <span className="text-[10px] text-zinc-500 uppercase font-black tracking-widest">{matchingData.myName || 'You'}</span>
                             <div className="w-32 h-1.5 bg-zinc-800 rounded-full overflow-hidden mt-1">
                                 <motion.div
                                     initial={{ width: 0 }}
@@ -187,7 +187,7 @@ const BattleArena = () => {
                         </div>
                         <div className="text-xl font-black italic text-zinc-800 tracking-tighter">VS</div>
                         <div className="flex flex-col items-end">
-                            <span className="text-[10px] text-zinc-500 uppercase font-black tracking-widest">Opponent</span>
+                            <span className="text-[10px] text-zinc-500 uppercase font-black tracking-widest">{matchingData.opponentName || 'Opponent'}</span>
                             <div className="w-32 h-1.5 bg-zinc-800 rounded-full overflow-hidden mt-1">
                                 <motion.div
                                     initial={{ width: 0 }}
