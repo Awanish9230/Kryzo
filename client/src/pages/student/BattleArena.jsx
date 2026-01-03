@@ -120,6 +120,8 @@ const BattleArena = () => {
             setLogs(results.map((r, idx) => ({
                 case: idx + 1,
                 status: r.passed ? 'Pass' : 'Fail',
+                input: r.input,
+                sanitizedInput: r.sanitizedInput, // Map for UI visibility
                 output: r.actualOutput,
                 error: r.error
             })));
@@ -360,6 +362,12 @@ const BattleArena = () => {
                                             <span className="font-black text-[10px] text-zinc-500 uppercase tracking-widest">Verification Segment {log.case}</span>
                                             <span className={`text-[10px] font-black uppercase tracking-widest ${log.status === 'Pass' ? 'text-green-500' : 'text-red-500'}`}>{log.status}ed</span>
                                         </div>
+                                        {log.sanitizedInput && log.status === 'Fail' && (
+                                            <div className="bg-blue-500/5 p-2 rounded-lg border border-blue-500/10 mb-2">
+                                                <span className="text-[8px] font-black text-blue-400 uppercase tracking-widest block mb-1">Incoming Stdin</span>
+                                                <span className="text-zinc-400 font-mono text-[9px]">{log.sanitizedInput}</span>
+                                            </div>
+                                        )}
                                         {log.error && (
                                             <div className="text-red-400 bg-red-950/30 p-3 rounded-xl mb-2 whitespace-pre-wrap border border-red-500/10 font-mono text-[10px]">{log.error}</div>
                                         )}

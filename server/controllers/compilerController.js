@@ -49,7 +49,18 @@ const runCode = asyncHandler(async (req, res) => {
             // 3. Remove "Input:" prefix if present
             rawInput = rawInput.replace(/^Input:\s*/i, '');
 
-            const execResult = await executePiston(code, language, rawInput);
+            // 4. Handle brackets and separators for numerical input (common in AI-gen questions)
+            // If the input contains brackets/commas and looks like it's meant for simple scanning,
+            // we'll replace them with spaces. We only do this if it doesn't look like a complex string.
+            // This fix helps Java's sc.nextInt() and C++ cin >> n
+            if (rawInput.includes('[') || rawInput.includes(']')) {
+                rawInput = rawInput.replace(/[\[\],]/g, ' ');
+            }
+
+            // Final trim and whitespace normalization
+            const sanitizedInput = rawInput.replace(/\s+/g, ' ').trim();
+
+            const execResult = await executePiston(code, language, sanitizedInput);
 
             const actualOutput = execResult.stdout ? execResult.stdout.trim() : '';
             const expectedOutput = (tc.output || '').trim();
@@ -65,6 +76,7 @@ const runCode = asyncHandler(async (req, res) => {
 
             results.push({
                 input: tc.input,
+                sanitizedInput: sanitizedInput, // Helpful for debugging
                 expectedOutput: tc.output,
                 actualOutput: actualOutput,
                 error: errorMsg,
