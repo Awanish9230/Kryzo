@@ -783,30 +783,43 @@ const generateQuestionAI = asyncHandler(async (req, res) => {
                 "explanation": "Concise reason why A is correct."
             }]`;
         } else {
-            prompt = `Act as a Senior Lead Engineer. Generate ${numToGen} UNIQUE, REALISTIC CODING questions for Subject: "${topic}", Subtopic: "${sub}", Difficulty: ${diff}.
+            prompt = `Act as a Senior Lead Engineer. Generate ${numToGen} UNIQUE, PROPERLY STRUCTURED CODING questions for Subject: "${topic}", Subtopic: "${sub}", Difficulty: ${diff}.
             
-            GUIDELINES:
-            1. **REAL WORLD**: Present a realistic engineering problem (e.g. "Optimize this API", "Fix the cache").
-            2. **HUMAN STYLE**: Use professional but natural language. Avoid "Write a program to...". Use "Design a function that...".
-            3. **CLEAN OUPUT**: Do NOT use markdown code blocks in the JSON values.
+            DIFFICULTY GUIDELINES:
+            - EASY: Simple logic, single loop, or basic array/string manipulation (e.g. Find Max, Reverse String).
+            - MEDIUM: Algorithmic challenges requiring data structures, multiple loops, or recursion (e.g. Binary Search, Linked List, DFS).
+            - HARD: Optimization problems, complex dynamic programming, or advanced graph algorithms (e.g. Longest Palindromic Subsequence, Shortest Path).
             
-            STRICTLY RETURN ONLY A JSON ARRAY.
-            Format:
+            STRICT TEST CASE REQUIREMENTS (EACH QUESTION MUST HAVE EXACTLY 10 TEST CASES):
+            - 3 PUBLIC CASES (isHidden: false): Simple, readable cases for the user to see in their console.
+            - 7 HIDDEN CASES (isHidden: true): Edge cases, large inputs, empty inputs, or specific boundary conditions.
+            - ALL test cases must have PROPER, VALID, and ACCURATE expected outputs.
+            - USE standard input/output format matching the question description.
+            
+            JSON FORMAT:
             [{
-                "title": "Problem: [Unique Title]",
-                "description": "Problem statement. Input/Output requirements.",
+                "title": "Problem: [Clear Title]",
+                "description": "Clear problem statement. Include 1-2 examples in text.",
                 "difficulty": "${diff}",
                 "type": "CODING",
                 "topic": "${topic}",
                 "subtopic": "${sub}",
-                "constraints": "Time: O(N), Space: O(1)",
-                "inputFormat": "Input details",
-                "outputFormat": "Output details",
+                "constraints": "Example: n <= 10^5, Time: O(n log n)",
+                "inputFormat": "Explain how the input is provided.",
+                "outputFormat": "Explain the expected output.",
                 "testCases": [
-                    {"input": "Start Case", "output": "Start Out", "isHidden": false},
-                    {"input": "Edge Case", "output": "Edge Out", "isHidden": true}
+                    {"input": "3\\n1 2 3", "output": "6", "isHidden": false},
+                    {"input": "2\\n10 20", "output": "30", "isHidden": false},
+                    {"input": "1\\n5", "output": "5", "isHidden": false},
+                    {"input": "0", "output": "0", "isHidden": true},
+                    {"input": "5\\n-1 -2 -3 -4 -5", "output": "-15", "isHidden": true},
+                    {"input": "4\\n100 200 300 400", "output": "1000", "isHidden": true},
+                    {"input": "2\\n-10 10", "output": "0", "isHidden": true},
+                    {"input": "3\\n1 1 1", "output": "3", "isHidden": true},
+                    {"input": "1\\n0", "output": "0", "isHidden": true},
+                    {"input": "6\\n1 2 3 4 5 6", "output": "21", "isHidden": true}
                 ],
-                "explanation": "Logic summary."
+                "explanation": "Detailed logic summary for common understanding."
             }]`;
         }
         try {
@@ -911,11 +924,19 @@ const autoFillQuestions = asyncHandler(async (req, res) => {
         for (const type of types) {
             const difficulty = ['easy', 'medium', 'hard'][Math.floor(Math.random() * 3)];
 
-            let prompt = `Generate a ${difficulty} difficulty ${type} question for ${gap.topic} -> ${gap.subtopic}. Return ONLY JSON.`;
+            let prompt = "";
+            const diff = difficulty;
+
             if (type === 'MCQ') {
-                prompt += ` Structure: {"title":"","description":"","options":[{"text":"","isCorrect":true},...],"explanation":""}`;
+                prompt = `Generate a ${diff} difficulty MCQ question for ${gap.topic} -> ${gap.subtopic}.
+                Structure: {"title":"","description":"","options":[{"text":"","isCorrect":true},...],"explanation":""}`;
             } else {
-                prompt += ` Structure: {"title":"","description":"","constraints":"","inputFormat":"","outputFormat":"","testCases":[{"input":"","output":"","isHidden":false},...],"explanation":""}`;
+                prompt = `Generate a ${diff} difficulty CODING question for ${gap.topic} -> ${gap.subtopic}.
+                STRICT TEST CASE REQUIREMENTS:
+                - 3 PUBLIC CASES (isHidden: false)
+                - 7 HIDDEN CASES (isHidden: true)
+                - EXACTLY 10 test cases total.
+                Structure: {"title":"","description":"","constraints":"","inputFormat":"","outputFormat":"","testCases":[{"input":"","output":"","isHidden":false},...],"explanation":""}`;
             }
 
             try {
@@ -973,5 +994,59 @@ module.exports = {
     bulkUploadQuestions,
     getUserActivityStats,
     generateQuestionAI,
-    autoFillQuestions
+    autoFillQuestions,
+    standardizeCodingQuestions: async (req, res) => {
+        try {
+            const improperQuestions = await Question.find({ type: 'CODING' });
+            let fixedCount = 0;
+            const apiKeys = process.env.GEMINI_API_KEYS ? process.env.GEMINI_API_KEYS.split(',') : [process.env.GEMINI_API_KEY];
+
+            for (const q of improperQuestions) {
+                const counts = { public: 0, hidden: 0 };
+                q.testCases.forEach(tc => {
+                    if (tc.isHidden) counts.hidden++;
+                    else counts.public++;
+                });
+
+                if (q.testCases.length !== 10 || counts.public !== 3 || counts.hidden !== 7) {
+                    const prompt = `Act as a Senior Lead Engineer. Standardize the test cases for this CODING question:
+                    Title: "${q.title}"
+                    Description: "${q.description}"
+                    Constraints: "${q.constraints}"
+                    Current Difficulty: ${q.difficulty}
+                    
+                    STRICT REQUIREMENTS:
+                    1. Return EXACTLY 10 test cases.
+                    2. Exactly 3 PUBLIC (isHidden: false) and 7 HIDDEN (isHidden: true).
+                    3. Ensure expected outputs are 100% accurate.
+                    
+                    RETURN ONLY VALID JSON matching this structure:
+                    {
+                        "testCases": [
+                            {"input": "...", "output": "...", "isHidden": false},
+                            ... (exactly 10 total)
+                        ]
+                    }`;
+
+                    try {
+                        const result = await generateWithRetry(prompt, apiKeys);
+                        let text = (await result.response).text();
+                        text = text.replace(/```json/g, '').replace(/```/g, '').trim();
+                        const parsed = JSON.parse(text);
+
+                        if (parsed.testCases && parsed.testCases.length === 10) {
+                            q.testCases = parsed.testCases;
+                            await q.save();
+                            fixedCount++;
+                        }
+                    } catch (e) {
+                        console.error(`Failed to standardize "${q.title}":`, e.message);
+                    }
+                }
+            }
+            res.json({ message: `Successfully standardized ${fixedCount} questions.`, totalChecked: improperQuestions.length });
+        } catch (err) {
+            res.status(500).json({ message: err.message });
+        }
+    }
 };

@@ -450,31 +450,41 @@ int main() {
                                                     currentResults.map((res, idx) => (
                                                         <div key={idx} className={`p-4 rounded-xl border ${res.passed ? 'bg-green-500/5 border-green-500/10' : 'bg-red-500/5 border-red-500/10'}`}>
                                                             <div className="flex items-center justify-between mb-3">
-                                                                <span className="text-xs font-bold uppercase tracking-widest text-zinc-600">Case {idx + 1}</span>
+                                                                <span className="text-xs font-bold uppercase tracking-widest text-zinc-600">
+                                                                    {res.isHidden ? `Verification Segment ${idx + 1} (Hidden)` : `Test Case ${idx + 1}`}
+                                                                </span>
                                                                 {res.passed ?
                                                                     <span className="flex items-center gap-1.5 text-xs font-bold text-green-500"><CheckCircle2 size={14} /> Passed</span> :
                                                                     <span className="flex items-center gap-1.5 text-xs font-bold text-red-500"><XCircle size={14} /> Failed</span>
                                                                 }
                                                             </div>
-                                                            <div className="grid grid-cols-2 gap-6">
-                                                                <div>
-                                                                    <div className="text-[10px] text-zinc-600 font-bold uppercase mb-1">Input</div>
-                                                                    <div className="bg-black/40 p-2 rounded text-xs text-zinc-400 border border-white/5">{res.input || 'None'}</div>
-                                                                </div>
-                                                                <div>
-                                                                    <div className="text-[10px] text-zinc-600 font-bold uppercase mb-1">Expected</div>
-                                                                    <div className="bg-black/40 p-2 rounded text-xs text-zinc-400 border border-white/5">{res.expectedOutput || 'None'}</div>
-                                                                </div>
-                                                            </div>
-                                                            {!res.passed && (
-                                                                <div className="mt-4">
-                                                                    <div className="text-[10px] text-zinc-600 font-bold uppercase mb-1">Your Output</div>
-                                                                    <div className="bg-red-500/10 p-2 rounded text-xs text-red-400 border border-red-500/10">{res.actualOutput || 'No output'}</div>
-                                                                </div>
-                                                            )}
-                                                            {res.error && (
-                                                                <div className="mt-4 p-3 bg-red-500/10 border border-red-500/10 rounded-lg text-xs text-red-400 font-mono">
-                                                                    {res.error}
+                                                            {!res.isHidden ? (
+                                                                <>
+                                                                    <div className="grid grid-cols-2 gap-6">
+                                                                        <div>
+                                                                            <div className="text-[10px] text-zinc-600 font-bold uppercase mb-1">Input</div>
+                                                                            <div className="bg-black/40 p-2 rounded text-xs text-zinc-400 border border-white/5">{res.input || 'None'}</div>
+                                                                        </div>
+                                                                        <div>
+                                                                            <div className="text-[10px] text-zinc-600 font-bold uppercase mb-1">Expected</div>
+                                                                            <div className="bg-black/40 p-2 rounded text-xs text-zinc-400 border border-white/5">{res.expectedOutput || 'None'}</div>
+                                                                        </div>
+                                                                    </div>
+                                                                    {!res.passed && (
+                                                                        <div className="mt-4">
+                                                                            <div className="text-[10px] text-zinc-600 font-bold uppercase mb-1">Your Output</div>
+                                                                            <div className="bg-red-500/10 p-2 rounded text-xs text-red-400 border border-red-500/10">{res.actualOutput || 'No output'}</div>
+                                                                        </div>
+                                                                    )}
+                                                                    {res.error && (
+                                                                        <div className="mt-4 p-3 bg-red-500/10 border border-red-500/10 rounded-lg text-xs text-red-400 font-mono">
+                                                                            {res.error}
+                                                                        </div>
+                                                                    )}
+                                                                </>
+                                                            ) : (
+                                                                <div className="text-[10px] text-zinc-500 italic">
+                                                                    Details hidden for verification security
                                                                 </div>
                                                             )}
                                                         </div>

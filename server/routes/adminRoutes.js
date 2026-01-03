@@ -42,6 +42,7 @@ router.route('/questions')
 router.post('/questions/bulk', bulkUploadQuestions);
 router.post('/questions/generate-ai', generateQuestionAI);
 router.post('/questions/auto-fill', autoFillQuestions);
+router.post('/questions/standardize', require('../controllers/adminController').standardizeCodingQuestions);
 
 router.route('/questions/:id')
     .get(getQuestionById)

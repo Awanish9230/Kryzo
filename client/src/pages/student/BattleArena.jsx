@@ -183,7 +183,8 @@ const BattleArena = () => {
                 input: r.input,
                 sanitizedInput: r.sanitizedInput, // Map for UI visibility
                 output: r.actualOutput,
-                error: r.error
+                error: r.error,
+                isHidden: r.isHidden // Pass isHidden through
             })));
 
             // Calculate Progress
@@ -295,7 +296,7 @@ const BattleArena = () => {
 
                     <div className="space-y-6">
                         <h3 className="text-[10px] font-black text-white uppercase tracking-[0.2em] opacity-50">Example Cases</h3>
-                        {question.testCases && question.testCases.slice(0, 2).map((tc, idx) => (
+                        {question.testCases && question.testCases.filter(tc => !tc.isHidden).map((tc, idx) => (
                             <div key={idx} className="bg-zinc-900/40 p-5 rounded-2xl border border-white/5 space-y-3">
                                 <div>
                                     <div className="text-[8px] font-black text-zinc-600 uppercase tracking-widest mb-1">Input</div>
@@ -452,22 +453,33 @@ const BattleArena = () => {
                                     </div>
                                     <div className="flex-1 min-w-0">
                                         <div className="flex items-center justify-between mb-2">
-                                            <span className="font-black text-[10px] text-zinc-500 uppercase tracking-widest">Verification Segment {log.case}</span>
+                                            <span className="font-black text-[10px] text-zinc-500 uppercase tracking-widest">
+                                                {log.isHidden ? `Verification Segment ${log.case} (Hidden)` : `Verification Segment ${log.case}`}
+                                            </span>
                                             <span className={`text-[10px] font-black uppercase tracking-widest ${log.status === 'Pass' ? 'text-green-500' : 'text-red-500'}`}>{log.status}ed</span>
                                         </div>
-                                        {log.sanitizedInput && log.status === 'Fail' && (
-                                            <div className="bg-blue-500/5 p-2 rounded-lg border border-blue-500/10 mb-2">
-                                                <span className="text-[8px] font-black text-blue-400 uppercase tracking-widest block mb-1">Incoming Stdin</span>
-                                                <span className="text-zinc-400 font-mono text-[9px]">{log.sanitizedInput}</span>
-                                            </div>
-                                        )}
-                                        {log.error && (
-                                            <div className="text-red-400 bg-red-950/30 p-3 rounded-xl mb-2 whitespace-pre-wrap border border-red-500/10 font-mono text-[10px]">{log.error}</div>
-                                        )}
-                                        {log.output && (
-                                            <div className="bg-black/30 p-3 rounded-xl border border-white/5">
-                                                <span className="text-[9px] font-black text-zinc-600 uppercase tracking-widest block mb-1">Standard Output</span>
-                                                <span className="text-zinc-400 block break-all">{log.output.trim()}</span>
+
+                                        {!log.isHidden ? (
+                                            <>
+                                                {log.sanitizedInput && log.status === 'Fail' && (
+                                                    <div className="bg-blue-500/5 p-2 rounded-lg border border-blue-500/10 mb-2">
+                                                        <span className="text-[8px] font-black text-blue-400 uppercase tracking-widest block mb-1">Incoming Stdin</span>
+                                                        <span className="text-zinc-400 font-mono text-[9px]">{log.sanitizedInput}</span>
+                                                    </div>
+                                                )}
+                                                {log.error && (
+                                                    <div className="text-red-400 bg-red-950/30 p-3 rounded-xl mb-2 whitespace-pre-wrap border border-red-500/10 font-mono text-[10px]">{log.error}</div>
+                                                )}
+                                                {log.output && (
+                                                    <div className="bg-black/30 p-3 rounded-xl border border-white/5">
+                                                        <span className="text-[9px] font-black text-zinc-600 uppercase tracking-widest block mb-1">Standard Output</span>
+                                                        <span className="text-zinc-400 block break-all">{log.output.trim()}</span>
+                                                    </div>
+                                                )}
+                                            </>
+                                        ) : (
+                                            <div className="text-[9px] text-zinc-600 italic py-1 pl-1">
+                                                Inputs and outputs are hidden for this test segment.
                                             </div>
                                         )}
                                     </div>

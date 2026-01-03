@@ -110,7 +110,8 @@ const runCode = asyncHandler(async (req, res) => {
             results.push({
                 input: tc.input,
                 error: 'Internal Server Error: ' + error.message,
-                passed: false
+                passed: false,
+                isHidden: tc.isHidden
             });
         }
     }

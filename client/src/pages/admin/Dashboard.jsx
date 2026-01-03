@@ -11,7 +11,8 @@ import {
     TrendingUp,
     BarChart2,
     Sparkles,
-    AlertCircle
+    AlertCircle,
+    Zap
 } from 'lucide-react';
 import { useSocket } from '../../context/SocketContext';
 import Loader from '../../components/Loader';
@@ -20,6 +21,7 @@ const AdminDashboard = () => {
     const [stats, setStats] = useState(null);
     const [loading, setLoading] = useState(true);
     const [isAutoFilling, setIsAutoFilling] = useState(false);
+    const [isStandardizing, setIsStandardizing] = useState(false);
     const { onlineUsers } = useSocket();
 
     const fetchStats = async () => {
@@ -54,6 +56,20 @@ const AdminDashboard = () => {
             alert(err.response?.data?.message || 'Auto-fill failed');
         } finally {
             setIsAutoFilling(false);
+        }
+    };
+
+    const handleStandardize = async () => {
+        if (!window.confirm('This will use AI to restructure test cases for ALL improper coding questions. Continue?')) return;
+        setIsStandardizing(true);
+        try {
+            const { data } = await api.post('/admin/questions/standardize');
+            alert(data.message);
+            fetchStats();
+        } catch (err) {
+            alert(err.response?.data?.message || 'Standardization failed');
+        } finally {
+            setIsStandardizing(false);
         }
     };
 
@@ -223,7 +239,15 @@ const AdminDashboard = () => {
                                     className="p-2 bg-white/5 rounded-xl hover:bg-white hover:text-black transition-all disabled:opacity-50"
                                     title="Auto-fill questions using AI"
                                 >
-                                    {isAutoFilling ? <Loader2 size={18} className="animate-spin" /> : <Sparkles size={18} className="text-yellow-500" />}
+                                    {isAutoFilling ? <div className="w-[18px] h-[18px] border-2 border-zinc-500 border-t-white rounded-full animate-spin" /> : <Sparkles size={18} className="text-yellow-500" />}
+                                </button>
+                                <button
+                                    onClick={handleStandardize}
+                                    disabled={isStandardizing}
+                                    className="p-2 bg-white/5 rounded-xl hover:bg-white hover:text-black transition-all disabled:opacity-50 ml-2"
+                                    title="Standardize existing coding test cases (3 Public / 7 Hidden)"
+                                >
+                                    {isStandardizing ? <div className="w-[18px] h-[18px] border-2 border-zinc-500 border-t-white rounded-full animate-spin" /> : <Zap size={18} className="text-blue-500" />}
                                 </button>
                             </div>
                             <p className="text-xs text-zinc-500 mb-6">The following subtopics have low question coverage. You can use autonomous AI to fill these gaps.</p>

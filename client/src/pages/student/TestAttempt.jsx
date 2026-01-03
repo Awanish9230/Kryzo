@@ -576,14 +576,24 @@ const TestAttempt = () => {
                                                         {runResults?.results.map((res, idx) => (
                                                             <div key={idx} className={`p-4 rounded-xl border ${res.passed ? 'bg-green-500/5 border-green-500/10' : 'bg-red-500/5 border-red-500/10'}`}>
                                                                 <div className="flex items-center justify-between mb-3 text-[10px] font-black uppercase tracking-widest">
-                                                                    <span className="text-zinc-600">Case {idx + 1}</span>
+                                                                    <span className="text-zinc-600">
+                                                                        {res.isHidden ? `Verification Segment ${idx + 1} (Hidden)` : `Test Case ${idx + 1}`}
+                                                                    </span>
                                                                     <span className={res.passed ? "text-green-500" : "text-red-500"}>{res.passed ? "Passed" : "Failed"}</span>
                                                                 </div>
-                                                                <div className="grid grid-cols-2 gap-4 text-[11px] text-zinc-400">
-                                                                    <div><span className="text-zinc-600 block mb-1 uppercase text-[8px]">Output</span>{res.actualOutput || 'N/A'}</div>
-                                                                    <div><span className="text-zinc-600 block mb-1 uppercase text-[8px]">Expected</span>{res.expectedOutput || 'N/A'}</div>
-                                                                </div>
-                                                                {res.error && <div className="mt-3 p-2 bg-red-500/10 text-red-400 text-[10px] rounded-lg">{res.error}</div>}
+                                                                {!res.isHidden ? (
+                                                                    <>
+                                                                        <div className="grid grid-cols-2 gap-4 text-[11px] text-zinc-400">
+                                                                            <div><span className="text-zinc-600 block mb-1 uppercase text-[8px]">Output</span>{res.actualOutput || 'N/A'}</div>
+                                                                            <div><span className="text-zinc-600 block mb-1 uppercase text-[8px]">Expected</span>{res.expectedOutput || 'N/A'}</div>
+                                                                        </div>
+                                                                        {res.error && <div className="mt-3 p-2 bg-red-500/10 text-red-400 text-[10px] rounded-lg">{res.error}</div>}
+                                                                    </>
+                                                                ) : (
+                                                                    <div className="text-[10px] text-zinc-600 italic">
+                                                                        Details hidden for verification security
+                                                                    </div>
+                                                                )}
                                                             </div>
                                                         ))}
                                                     </div>
