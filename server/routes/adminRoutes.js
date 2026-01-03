@@ -21,7 +21,8 @@ const {
     updateReportStatus,
     getPainPointAnalytics,
     generateQuestionAI,
-    autoFillQuestions
+    autoFillQuestions,
+    getSystemLogs
 } = require('../controllers/adminController');
 const {
     getSettings,
@@ -75,5 +76,7 @@ router.delete('/documentation/:id', deleteDocumentation);
 router.route('/settings')
     .get(getSettings)
     .put(updateSettings);
+
+router.get('/logs', getSystemLogs);
 
 module.exports = router;

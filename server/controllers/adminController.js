@@ -8,6 +8,7 @@ const ReportedQuestion = require('../models/ReportedQuestion');
 const TOPICS_DATA = require('../config/topicsData');
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 const Settings = require('../models/Settings');
+const SystemLog = require('../models/SystemLog');
 const bcrypt = require('bcryptjs');
 
 // @desc    Get system stats
@@ -1099,5 +1100,24 @@ module.exports = {
         } catch (err) {
             res.status(500).json({ message: err.message });
         }
-    }
+    },
+    // @desc    Get system logs
+    // @route   GET /api/admin/logs
+    // @access  Private/Admin
+    getSystemLogs: asyncHandler(async (req, res) => {
+        const logs = await SystemLog.find()
+            .sort({ createdAt: -1 })
+            .limit(100)
+            .populate('userId', 'name email');
+
+        // Aggregated Stats
+        const stats = {
+            auth: await SystemLog.countDocuments({ type: 'AUTH' }),
+            tests: await SystemLog.countDocuments({ type: { $in: ['TEST', 'CUSTOM'] } }),
+            battles: await SystemLog.countDocuments({ type: 'BATTLE' }),
+            errors: await SystemLog.countDocuments({ type: 'ERROR' })
+        };
+
+        res.json({ logs: logs.reverse(), stats });
+    })
 };

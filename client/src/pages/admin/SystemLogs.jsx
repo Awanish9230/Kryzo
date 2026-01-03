@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Terminal, Shield, List, Play, CheckCircle, AlertTriangle, XCircle, Activity, User, Monitor } from 'lucide-react';
-import io from 'socket.io-client';
+import { useSocket } from '../../context/SocketContext';
+import api from '../../utils/api';
 
 const SystemLogs = () => {
+    const { socket } = useSocket();
     const [logs, setLogs] = useState([]);
     const [filter, setFilter] = useState('ALL');
     const logsEndRef = useRef(null);
@@ -15,20 +17,31 @@ const SystemLogs = () => {
     });
 
     useEffect(() => {
-        // Fetch initial logs (mock for now or from API if we built endpoint)
-        // For now, start empty or fetch from API if we implemented GET /logs
-        // We'll trust the socket stream for "Real-time" feel.
+        // Fetch initial logs and stats
+        const fetchInitialData = async () => {
+            try {
+                const { data } = await api.get('/admin/logs');
+                setLogs(data.logs);
+                setStats(data.stats);
+                setTimeout(scrollToBottom, 100);
+            } catch (err) {
+                console.error('Failed to fetch logs:', err);
+            }
+        };
 
-        const newSocket = io(import.meta.env.VITE_API_URL || 'http://localhost:5000');
+        fetchInitialData();
 
-        newSocket.on('system_log', (log) => {
-            setLogs(prev => [...prev, log]);
-            updateStats(log.type);
-            scrollToBottom();
-        });
+        if (socket) {
+            const handleNewLog = (log) => {
+                setLogs(prev => [...prev, log].slice(-100)); // Keep last 100
+                updateStats(log.type);
+                setTimeout(scrollToBottom, 100);
+            };
 
-        return () => newSocket.disconnect();
-    }, []);
+            socket.on('system_log', handleNewLog);
+            return () => socket.off('system_log', handleNewLog);
+        }
+    }, [socket]);
 
     const updateStats = (type) => {
         setStats(prev => {
