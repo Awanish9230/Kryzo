@@ -43,6 +43,7 @@ const BattleArena = () => {
         me: matchingData.myName || JSON.parse(localStorage.getItem('user'))?.name || 'You',
         opponent: matchingData.opponentName || 'Opponent'
     });
+    const [rematchStatus, setRematchStatus] = useState('idle'); // 'idle' | 'sent' | 'received'
 
     // Reset code when language changes if it's still the boilerplate
     const handleLanguageChange = (newLang) => {
@@ -101,12 +102,49 @@ const BattleArena = () => {
             setGameResult('WIN');
         });
 
+        socket.on('rematch_requested', (data) => {
+            console.log('BattleArena: rematch_requested', data);
+            setRematchStatus('received');
+            toast('⚔️ Opponent challenged you to a rematch!', { icon: '🤝' });
+        });
+
+        socket.on('rematch_started', (data) => {
+            console.log('BattleArena: rematch_started', data);
+            toast.success('Rematch Started! New Question Assigned.');
+
+            // Navigate to new room with updated data
+            navigate(`/student/battle/${data.newRoomId}`, {
+                replace: true, // Replace history to avoid back-button loop
+                state: {
+                    battleData: {
+                        roomId: data.newRoomId,
+                        opponentId,
+                        opponentName: names.opponent,
+                        myName: names.me,
+                        question: data.question,
+                        selectedLanguage
+                    }
+                }
+            });
+
+            // Reset local states for the new match
+            setGameResult(null);
+            setMyProgress(0);
+            setOpponentProgress(0);
+            setLogs([]);
+            setRematchStatus('idle');
+            // Code is usually kept or reset? Let's keep it for now but maybe reset to boilerplate
+            setCode(BOILERPLATES[selectedLanguage]);
+        });
+
         return () => {
             socket.off('opponent_progress');
             socket.off('game_over');
             socket.off('opponent_disconnected');
+            socket.off('rematch_requested');
+            socket.off('rematch_started');
         };
-    }, [socket]);
+    }, [socket, roomId, navigate, names, opponentId, selectedLanguage]);
 
     const executeCode = async (isSubmit = false) => {
         if (isRunning || gameResult) return;
@@ -183,6 +221,13 @@ const BattleArena = () => {
             socket.emit('leave_battle', { roomId });
             navigate('/student/battle');
         }
+    };
+
+    const handleRematch = () => {
+        if (!socket) return;
+        setRematchStatus('sent');
+        socket.emit('rematch_request', { roomId, opponentId });
+        toast.success('Rematch request sent!');
     };
 
     return (
@@ -320,6 +365,32 @@ const BattleArena = () => {
                                         >
                                             Return to Lobby
                                         </button>
+
+                                        <div className="mt-4 flex gap-3">
+                                            {rematchStatus === 'idle' && (
+                                                <button
+                                                    onClick={handleRematch}
+                                                    className="flex-1 py-4 bg-blue-600 text-white font-black text-[10px] uppercase tracking-[0.2em] rounded-2xl hover:bg-blue-500 transition-all border border-blue-400/20 active:scale-95"
+                                                >
+                                                    Request Rematch
+                                                </button>
+                                            )}
+
+                                            {rematchStatus === 'sent' && (
+                                                <div className="flex-1 py-4 bg-zinc-800 text-zinc-500 font-black text-[10px] uppercase tracking-[0.2em] rounded-2xl border border-white/5 animate-pulse">
+                                                    Waiting for Opponent...
+                                                </div>
+                                            )}
+
+                                            {rematchStatus === 'received' && (
+                                                <button
+                                                    onClick={handleRematch}
+                                                    className="flex-1 py-4 bg-green-600 text-white font-black text-[10px] uppercase tracking-[0.2em] rounded-2xl hover:bg-green-500 transition-all border border-green-400/20 shadow-lg shadow-green-500/20 active:scale-95"
+                                                >
+                                                    Accept Rematch
+                                                </button>
+                                            )}
+                                        </div>
                                     </div>
                                 </motion.div>
                             )}
