@@ -11,13 +11,18 @@ module.exports = (io) => {
     io.on('connection', (socket) => {
         // console.log('Battle system attached to socket:', socket.id);
 
-        // Initial broadcast of count to everyone
-        io.emit('battle_users_count', io.sockets.size);
+        const updateCount = () => {
+            const count = io.engine?.clientsCount || io.sockets.size || 0;
+            io.emit('battle_users_count', count);
+        };
+
+        // Initial broadcast to everyone
+        updateCount();
         // Also send specifically to this connected socket
-        socket.emit('battle_users_count', io.sockets.size);
+        socket.emit('battle_users_count', io.engine?.clientsCount || io.sockets.size || 0);
 
         socket.on('get_users_count', () => {
-            socket.emit('battle_users_count', io.sockets.size);
+            updateCount();
         });
 
         // Join Queue

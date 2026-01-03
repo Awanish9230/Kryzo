@@ -18,6 +18,13 @@ const BattleLobby = () => {
     useEffect(() => {
         if (socket) {
             socket.emit('get_users_count');
+
+            // Add a heartbeat to keep count fresh
+            const interval = setInterval(() => {
+                socket.emit('get_users_count');
+            }, 15000);
+
+            return () => clearInterval(interval);
         }
     }, [socket]);
 
@@ -62,7 +69,8 @@ const BattleLobby = () => {
 
         socket.on('battle_users_count', (count) => {
             console.log('BattleLobby: battle_users_count', count);
-            setActiveUsers(count);
+            const num = Number(count);
+            setActiveUsers(isNaN(num) ? 1 : Math.max(1, num));
         });
 
         socket.on('error', (err) => {
