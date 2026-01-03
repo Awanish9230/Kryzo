@@ -792,36 +792,27 @@ const generateQuestionAI = asyncHandler(async (req, res) => {
             - HARD: Optimization problems, complex dynamic programming, or advanced graph algorithms (e.g. Longest Palindromic Subsequence, Shortest Path).
             
             STRICT TEST CASE REQUIREMENTS (EACH QUESTION MUST HAVE EXACTLY 10 TEST CASES):
-            - 3 PUBLIC CASES (isHidden: false): Simple, readable cases for the user to see in their console.
-            - 7 HIDDEN CASES (isHidden: true): Edge cases, large inputs, empty inputs, or specific boundary conditions.
+            - 3 PUBLIC CASES (isHidden: false): Standard, readable examples.
+            - 7 HIDDEN CASES (isHidden: true): Edge cases, large inputs, or specific boundary conditions.
             - ALL test cases must have PROPER, VALID, and ACCURATE expected outputs.
-            - USE standard input/output format matching the question description.
+            - CLEAN DATA: The 'input' and 'output' fields MUST contain ONLY raw data (Standard Stdin/Stdout). NO labels like "Input:" or "Output:", no backticks, and no variable names.
             
             JSON FORMAT:
             [{
-                "title": "Problem: [Clear Title]",
-                "description": "# [Problem Summary]\\nDetailed text...\\n\\n### Examples\\n**Example 1:**\\n\`\`\`\\nInput: s = \\\"a\\\", t = \\\"a\\\"\\nOutput: \\\"a\\\"\\n\`\`\`\\n**Explanation:** Explains why...\\n\\n### Constraints\\n- n <= 10^5",
+                "title": "[Engaging, Human-Like Title]",
+                "description": "# [Problem Summary]\\nWrite a natural, engaging description. Avoid over-using backticks for every variable unless it simplifies reading code.\\n\\n### Examples\\n**Example 1:**\\n\`\`\`\\nInput: [Raw Input Description]\\nOutput: [Raw Output Description]\\n\`\`\`\\n**Explanation:** A simple, human explanation...\\n\\n### Constraints\\n- [Constraint 1]",
                 "difficulty": "${diff}",
                 "type": "CODING",
                 "topic": "${topic}",
                 "subtopic": "${sub}",
-                "constraints": "n <= 10^5",
-                "inputFormat": "Explain how the input is provided clearly.",
-                "outputFormat": "Explain the expected output clearly.",
+                "constraints": "...",
+                "inputFormat": "...",
+                "outputFormat": "...",
                 "testCases": [
-                    {"input": "3\\n1 2 3", "output": "6", "isHidden": false},
-                    {"input": "2\\n10 20", "output": "30", "isHidden": false},
-                    {"input": "1\\n5", "output": "5", "isHidden": false},
-                    {"input": "0", "output": "0", "isHidden": true},
-                    {"input": "5\\n-1 -2 -3 -4 -5", "output": "-15", "isHidden": true},
-                    {"input": "4\\n100 200 300 400", "output": "1000", "isHidden": true},
-                    {"input": "2\\n-10 10", "output": "0", "isHidden": true},
-                    {"input": "3\\n1 1 1", "output": "3", "isHidden": true},
-                    {"input": "1\\n0", "output": "0", "isHidden": true},
-                    {"input": "6\\n1 2 3 4 5 6", "output": "21", "isHidden": true}
+                    {"input": "...", "output": "...", "isHidden": false}
                 ],
-                "explanation": "Detailed logic summary for common understanding."
-            }]`;
+                "explanation": "..."
+            }];`
         }
         try {
             const result = await generateWithRetry(prompt, apiKeys);
@@ -937,8 +928,8 @@ const autoFillQuestions = asyncHandler(async (req, res) => {
                 - 3 PUBLIC CASES (isHidden: false)
                 - 7 HIDDEN CASES (isHidden: true)
                 - EXACTLY 10 test cases total (3 public, 7 hidden).
-                - Description must be RICH MARKDOWN with Examples (Input/Output/Explanation) and Constraints internal to the text.
-                - MUST include clear inputFormat and outputFormat.
+                - CLEAN DATA: 'input' and 'output' fields MUST be RAW DATA. No labels, no backticks, no variable names.
+                - Description must be HUMAN-LIKE and professional. Use minimal markdown.
                 Structure: {"title":"","description":"# ...\n\n### Examples\n...","constraints":"","inputFormat":"","outputFormat":"","testCases":[{"input":"","output":"","isHidden":false},...],"explanation":""}`;
             }
 
@@ -1030,36 +1021,34 @@ module.exports = {
                     Output Format: "${q.outputFormat}"
                     Difficulty: ${q.difficulty}
                     
-                    TASKS:
-                    1. The "description" MUST follow this EXACT structure (Markdown):
+                     TASKS:
+                    1. The "description" should be HUMAN-LIKE and professional. Avoid robotic phrasing.
+                    2. Use the following Markdown structure, but keep it natural:
                        # [Problem Summary]
-                       Detailed explanation...
+                       A clear, engaging explanation of the problem. Use minimal backticks for variables if it makes the text look cluttered.
                        
                        ### Examples
                        **Example 1:**
                        \`\`\`
-                       Input: input_data
-                       Output: output_data
+                       Input: [Data]
+                       Output: [Data]
                        \`\`\`
-                       **Explanation:** Why this is the output.
-                       
-                       **Example 2:**
-                       ...
+                       **Explanation:** [Brief, logical reasoning]
                        
                        ### Constraints
-                       - [Constraint 1]
-                       - [Constraint 2]
+                       - [Clean bullet points]
                        
-                    2. If constraints are missing or unrealistic, fix them.
-                    3. Generate EXACTLY 10 test cases:
-                       - 3 PUBLIC (isHidden: false): Standard cases, readable.
-                       - 7 HIDDEN (isHidden: true): Edge cases, large numbers, empty inputs, etc.
-                    4. ENSURE ALL test case outputs are 100% CORRECT.
+                    3. If constraints are missing or unrealistic, fix them.
+                    4. Generate EXACTLY 10 test cases:
+                       - 3 PUBLIC (isHidden: false)
+                       - 7 HIDDEN (isHidden: true)
+                    5. CLEAN DATA: The 'input' and 'output' fields MUST contain ONLY raw data (Standard Stdin/Stdout). NO backticks ( \` ), NO variable names, NO labels.
+                    6. ENSURE ALL test case outputs are 100% CORRECT.
                     
                     RETURN ONLY JSON in this format:
                     {
-                        "description": "The rich markdown description as specified above",
-                        "constraints": "Single line or concise list of constraints (for the 'Constraints' field)",
+                        "description": "...",
+                        "constraints": "...",
                         "inputFormat": "...",
                         "outputFormat": "...",
                         "testCases": [
