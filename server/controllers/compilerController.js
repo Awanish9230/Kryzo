@@ -50,15 +50,35 @@ const runCode = asyncHandler(async (req, res) => {
             rawInput = rawInput.replace(/^Input:\s*/i, '');
 
             // 4. Handle brackets and separators for numerical input (common in AI-gen questions)
-            // If the input contains brackets/commas and looks like it's meant for simple scanning,
-            // we'll replace them with spaces. We only do this if it doesn't look like a complex string.
-            // This fix helps Java's sc.nextInt() and C++ cin >> n
+            // If the input contains brackets/commas, we'll try to be smart about providing the count
+            // many users (Java/C++) expect the first input to be the count 'n'.
+            let elementCount = 0;
+            let isArrayInput = false;
+
+            if (rawInput.trim().startsWith('[') && rawInput.trim().endsWith(']')) {
+                isArrayInput = true;
+                // Simple comma-based split to count elements
+                const contents = rawInput.trim().slice(1, -1);
+                if (contents.trim() === '') {
+                    elementCount = 0;
+                } else {
+                    // Split by comma, but handle potential spaces
+                    elementCount = contents.split(',').length;
+                }
+            }
+
             if (rawInput.includes('[') || rawInput.includes(']')) {
                 rawInput = rawInput.replace(/[\[\],]/g, ' ');
             }
 
             // Final trim and whitespace normalization
-            const sanitizedInput = rawInput.replace(/\s+/g, ' ').trim();
+            let sanitizedInput = rawInput.replace(/\s+/g, ' ').trim();
+
+            // Smart Prepend: If we detected an array, prepend the count 'n'
+            // This fixes InputMismatchException for users doing sc.nextInt() then Loop
+            if (isArrayInput) {
+                sanitizedInput = `${elementCount} ${sanitizedInput}`;
+            }
 
             const execResult = await executePiston(code, language, sanitizedInput);
 
