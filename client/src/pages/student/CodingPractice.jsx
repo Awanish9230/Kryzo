@@ -304,11 +304,18 @@ const CodingPractice = () => {
                 <div className={`flex-grow h-full flex flex-col bg-black transition-all duration-300 ${!showQuestionPanel ? 'w-full' : 'w-[60%]'}`}>
                     <div className="flex-grow">
                         <Editor
+                            key={selectedLanguage}
                             height="100%"
-                            language={question.codeLanguage?.toLowerCase() || 'javascript'}
+                            language={selectedLanguage === 'c++' ? 'cpp' : selectedLanguage}
                             theme="vs-dark"
                             value={codes[currentQuestionIdx]}
                             onChange={handleCodeChange}
+                            onMount={(editor, monaco) => {
+                                monaco.languages.typescript.javascriptDefaults.setDiagnosticsOptions({
+                                    noSemanticValidation: true,
+                                    noSyntaxValidation: false,
+                                });
+                            }}
                             options={{
                                 fontSize: 14,
                                 minimap: { enabled: false },
