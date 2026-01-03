@@ -278,10 +278,10 @@ int main() {
 
             {/* Main Split Layout */}
             <div className="flex-grow flex overflow-hidden">
-                <PanelGroup direction="horizontal" autoSaveId="coding-practice-layout">
+                <PanelGroup direction="horizontal" autoSaveId="coding-practice-main-v3" key={test?._id}>
                     {showQuestionPanel && (
                         <>
-                            <Panel defaultSize={40} minSize={20} className="h-full border-r border-white/5 bg-zinc-900/30 overflow-y-auto">
+                            <Panel id="question-panel" defaultSize={40} minSize={20} className="h-full border-r border-white/5 bg-zinc-900/30 overflow-y-auto">
                                 <div className="p-8 pb-32">
                                     <div className="flex items-center gap-2 mb-6">
                                         <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-widest ${question.difficulty === 'easy' ? 'bg-green-500/10 text-green-500 border border-green-500/20' :
@@ -333,7 +333,7 @@ int main() {
                     )}
 
                     {/* Right: Code Editor & Console */}
-                    <Panel minSize={30}>
+                    <Panel id="editor-panel" defaultSize={60} minSize={30}>
                         <div className="h-full flex flex-col bg-black w-full">
                             <div className="flex-grow">
                                 <Editor
@@ -386,33 +386,37 @@ int main() {
                                         </button>
                                     </div>
 
-                                    <div className="flex items-center gap-2 ml-auto pr-6">
-                                        <select
-                                            value={selectedLanguage}
-                                            onChange={(e) => handleLanguageChange(e.target.value)}
-                                            className="bg-zinc-800 border border-white/5 text-[10px] font-bold text-zinc-300 rounded-lg px-3 py-1.5 focus:outline-none hover:text-white cursor-pointer transition-colors appearance-none uppercase tracking-wider mr-2"
-                                        >
-                                            <option value="javascript">JavaScript</option>
-                                            <option value="python">Python</option>
-                                            <option value="java">Java</option>
-                                            <option value="cpp">C++</option>
-                                        </select>
-                                        <button
-                                            onClick={handleRunCode}
-                                            disabled={submitting}
-                                            className="flex items-center gap-2 px-4 py-1.5 bg-zinc-800 hover:bg-zinc-700 disabled:opacity-50 text-white text-xs font-bold rounded-lg transition-all"
-                                        >
-                                            {submitting ? <Loader size="small" showText={false} /> : <Play size={14} fill="currentColor" />}
-                                            Run
-                                        </button>
-                                        <button
-                                            onClick={handleSubmitCode}
-                                            disabled={submitting}
-                                            className="flex items-center gap-2 px-4 py-1.5 bg-blue-500 hover:bg-blue-600 disabled:opacity-50 text-white text-xs font-bold rounded-lg transition-all"
-                                        >
-                                            {submitting ? <Loader size="small" showText={false} /> : <Send size={14} />}
-                                            Submit
-                                        </button>
+                                    <div className="flex flex-wrap items-center gap-2 justify-end flex-1 min-w-0 pr-4 py-1">
+                                        <div className="flex items-center gap-2 shrink-0">
+                                            <select
+                                                value={selectedLanguage}
+                                                onChange={(e) => handleLanguageChange(e.target.value)}
+                                                className="bg-zinc-800 border border-white/5 text-[10px] font-bold text-zinc-300 rounded-lg px-2 py-1.5 focus:outline-none hover:text-white cursor-pointer transition-colors appearance-none uppercase tracking-wider"
+                                            >
+                                                <option value="javascript">JavaScript</option>
+                                                <option value="python">Python</option>
+                                                <option value="java">Java</option>
+                                                <option value="cpp">C++</option>
+                                            </select>
+                                        </div>
+                                        <div className="flex items-center gap-2 shrink-0">
+                                            <button
+                                                onClick={handleRunCode}
+                                                disabled={submitting}
+                                                className="flex items-center gap-2 px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 disabled:opacity-50 text-white text-[10px] font-bold rounded-lg transition-all"
+                                            >
+                                                {submitting ? <Loader size="small" showText={false} /> : <Play size={12} fill="currentColor" />}
+                                                Run
+                                            </button>
+                                            <button
+                                                onClick={handleSubmitCode}
+                                                disabled={submitting}
+                                                className="flex items-center gap-2 px-3 py-1.5 bg-blue-500 hover:bg-blue-600 disabled:opacity-50 text-white text-[10px] font-bold rounded-lg transition-all"
+                                            >
+                                                {submitting ? <Loader size="small" showText={false} /> : <Send size={12} />}
+                                                Submit
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
 

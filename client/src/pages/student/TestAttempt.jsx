@@ -375,219 +375,226 @@ const TestAttempt = () => {
                 </AnimatePresence>
 
                 <div className="flex-1 flex flex-col relative bg-zinc-950/20 overflow-hidden">
-                    {currentQuestion.type === 'MCQ' ? (
-                        <div className="flex-1 flex overflow-hidden">
+                    <div className="flex-1 flex overflow-hidden">
+                        <PanelGroup direction="horizontal" autoSaveId="test-attempt-layout-mcq-v3" key={test?._id}>
                             <AnimatePresence initial={false}>
                                 {showQuestionPanel && (
-                                    <motion.div
-                                        initial={{ width: 0, opacity: 0 }}
-                                        animate={{ width: '40%', opacity: 1 }}
-                                        exit={{ width: 0, opacity: 0 }}
-                                        className="h-full border-r border-white/5 bg-zinc-950/30 overflow-y-auto custom-scrollbar"
-                                    >
-                                        <div className="p-8 pb-32">
-                                            <div className="flex items-center gap-2 mb-6">
-                                                <span className="px-3 py-1 bg-white/5 border border-white/10 rounded-lg text-[9px] font-black text-zinc-400 uppercase tracking-[0.2em]">Question {currentIdx + 1}</span>
-                                                <span className={`px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-[0.2em] ${currentQuestion.difficulty === 'hard' ? 'bg-red-500/10 text-red-500 border border-red-500/20' : currentQuestion.difficulty === 'medium' ? 'bg-yellow-500/10 text-yellow-500 border border-yellow-500/20' : 'bg-green-500/10 text-green-500 border border-green-500/20'
-                                                    }`}>
-                                                    {currentQuestion.difficulty}
-                                                </span>
+                                    <>
+                                        <Panel id="mcq-question-panel" defaultSize={40} minSize={20} className="h-full border-r border-white/5 bg-zinc-950/30 overflow-y-auto custom-scrollbar">
+                                            <div className="p-8 pb-32">
+                                                <div className="flex items-center gap-2 mb-6">
+                                                    <span className="px-3 py-1 bg-white/5 border border-white/10 rounded-lg text-[9px] font-black text-zinc-400 uppercase tracking-[0.2em]">Question {currentIdx + 1}</span>
+                                                    <span className={`px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-[0.2em] ${currentQuestion.difficulty === 'hard' ? 'bg-red-500/10 text-red-500 border border-red-500/20' : currentQuestion.difficulty === 'medium' ? 'bg-yellow-500/10 text-yellow-500 border border-yellow-500/20' : 'bg-green-500/10 text-green-500 border border-green-500/20'
+                                                        }`}>
+                                                        {currentQuestion.difficulty}
+                                                    </span>
+                                                </div>
+                                                <h1 className="text-2xl font-black tracking-tight text-white mb-6 leading-tight">
+                                                    {currentQuestion.title}
+                                                </h1>
+                                                <div className="text-zinc-400 text-sm leading-relaxed whitespace-pre-wrap prose prose-invert max-w-none">
+                                                    {currentQuestion.description}
+                                                </div>
                                             </div>
-                                            <h1 className="text-2xl font-black tracking-tight text-white mb-6 leading-tight">
-                                                {currentQuestion.title}
-                                            </h1>
-                                            <div className="text-zinc-400 text-sm leading-relaxed whitespace-pre-wrap prose prose-invert max-w-none">
-                                                {currentQuestion.description}
-                                            </div>
-                                        </div>
-                                    </motion.div>
+                                        </Panel>
+                                        <PanelResizeHandle className="w-1.5 bg-black hover:bg-blue-500/50 transition-colors flex flex-col justify-center items-center group cursor-col-resize z-50">
+                                            <div className="h-8 w-0.5 bg-zinc-700/50 rounded-full group-hover:bg-white transition-colors" />
+                                        </PanelResizeHandle>
+                                    </>
                                 )}
                             </AnimatePresence>
-
-                            <div className="flex-1 overflow-y-auto w-full custom-scrollbar bg-black/20">
-                                <div className="p-4 border-b border-white/5 flex items-center justify-between bg-zinc-950/50 backdrop-blur-md sticky top-0 z-10">
-                                    <button
-                                        onClick={() => setShowQuestionPanel(!showQuestionPanel)}
-                                        className="p-1.5 bg-white/5 border border-white/10 rounded-lg text-zinc-500 hover:text-white transition-all"
-                                    >
-                                        {showQuestionPanel ? <PanelRightClose size={14} /> : <PanelRightOpen size={14} />}
-                                    </button>
-                                    <span className="text-[10px] font-black text-zinc-600 uppercase tracking-widest">Select Answer</span>
-                                </div>
-                                <div className="p-10 max-w-3xl mx-auto w-full pb-32">
-                                    <div className="grid grid-cols-1 gap-4">
-                                        {currentQuestion.options.map((opt, idx) => (
-                                            <button
-                                                key={idx}
-                                                onClick={() => handleAnswer(currentQuestion._id, idx)}
-                                                className={`group p-6 rounded-3xl border text-left transition-all flex items-center gap-5 ${answers[currentQuestion._id] === idx
-                                                    ? 'bg-white border-white text-black shadow-2xl shadow-white/10'
-                                                    : 'bg-zinc-900/30 border-white/5 text-zinc-400 hover:border-white/20 hover:bg-zinc-900/50'
-                                                    }`}
-                                            >
-                                                <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center text-xs font-black transition-colors ${answers[currentQuestion._id] === idx ? 'bg-black border-black text-white' : 'border-zinc-700 text-zinc-600 group-hover:border-zinc-500'
-                                                    }`}>
-                                                    {String.fromCharCode(65 + idx)}
-                                                </div>
-                                                <span className="font-bold text-base">{opt.text}</span>
-                                            </button>
-                                        ))}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    ) : (
-                        <div className="flex-1 flex overflow-hidden">
-                            <AnimatePresence initial={false}>
-                                {showQuestionPanel && (
-                                    <motion.div
-                                        initial={{ width: 0, opacity: 0 }}
-                                        animate={{ width: '40%', opacity: 1 }}
-                                        exit={{ width: 0, opacity: 0 }}
-                                        className="h-full border-r border-white/5 bg-zinc-950/30 overflow-y-auto custom-scrollbar"
-                                    >
-                                        <div className="p-8 pb-32">
-                                            <div className="flex items-center gap-2 mb-6 text-zinc-500">
-                                                <span className="text-[10px] font-black uppercase tracking-widest border border-white/10 px-2 py-0.5 rounded">Question {currentIdx + 1}</span>
-                                                <span className={`text-[10px] font-black uppercase tracking-widest border px-2 py-0.5 rounded ${currentQuestion.difficulty === 'hard' ? 'bg-red-500/10 text-red-500 border-red-500/20' : currentQuestion.difficulty === 'medium' ? 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20' : 'bg-green-500/10 text-green-500 border-green-500/20'}`}>
-                                                    {currentQuestion.difficulty}
-                                                </span>
-                                            </div>
-                                            <h2 className="text-xl font-black tracking-tight text-white mb-6 leading-tight">
-                                                {currentQuestion.title}
-                                            </h2>
-                                            <div className="text-zinc-400 text-sm leading-relaxed whitespace-pre-wrap prose prose-invert max-w-none mb-8">
-                                                {currentQuestion.description}
-                                            </div>
-
-                                            {currentQuestion.constraints && (
-                                                <div className="mb-6">
-                                                    <h3 className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-3">Constraints</h3>
-                                                    <pre className="bg-black/50 p-4 border border-white/5 rounded-2xl text-[11px] text-zinc-500 font-mono">
-                                                        {currentQuestion.constraints}
-                                                    </pre>
-                                                </div>
-                                            )}
-
-                                            {currentQuestion.inputFormat && (
-                                                <div className="mb-6">
-                                                    <h3 className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-3">Input Format</h3>
-                                                    <div className="text-[11px] text-zinc-500 italic px-1">{currentQuestion.inputFormat}</div>
-                                                </div>
-                                            )}
-
-                                            {currentQuestion.outputFormat && (
-                                                <div className="mb-6">
-                                                    <h3 className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-3">Output Format</h3>
-                                                    <div className="text-[11px] text-zinc-500 italic px-1">{currentQuestion.outputFormat}</div>
-                                                </div>
-                                            )}
-                                        </div>
-                                    </motion.div>
-                                )}
-                            </AnimatePresence>
-
-                            <div className="flex-1 flex flex-col bg-black overflow-hidden relative">
-                                <div className="bg-zinc-950/50 px-6 py-3 border-b border-white/5 flex items-center justify-between shrink-0 backdrop-blur-md">
-                                    <div className="flex items-center gap-3">
+                            <Panel id="mcq-answer-panel" defaultSize={60} minSize={30}>
+                                <div className="h-full flex flex-col relative bg-zinc-950/20 overflow-hidden">
+                                    <div className="p-4 border-b border-white/5 flex items-center justify-between bg-zinc-950/50 backdrop-blur-md sticky top-0 z-10 shrink-0">
                                         <button
                                             onClick={() => setShowQuestionPanel(!showQuestionPanel)}
                                             className="p-1.5 bg-white/5 border border-white/10 rounded-lg text-zinc-500 hover:text-white transition-all"
                                         >
                                             {showQuestionPanel ? <PanelRightClose size={14} /> : <PanelRightOpen size={14} />}
                                         </button>
-                                        <select
-                                            className="bg-black border border-white/10 text-[10px] font-black text-zinc-400 rounded-xl px-4 py-1.5 focus:outline-none hover:text-white cursor-pointer transition-colors appearance-none uppercase tracking-widest"
-                                            value={selectedLanguage}
-                                            onChange={(e) => {
-                                                const newLang = e.target.value;
-                                                setSelectedLanguage(newLang);
-                                                localStorage.setItem('preferred_language', newLang);
-                                            }}
-                                        >
-                                            <option value="javascript">JavaScript</option>
-                                            <option value="python">Python</option>
-                                            <option value="java">Java</option>
-                                            <option value="cpp">C++</option>
-                                        </select>
+                                        <span className="text-[10px] font-black text-zinc-600 uppercase tracking-widest">Select Answer</span>
                                     </div>
-                                    <div className="flex items-center gap-2">
-                                        <button
-                                            onClick={handleRunCode}
-                                            disabled={isRunning}
-                                            className="px-5 py-1.5 bg-zinc-800 text-[10px] font-black text-white uppercase tracking-widest rounded-xl hover:bg-zinc-700 transition-all flex items-center gap-3 disabled:opacity-50"
-                                        >
-                                            {isRunning ? <Loader size="small" showText={false} /> : <Play size={10} fill="currentColor" />}
-                                            Run
-                                        </button>
-                                        <button
-                                            onClick={handleSubmitCoding}
-                                            disabled={isRunning}
-                                            className="px-5 py-1.5 bg-blue-600 text-[10px] font-black text-white uppercase tracking-widest rounded-xl hover:bg-blue-500 transition-all shadow-lg shadow-blue-500/20 flex items-center gap-3 disabled:opacity-50"
-                                        >
-                                            {isRunning ? <Loader size="small" showText={false} /> : <Check size={12} />}
-                                            Submit
-                                        </button>
-                                    </div>
-                                </div>
-
-                                <div className="flex-1">
-                                    <Editor
-                                        height="100%"
-                                        language={selectedLanguage?.toLowerCase()}
-                                        theme="vs-dark"
-                                        value={answers[currentQuestion._id] || ''}
-                                        onChange={(val) => handleAnswer(currentQuestion._id, val)}
-                                        options={{
-                                            minimap: { enabled: false },
-                                            fontSize: 14,
-                                            padding: { top: 20 },
-                                            scrollBeyondLastLine: false,
-                                            automaticLayout: true,
-                                            fontFamily: 'JetBrains Mono, Menlo, Monaco, Courier New, monospace',
-                                        }}
-                                    />
-                                </div>
-
-                                {(isRunning || runResults) && (
-                                    <motion.div
-                                        initial={{ height: 0 }}
-                                        animate={{ height: '40%' }}
-                                        className="h-[40%] bg-zinc-950 border-t border-white/10 flex flex-col absolute bottom-0 left-0 right-0 z-10"
-                                    >
-                                        <div className="px-6 py-3 border-b border-white/5 flex items-center justify-between shrink-0">
-                                            <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Test Results</span>
-                                            <button onClick={() => setRunResults(null)} className="text-zinc-500 hover:text-white"><X size={14} /></button>
-                                        </div>
-                                        <div className="flex-1 overflow-y-auto p-6 custom-scrollbar font-mono">
-                                            {!runResults && isRunning ? (
-                                                <div className="text-blue-500 flex items-center gap-3 font-bold tracking-widest uppercase text-[10px]">
-                                                    <Loader size="small" showText={false} className="!flex-row" />
-                                                    Executing Code...
-                                                </div>
-                                            ) : (
-                                                <div className="space-y-4">
-                                                    {runResults?.results.map((res, idx) => (
-                                                        <div key={idx} className={`p-4 rounded-xl border ${res.passed ? 'bg-green-500/5 border-green-500/10' : 'bg-red-500/5 border-red-500/10'}`}>
-                                                            <div className="flex items-center justify-between mb-3 text-[10px] font-black uppercase tracking-widest">
-                                                                <span className="text-zinc-600">Case {idx + 1}</span>
-                                                                <span className={res.passed ? "text-green-500" : "text-red-500"}>{res.passed ? "Passed" : "Failed"}</span>
-                                                            </div>
-                                                            <div className="grid grid-cols-2 gap-4 text-[11px] text-zinc-400">
-                                                                <div><span className="text-zinc-600 block mb-1 uppercase text-[8px]">Output</span>{res.actualOutput || 'N/A'}</div>
-                                                                <div><span className="text-zinc-600 block mb-1 uppercase text-[8px]">Expected</span>{res.expectedOutput || 'N/A'}</div>
-                                                            </div>
-                                                            {res.error && <div className="mt-3 p-2 bg-red-500/10 text-red-400 text-[10px] rounded-lg">{res.error}</div>}
+                                    <div className="flex-1 overflow-y-auto w-full custom-scrollbar bg-black/20">
+                                        <div className="p-10 max-w-3xl mx-auto w-full pb-32">
+                                            <div className="grid grid-cols-1 gap-4">
+                                                {currentQuestion.options.map((opt, idx) => (
+                                                    <button
+                                                        key={idx}
+                                                        onClick={() => handleAnswer(currentQuestion._id, idx)}
+                                                        className={`group p-6 rounded-3xl border text-left transition-all flex items-center gap-5 ${answers[currentQuestion._id] === idx
+                                                            ? 'bg-white border-white text-black shadow-2xl shadow-white/10'
+                                                            : 'bg-zinc-900/30 border-white/5 text-zinc-400 hover:border-white/20 hover:bg-zinc-900/50'
+                                                            }`}
+                                                    >
+                                                        <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center text-xs font-black transition-colors ${answers[currentQuestion._id] === idx ? 'bg-black border-black text-white' : 'border-zinc-700 text-zinc-600 group-hover:border-zinc-500'
+                                                            }`}>
+                                                            {String.fromCharCode(65 + idx)}
                                                         </div>
-                                                    ))}
-                                                </div>
-                                            )}
+                                                        <span className="font-bold text-base">{opt.text}</span>
+                                                    </button>
+                                                ))}
+                                            </div>
                                         </div>
-                                    </motion.div>
+                                    </div>
+                                </div>
+                            </Panel>
+                        </PanelGroup>
+                    </div>
+                    ) : (
+                    <div className="flex-1 flex overflow-hidden">
+                        <PanelGroup direction="horizontal" autoSaveId="test-attempt-layout-coding-v3" key={test?._id}>
+                            <AnimatePresence initial={false}>
+                                {showQuestionPanel && (
+                                    <>
+                                        <Panel id="coding-question-panel" defaultSize={40} minSize={20} className="h-full border-r border-white/5 bg-zinc-950/30 overflow-y-auto custom-scrollbar">
+                                            <div className="p-8 pb-32">
+                                                <div className="flex items-center gap-2 mb-6 text-zinc-500">
+                                                    <span className="text-[10px] font-black uppercase tracking-widest border border-white/10 px-2 py-0.5 rounded">Question {currentIdx + 1}</span>
+                                                    <span className={`text-[10px] font-black uppercase tracking-widest border px-2 py-0.5 rounded ${currentQuestion.difficulty === 'hard' ? 'bg-red-500/10 text-red-500 border-red-500/20' : currentQuestion.difficulty === 'medium' ? 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20' : 'bg-green-500/10 text-green-500 border-green-500/20'}`}>
+                                                        {currentQuestion.difficulty}
+                                                    </span>
+                                                </div>
+                                                <h2 className="text-xl font-black tracking-tight text-white mb-6 leading-tight">
+                                                    {currentQuestion.title}
+                                                </h2>
+                                                <div className="text-zinc-400 text-sm leading-relaxed whitespace-pre-wrap prose prose-invert max-w-none mb-8">
+                                                    {currentQuestion.description}
+                                                </div>
+
+                                                {currentQuestion.constraints && (
+                                                    <div className="mb-6">
+                                                        <h3 className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-3">Constraints</h3>
+                                                        <pre className="bg-black/50 p-4 border border-white/5 rounded-2xl text-[11px] text-zinc-500 font-mono">
+                                                            {currentQuestion.constraints}
+                                                        </pre>
+                                                    </div>
+                                                )}
+
+                                                {currentQuestion.inputFormat && (
+                                                    <div className="mb-6">
+                                                        <h3 className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-3">Input Format</h3>
+                                                        <div className="text-[11px] text-zinc-500 italic px-1">{currentQuestion.inputFormat}</div>
+                                                    </div>
+                                                )}
+
+                                                {currentQuestion.outputFormat && (
+                                                    <div className="mb-6">
+                                                        <h3 className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-3">Output Format</h3>
+                                                        <div className="text-[11px] text-zinc-500 italic px-1">{currentQuestion.outputFormat}</div>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </Panel>
+                                        <PanelResizeHandle className="w-1.5 bg-black hover:bg-blue-500/50 transition-colors flex flex-col justify-center items-center group cursor-col-resize z-50">
+                                            <div className="h-8 w-0.5 bg-zinc-700/50 rounded-full group-hover:bg-white transition-colors" />
+                                        </PanelResizeHandle>
+                                    </>
                                 )}
-                            </div>
-                        </div>
-                    )}
+                            </AnimatePresence>
+
+                            <Panel id="coding-editor-panel" defaultSize={60} minSize={30}>
+                                <div className="h-full flex flex-col bg-black overflow-hidden relative">
+                                    <div className="bg-zinc-950/50 px-6 py-3 border-b border-white/5 flex items-center justify-between shrink-0 backdrop-blur-md">
+                                        <div className="flex items-center gap-3">
+                                            <button
+                                                onClick={() => setShowQuestionPanel(!showQuestionPanel)}
+                                                className="p-1.5 bg-white/5 border border-white/10 rounded-lg text-zinc-500 hover:text-white transition-all"
+                                            >
+                                                {showQuestionPanel ? <PanelRightClose size={14} /> : <PanelRightOpen size={14} />}
+                                            </button>
+                                            <select
+                                                className="bg-black border border-white/10 text-[10px] font-black text-zinc-400 rounded-xl px-4 py-1.5 focus:outline-none hover:text-white cursor-pointer transition-colors appearance-none uppercase tracking-widest"
+                                                value={selectedLanguage}
+                                                onChange={(e) => {
+                                                    const newLang = e.target.value;
+                                                    setSelectedLanguage(newLang);
+                                                    localStorage.setItem('preferred_language', newLang);
+                                                }}
+                                            >
+                                                <option value="javascript">JavaScript</option>
+                                                <option value="python">Python</option>
+                                                <option value="java">Java</option>
+                                                <option value="cpp">C++</option>
+                                            </select>
+                                        </div>
+                                        <div className="flex flex-wrap items-center gap-2 justify-end">
+                                            <button
+                                                onClick={handleRunCode}
+                                                disabled={isRunning}
+                                                className="px-4 py-1.5 bg-zinc-800 text-[10px] font-black text-white uppercase tracking-widest rounded-xl hover:bg-zinc-700 transition-all flex items-center gap-2 disabled:opacity-50"
+                                            >
+                                                {isRunning ? <Loader size="small" showText={false} /> : <Play size={10} fill="currentColor" />}
+                                                Run
+                                            </button>
+                                            <button
+                                                onClick={handleSubmitCoding}
+                                                disabled={isRunning}
+                                                className="px-4 py-1.5 bg-blue-600 text-[10px] font-black text-white uppercase tracking-widest rounded-xl hover:bg-blue-500 transition-all shadow-lg shadow-blue-500/20 flex items-center gap-2 disabled:opacity-50"
+                                            >
+                                                {isRunning ? <Loader size="small" showText={false} /> : <Check size={12} />}
+                                                Submit
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex-1">
+                                        <Editor
+                                            height="100%"
+                                            language={selectedLanguage?.toLowerCase()}
+                                            theme="vs-dark"
+                                            value={answers[currentQuestion._id] || ''}
+                                            onChange={(val) => handleAnswer(currentQuestion._id, val)}
+                                            options={{
+                                                minimap: { enabled: false },
+                                                fontSize: 14,
+                                                padding: { top: 20 },
+                                                scrollBeyondLastLine: false,
+                                                automaticLayout: true,
+                                                fontFamily: 'JetBrains Mono, Menlo, Monaco, Courier New, monospace',
+                                            }}
+                                        />
+                                    </div>
+
+                                    {(isRunning || runResults) && (
+                                        <motion.div
+                                            initial={{ height: 0 }}
+                                            animate={{ height: '40%' }}
+                                            className="h-[40%] bg-zinc-950 border-t border-white/10 flex flex-col absolute bottom-0 left-0 right-0 z-10"
+                                        >
+                                            <div className="px-6 py-3 border-b border-white/5 flex items-center justify-between shrink-0">
+                                                <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Test Results</span>
+                                                <button onClick={() => setRunResults(null)} className="text-zinc-500 hover:text-white"><X size={14} /></button>
+                                            </div>
+                                            <div className="flex-1 overflow-y-auto p-6 custom-scrollbar font-mono">
+                                                {!runResults && isRunning ? (
+                                                    <div className="text-blue-500 flex items-center gap-3 font-bold tracking-widest uppercase text-[10px]">
+                                                        <Loader size="small" showText={false} className="!flex-row" />
+                                                        Executing Code...
+                                                    </div>
+                                                ) : (
+                                                    <div className="space-y-4">
+                                                        {runResults?.results.map((res, idx) => (
+                                                            <div key={idx} className={`p-4 rounded-xl border ${res.passed ? 'bg-green-500/5 border-green-500/10' : 'bg-red-500/5 border-red-500/10'}`}>
+                                                                <div className="flex items-center justify-between mb-3 text-[10px] font-black uppercase tracking-widest">
+                                                                    <span className="text-zinc-600">Case {idx + 1}</span>
+                                                                    <span className={res.passed ? "text-green-500" : "text-red-500"}>{res.passed ? "Passed" : "Failed"}</span>
+                                                                </div>
+                                                                <div className="grid grid-cols-2 gap-4 text-[11px] text-zinc-400">
+                                                                    <div><span className="text-zinc-600 block mb-1 uppercase text-[8px]">Output</span>{res.actualOutput || 'N/A'}</div>
+                                                                    <div><span className="text-zinc-600 block mb-1 uppercase text-[8px]">Expected</span>{res.expectedOutput || 'N/A'}</div>
+                                                                </div>
+                                                                {res.error && <div className="mt-3 p-2 bg-red-500/10 text-red-400 text-[10px] rounded-lg">{res.error}</div>}
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </motion.div>
+                                    )}
+                                </div>
+                            </Panel>
+                        </PanelGroup>
+                    </div>
                     <footer className="h-16 md:h-20 border-t border-white/5 bg-zinc-950/80 backdrop-blur-md px-4 md:px-10 flex items-center justify-between shrink-0">
                         <button
                             type="button"
