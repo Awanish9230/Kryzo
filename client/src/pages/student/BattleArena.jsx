@@ -27,9 +27,9 @@ const BattleArena = () => {
 
     const BOILERPLATES = {
         javascript: `// Write your solution here\nfunction solve(input) {\n    // console.log(input);\n    return "";\n}\n`,
-        python: `# Write your solution here\nimport sys\n\ndef solve():\n    # input_data = sys.stdin.read()\n    print("Hello")\n\nif __name__ == "__main__":\n    solve()\n`,
-        java: `import java.util.*;\n\npublic class Main {\n    public static void main(String[] args) {\n        Scanner sc = new Scanner(System.in);\n        System.out.println("Hello");\n    }\n}\n`,
-        cpp: `#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    cout << "Hello" << endl;\n    return 0;\n}\n`
+        python: `# Write your solution here\nimport sys\n\ndef solve():\n    # input_data = sys.stdin.read().split()\n    # Use map(int, input_data) for numbers\n    print("Hello")\n\nif __name__ == "__main__":\n    solve()\n`,
+        java: `import java.util.*;\n\npublic class Main {\n    public static void main(String[] args) {\n        Scanner sc = new Scanner(System.in);\n        \n        // Standard pattern for competitive programming:\n        if (sc.hasNextInt()) {\n            int n = sc.nextInt(); // Read array/data size\n            // Read your data and solve...\n        }\n    }\n}\n`,
+        cpp: `#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    int n;\n    if (cin >> n) {\n        // Read elements and solve\n    }\n    return 0;\n}\n`
     };
 
     const [selectedLanguage, setSelectedLanguage] = useState(matchingData.selectedLanguage || 'javascript');
@@ -170,7 +170,7 @@ const BattleArena = () => {
     };
 
     return (
-        <div className="h-[calc(100vh-64px)] bg-black text-white flex flex-col">
+        <div className="h-screen bg-black text-white flex flex-col">
             {/* Header / Status Bar */}
             <div className="h-16 border-b border-white/10 flex items-center justify-between px-6 bg-zinc-900/50 backdrop-blur shrink-0">
                 <div className="flex items-center gap-6">

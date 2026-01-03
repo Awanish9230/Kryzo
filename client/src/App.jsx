@@ -55,7 +55,8 @@ const Layout = ({ children }) => {
   const isTestRoute = (location.pathname.includes('/student/test/') &&
     !location.pathname.includes('/custom') &&
     !location.pathname.includes('/result')) ||
-    location.pathname.includes('/student/practice/coding');
+    location.pathname.includes('/student/practice/coding') ||
+    location.pathname.includes('/student/battle/');
 
   return (
     <div className="flex flex-col min-h-screen bg-black text-white">
