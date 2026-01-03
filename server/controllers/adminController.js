@@ -1124,14 +1124,25 @@ module.exports = {
             { $match: { status: 'published' } },
             {
                 $group: {
-                    _id: '$topic',
+                    _id: {
+                        topic: '$topic',
+                        type: '$type',
+                        difficulty: '$difficulty'
+                    },
+                    count: { $sum: 1 }
+                }
+            },
+            {
+                $group: {
+                    _id: '$_id.topic',
                     stats: {
                         $push: {
-                            type: '$type',
-                            difficulty: '$difficulty'
+                            type: '$_id.type',
+                            difficulty: '$_id.difficulty',
+                            count: '$count'
                         }
                     },
-                    total: { $sum: 1 }
+                    total: { $sum: '$count' }
                 }
             },
             { $sort: { _id: 1 } }
