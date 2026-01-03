@@ -1,7 +1,27 @@
 import axios from 'axios';
 
+const getBaseURL = () => {
+    if (import.meta.env.VITE_BACKEND_URL) return `${import.meta.env.VITE_BACKEND_URL}/api`;
+    if (import.meta.env.VITE_API_URL) return import.meta.env.VITE_API_URL;
+
+    // Dynamic fallback for local testing on other devices (e.g. mobile)
+    // If accessed via IP (192.168.x.x), use that IP with port 5000
+    if (typeof window !== 'undefined') {
+        const protocol = window.location.protocol;
+        const hostname = window.location.hostname;
+        const port = window.location.port;
+
+        // If we're on a Vite dev port, assume backend is on 5000
+        if (port === '5173' || port === '5174') {
+            return `${protocol}//${hostname}:5000/api`;
+        }
+    }
+
+    return '/api';
+};
+
 const api = axios.create({
-    baseURL: import.meta.env.VITE_BACKEND_URL ? `${import.meta.env.VITE_BACKEND_URL}/api` : '/api',
+    baseURL: getBaseURL(),
     headers: {
         'Content-Type': 'application/json',
     },
