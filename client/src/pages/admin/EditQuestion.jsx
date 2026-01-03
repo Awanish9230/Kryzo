@@ -19,6 +19,7 @@ import {
     X as CloseIcon
 } from 'lucide-react';
 import Loader from '../../components/Loader';
+import toast from 'react-hot-toast';
 
 const EditQuestion = () => {
     const { id } = useParams();
@@ -86,7 +87,7 @@ const EditQuestion = () => {
             if (data.subtopic) setSelectedSubtopic(data.subtopic);
             setLoading(false);
         } catch (error) {
-            alert('Failed to load question');
+            toast.error('Failed to load question');
             navigate('/admin/questions');
         }
     };
@@ -148,11 +149,11 @@ const EditQuestion = () => {
 
     const handleTestCode = async () => {
         if (!testCode.trim()) {
-            alert('Please provide some code to test');
+            toast.error('Please provide some code to test');
             return;
         }
         if (formData.testCases.length === 0 || !formData.testCases[0].input) {
-            alert('Please add at least one test case with input/output');
+            toast.error('Please add at least one test case with input/output');
             return;
         }
 
@@ -167,7 +168,7 @@ const EditQuestion = () => {
             setTestResults(data);
         } catch (error) {
             console.error(error);
-            alert('Testing failed. Check console or test cases format.');
+            toast.error('Testing failed. Check console or test cases format.');
         } finally {
             setIsTesting(false);
         }
@@ -184,9 +185,10 @@ const EditQuestion = () => {
                 expectedDeliverables: formData.expectedDeliverables.filter(d => d.trim())
             };
             await api.put(`/admin/questions/${id}`, payload);
+            toast.success('Question updated successfully');
             navigate('/admin/questions');
         } catch (error) {
-            alert(error.response?.data?.message || 'Error updating question');
+            toast.error(error.response?.data?.message || 'Error updating question');
         }
     };
 

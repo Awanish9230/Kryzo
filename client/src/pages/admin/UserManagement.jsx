@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { useSocket } from '../../context/SocketContext';
 import Loader from '../../components/Loader';
+import toast from 'react-hot-toast';
 
 const UserManagement = () => {
     const [users, setUsers] = useState([]);
@@ -44,8 +45,9 @@ const UserManagement = () => {
             try {
                 await api.delete(`/admin/users/${id}`);
                 setUsers(users.filter(u => u._id !== id));
+                toast.success(`User "${name}" deleted`);
             } catch (err) {
-                alert(err.response?.data?.message || 'Failed to delete user');
+                toast.error(err.response?.data?.message || 'Failed to delete user');
             }
         }
     };
@@ -66,8 +68,9 @@ const UserManagement = () => {
             setUsers(users.map(u => u._id === data._id ? { ...u, ...data } : u));
             setShowEditModal(false);
             setEditingUser(null);
+            toast.success('User updated successfully');
         } catch (err) {
-            alert(err.response?.data?.message || 'Failed to update user');
+            toast.error(err.response?.data?.message || 'Failed to update user');
         }
     };
 
@@ -100,8 +103,9 @@ const UserManagement = () => {
                 role: 'student',
                 collegeId: ''
             });
+            toast.success('User created successfully');
         } catch (err) {
-            alert(err.response?.data?.message || 'Failed to create user');
+            toast.error(err.response?.data?.message || 'Failed to create user');
         }
     };
 

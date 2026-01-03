@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import Loader from '../../components/Loader';
 import ActivityCalendar from '../../components/ActivityCalendar';
+import toast from 'react-hot-toast';
 import {
     Radar,
     RadarChart,
@@ -74,7 +75,7 @@ const Profile = () => {
         const file = e.target.files[0];
         if (file) {
             if (file.size > 500000) { // 500KB limit
-                alert("File too large. Please upload an image under 500KB.");
+                toast.error("File too large. Please upload an image under 500KB.");
                 return;
             }
             const reader = new FileReader();
@@ -102,8 +103,9 @@ const Profile = () => {
                 }
             }));
             setIsEditing(false);
+            toast.success('Profile updated successfully');
         } catch (err) {
-            alert(err.response?.data?.message || 'Failed to update profile');
+            toast.error(err.response?.data?.message || 'Failed to update profile');
         }
     };
 

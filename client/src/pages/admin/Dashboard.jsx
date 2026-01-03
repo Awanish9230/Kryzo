@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { useSocket } from '../../context/SocketContext';
 import Loader from '../../components/Loader';
+import toast from 'react-hot-toast';
 
 const AdminDashboard = () => {
     const [stats, setStats] = useState(null);
@@ -50,10 +51,10 @@ const AdminDashboard = () => {
         setIsAutoFilling(true);
         try {
             await api.post('/admin/questions/auto-fill');
-            alert('Autonomous gap-filling complete!');
+            toast.success('Autonomous gap-filling complete!');
             fetchStats();
         } catch (err) {
-            alert(err.response?.data?.message || 'Auto-fill failed');
+            toast.error(err.response?.data?.message || 'Auto-fill failed');
         } finally {
             setIsAutoFilling(false);
         }
@@ -65,10 +66,10 @@ const AdminDashboard = () => {
         setIsStandardizing(true);
         try {
             const { data } = await api.post('/admin/questions/standardize', { force: choice });
-            alert(data.message);
+            toast.success(data.message);
             fetchStats();
         } catch (err) {
-            alert(err.response?.data?.message || 'Standardization failed');
+            toast.error(err.response?.data?.message || 'Standardization failed');
         } finally {
             setIsStandardizing(false);
         }

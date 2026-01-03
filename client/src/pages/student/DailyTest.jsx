@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Clock, AlertCircle, CheckCircle, Code, Play, X, CheckCircle2, XCircle, ChevronLeft, ChevronRight, PanelRightClose, PanelRightOpen } from 'lucide-react';
 import { Editor } from '@monaco-editor/react';
 import Loader from '../../components/Loader';
+import toast from 'react-hot-toast';
 
 const DailyTest = () => {
     const { dayNumber } = useParams();
@@ -68,9 +69,10 @@ const DailyTest = () => {
                 testId: test._id,
                 answers: answersArray
             });
+            toast.success('Test submitted successfully');
             navigate('/student/test/result');
         } catch (err) {
-            alert('Failed to submit test: ' + (err.response?.data?.message || err.message));
+            toast.error('Failed to submit test: ' + (err.response?.data?.message || err.message));
             setSubmitting(false);
         }
     };
@@ -99,7 +101,7 @@ const DailyTest = () => {
         const code = currentAnswer.code;
 
         if (!code || !language) {
-            alert('Please write some code and select a language first.');
+            toast.error('Please write some code and select a language first.');
             return;
         }
 
@@ -113,7 +115,7 @@ const DailyTest = () => {
             });
             setRunResults(data);
         } catch (err) {
-            alert('Execution failed: ' + (err.response?.data?.message || err.message));
+            toast.error('Execution failed: ' + (err.response?.data?.message || err.message));
         } finally {
             setIsRunning(false);
         }
