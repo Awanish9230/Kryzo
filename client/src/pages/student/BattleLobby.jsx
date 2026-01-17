@@ -5,7 +5,10 @@ import { motion } from 'framer-motion';
 import { Swords, Users, Clock, Zap } from 'lucide-react';
 import toast from 'react-hot-toast';
 
+import { useTheme } from '../../context/ThemeContext';
+
 const BattleLobby = () => {
+    const { theme } = useTheme();
     const { socket } = useSocket();
     const navigate = useNavigate();
     const [isSearching, setIsSearching] = useState(false);
@@ -129,9 +132,9 @@ const BattleLobby = () => {
     };
 
     return (
-        <div className="min-h-screen bg-black flex flex-col items-center pt-24 pb-12 relative overflow-hidden">
+        <div className="min-h-screen bg-brand-bg flex flex-col items-center pt-24 pb-12 relative overflow-hidden transition-colors duration-300">
             {/* Background Effects */}
-            <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0">
+            <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0 pointer-events-none">
                 <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-600/10 rounded-full blur-[128px]" />
                 <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-600/10 rounded-full blur-[128px]" />
             </div>
@@ -141,19 +144,19 @@ const BattleLobby = () => {
                     <motion.div
                         initial={{ scale: 0.9, opacity: 0 }}
                         animate={{ scale: 1, opacity: 1 }}
-                        className="inline-flex items-center justify-center p-4 bg-zinc-900/50 border border-white/10 rounded-3xl mb-6 shadow-2xl shadow-blue-500/10"
+                        className="inline-flex items-center justify-center p-4 bg-brand-card/50 border border-brand-border rounded-3xl mb-6 shadow-2xl shadow-blue-500/10"
                     >
-                        <Swords size={48} className="text-white" />
+                        <Swords size={48} className="text-brand-text" />
                     </motion.div>
-                    <h1 className="text-3xl md:text-5xl font-black text-white tracking-tighter mb-4">
+                    <h1 className="text-3xl md:text-5xl font-black text-brand-text tracking-tighter mb-4">
                         1v1 <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-purple-500">Battle Arena</span>
                     </h1>
-                    <p className="text-zinc-500 text-lg font-medium">
+                    <p className="text-brand-text-secondary text-lg font-medium">
                         Challenge other students in real-time coding duels.
                     </p>
                 </div>
 
-                <div className="bg-zinc-950/50 backdrop-blur-xl border border-white/10 rounded-[2.5rem] p-8 md:p-12 relative overflow-hidden">
+                <div className="bg-brand-card/30 backdrop-blur-xl border border-brand-border rounded-[2.5rem] p-8 md:p-12 relative overflow-hidden">
                     {/* Status Indicator */}
                     <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-blue-500 opacity-20" />
 
@@ -167,11 +170,11 @@ const BattleLobby = () => {
                                         className="w-full h-full border-4 border-blue-500/20 border-t-blue-500 rounded-full"
                                     />
                                     <div className="absolute inset-0 flex items-center justify-center">
-                                        <span className="text-2xl font-black text-white font-mono">{formatTime(queueTime)}</span>
+                                        <span className="text-2xl font-black text-brand-text font-mono">{formatTime(queueTime)}</span>
                                     </div>
                                 </div>
-                                <h2 className="text-2xl font-bold text-white mb-2 animate-pulse">{status}</h2>
-                                <p className="text-zinc-500 text-sm">Finding worthy opponent...</p>
+                                <h2 className="text-2xl font-bold text-brand-text mb-2 animate-pulse">{status}</h2>
+                                <p className="text-brand-text-secondary text-sm">Finding worthy opponent...</p>
 
                                 <button
                                     onClick={handleCancel}
@@ -183,26 +186,26 @@ const BattleLobby = () => {
                         ) : (
                             <div className="text-center py-4">
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10 text-left">
-                                    <div className="p-4 bg-zinc-900/50 rounded-2xl border border-white/5">
+                                    <div className="p-4 bg-brand-bg/50 rounded-2xl border border-brand-border">
                                         <Zap className="text-amber-500 mb-2" size={24} />
-                                        <div className="text-2xl font-black text-white">Fast</div>
-                                        <div className="text-[10px] text-zinc-500 uppercase font-bold">Matchmaking</div>
+                                        <div className="text-2xl font-black text-brand-text">Fast</div>
+                                        <div className="text-[10px] text-brand-text-secondary uppercase font-bold">Matchmaking</div>
                                     </div>
-                                    <div className="p-4 bg-zinc-900/50 rounded-2xl border border-white/5">
+                                    <div className="p-4 bg-brand-bg/50 rounded-2xl border border-brand-border">
                                         <Clock className="text-blue-500 mb-2" size={24} />
-                                        <div className="text-2xl font-black text-white">15m</div>
-                                        <div className="text-[10px] text-zinc-500 uppercase font-bold">Time Limit</div>
+                                        <div className="text-2xl font-black text-brand-text">15m</div>
+                                        <div className="text-[10px] text-brand-text-secondary uppercase font-bold">Time Limit</div>
                                     </div>
-                                    <div className="p-4 bg-zinc-900/50 rounded-2xl border border-white/5">
+                                    <div className="p-4 bg-brand-bg/50 rounded-2xl border border-brand-border">
                                         <Users className="text-purple-500 mb-2" size={24} />
-                                        <div className="text-2xl font-black text-white">{activeUsers}</div>
-                                        <div className="text-[10px] text-zinc-500 uppercase font-bold">Online Gladiators</div>
+                                        <div className="text-2xl font-black text-brand-text">{activeUsers}</div>
+                                        <div className="text-[10px] text-brand-text-secondary uppercase font-bold">Online Gladiators</div>
                                     </div>
                                 </div>
 
                                 <div className="space-y-4 mb-8">
                                     <div className="flex items-center justify-between px-2">
-                                        <span className="text-[10px] font-black text-zinc-600 uppercase tracking-widest">Select Duel Language</span>
+                                        <span className="text-[10px] font-black text-brand-text-secondary uppercase tracking-widest">Select Duel Language</span>
                                         <span className="text-[9px] font-bold text-blue-500/80 bg-blue-500/5 px-2 py-0.5 rounded border border-blue-500/10">Required</span>
                                     </div>
                                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -215,7 +218,7 @@ const BattleLobby = () => {
                                                 }}
                                                 className={`py-3 px-4 rounded-2xl border transition-all text-[10px] font-black uppercase tracking-widest ${selectedLanguage === lang
                                                     ? 'bg-blue-600 border-blue-500 text-white shadow-lg shadow-blue-500/25 scale-95'
-                                                    : 'bg-zinc-900/50 border-white/5 text-zinc-500 hover:border-white/20 hover:text-zinc-300'
+                                                    : 'bg-brand-secondary/5 border-brand-border text-brand-text-secondary hover:border-brand-border/50 hover:text-brand-text'
                                                     }`}
                                             >
                                                 {lang === 'cpp' ? 'C++' : lang}
@@ -226,7 +229,7 @@ const BattleLobby = () => {
 
                                 <button
                                     onClick={handleFindMatch}
-                                    className="w-full py-6 bg-white text-black text-xl font-black uppercase tracking-widest rounded-3xl hover:bg-zinc-200 transition-all shadow-xl shadow-white/10 relative overflow-hidden group active:scale-[0.98]"
+                                    className="w-full py-6 bg-brand-text text-brand-bg text-xl font-black uppercase tracking-widest rounded-3xl hover:opacity-90 transition-all shadow-xl shadow-brand-text/10 relative overflow-hidden group active:scale-[0.98]"
                                 >
                                     <span className="relative z-10 flex items-center justify-center gap-3">
                                         <Swords size={24} />

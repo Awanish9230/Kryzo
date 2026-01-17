@@ -1,14 +1,16 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import api from '../../utils/api';
+import { useTheme } from '../../context/ThemeContext';
 import { motion } from 'framer-motion';
 import { CheckCircle, XCircle, Clock, Calendar, Award, Lightbulb, Code2, ArrowLeft, ChevronLeft, ChevronRight, ChevronUp, ChevronDown } from 'lucide-react';
 import Loader from '../../components/Loader';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import { vscDarkPlus, prism } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import toast from 'react-hot-toast';
 
 const TestReviewDetail = () => {
+    const { theme } = useTheme();
     const { attemptId } = useParams();
     const navigate = useNavigate();
     const [review, setReview] = useState(null);
@@ -96,16 +98,16 @@ const TestReviewDetail = () => {
     );
 
     if (error) return (
-        <div className="min-h-screen bg-black flex flex-col items-center justify-center text-center px-4">
+        <div className="min-h-screen bg-brand-bg flex flex-col items-center justify-center text-center px-4">
             <XCircle className="w-12 h-12 text-red-500 mb-4" />
-            <h2 className="text-xl font-bold text-white mb-2">{error}</h2>
+            <h2 className="text-xl font-bold text-brand-text mb-2">{error}</h2>
             <button
                 onClick={fetchReview}
-                className="px-6 py-2 bg-white text-black rounded-lg font-bold hover:bg-gray-200 transition-colors"
+                className="px-6 py-2 bg-brand-text text-brand-bg rounded-lg font-bold hover:opacity-90 transition-colors"
             >
                 Retry
             </button>
-            <Link to="/student/reviews" className="mt-4 text-zinc-500 hover:text-white">
+            <Link to="/student/reviews" className="mt-4 text-brand-text-secondary hover:text-brand-text">
                 Back to Reviews
             </Link>
         </div>
@@ -114,79 +116,79 @@ const TestReviewDetail = () => {
     const currentQuestion = review.questions[currentQuestionIndex];
 
     return (
-        <div className="min-h-screen bg-black pt-24 pb-12 px-6">
+        <div className="min-h-screen bg-brand-bg pt-24 pb-12 px-6 transition-colors duration-300">
             <div className="max-w-7xl mx-auto">
                 {/* Header */}
                 <div className="mb-8">
                     <Link
                         to="/student/reviews"
-                        className="inline-flex items-center gap-2 text-zinc-500 hover:text-white transition-colors mb-4 text-sm font-bold"
+                        className="inline-flex items-center gap-2 text-brand-text-secondary hover:text-brand-text transition-colors mb-4 text-sm font-bold"
                     >
                         <ArrowLeft size={16} />
                         Back to Reviews
                     </Link>
-                    <h1 className="text-4xl font-bold mb-2 tracking-tight">Test Review</h1>
-                    <p className="text-zinc-500">{review.testType} Test • {formatDate(review.completedAt)}</p>
+                    <h1 className="text-4xl font-bold mb-2 tracking-tight text-brand-text">Test Review</h1>
+                    <p className="text-brand-text-secondary">{review.testType} Test • {formatDate(review.completedAt)}</p>
                 </div>
 
                 {/* Stats Overview */}
                 <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8">
-                    <div className="bg-zinc-900 border border-white/5 rounded-2xl p-6">
+                    <div className="bg-brand-card/30 border border-brand-border rounded-2xl p-6">
                         <div className="flex items-center gap-3 mb-2">
                             <Award className="w-5 h-5 text-blue-500" />
-                            <span className="text-sm font-bold text-zinc-500 uppercase tracking-wider">Score</span>
+                            <span className="text-sm font-bold text-brand-text-secondary uppercase tracking-wider">Score</span>
                         </div>
-                        <div className="text-3xl font-black">{review.stats.percentage}%</div>
-                        <div className="text-sm text-zinc-500 mt-1">{review.stats.score}/{review.stats.maxScore} points</div>
+                        <div className="text-3xl font-black text-brand-text">{review.stats.percentage}%</div>
+                        <div className="text-sm text-brand-text-secondary mt-1">{review.stats.score}/{review.stats.maxScore} points</div>
                     </div>
 
-                    <div className="bg-zinc-900 border border-white/5 rounded-2xl p-6">
+                    <div className="bg-brand-card/30 border border-brand-border rounded-2xl p-6">
                         <div className="flex items-center gap-3 mb-2">
                             <CheckCircle className="w-5 h-5 text-green-500" />
-                            <span className="text-sm font-bold text-zinc-500 uppercase tracking-wider">Correct</span>
+                            <span className="text-sm font-bold text-brand-text-secondary uppercase tracking-wider">Correct</span>
                         </div>
                         <div className="text-3xl font-black text-green-500">{review.stats.correctCount}</div>
-                        <div className="text-sm text-zinc-500 mt-1">out of {review.stats.totalQuestions}</div>
+                        <div className="text-sm text-brand-text-secondary mt-1">out of {review.stats.totalQuestions}</div>
                     </div>
 
-                    <div className="bg-zinc-900 border border-white/5 rounded-2xl p-6">
+                    <div className="bg-brand-card/30 border border-brand-border rounded-2xl p-6">
                         <div className="flex items-center gap-3 mb-2">
                             <XCircle className="w-5 h-5 text-red-500" />
-                            <span className="text-sm font-bold text-zinc-500 uppercase tracking-wider">Wrong</span>
+                            <span className="text-sm font-bold text-brand-text-secondary uppercase tracking-wider">Wrong</span>
                         </div>
                         <div className="text-3xl font-black text-red-500">{review.stats.wrongCount}</div>
-                        <div className="text-sm text-zinc-500 mt-1">to review</div>
+                        <div className="text-sm text-brand-text-secondary mt-1">to review</div>
                     </div>
 
-                    <div className="bg-zinc-900 border border-white/5 rounded-2xl p-6">
+                    <div className="bg-brand-card/30 border border-brand-border rounded-2xl p-6">
                         <div className="flex items-center gap-3 mb-2">
-                            <ArrowLeft className="w-5 h-5 text-zinc-500" />
-                            <span className="text-sm font-bold text-zinc-500 uppercase tracking-wider">Skipped</span>
+                            <ArrowLeft className="w-5 h-5 text-brand-text-secondary" />
+                            <span className="text-sm font-bold text-brand-text-secondary uppercase tracking-wider">Skipped</span>
                         </div>
-                        <div className="text-3xl font-black text-zinc-500">{review.stats.skippedCount || 0}</div>
-                        <div className="text-sm text-zinc-500 mt-1">not attempted</div>
+                        <div className="text-3xl font-black text-brand-text-secondary">{review.stats.skippedCount || 0}</div>
+                        <div className="text-sm text-brand-text-secondary mt-1">not attempted</div>
                     </div>
 
-                    <div className="bg-zinc-900 border border-white/5 rounded-2xl p-6">
+                    <div className="bg-brand-card/30 border border-brand-border rounded-2xl p-6">
                         <div className="flex items-center gap-3 mb-2">
                             <Clock className="w-5 h-5 text-purple-500" />
-                            <span className="text-sm font-bold text-zinc-500 uppercase tracking-wider">Time</span>
+                            <span className="text-sm font-bold text-brand-text-secondary uppercase tracking-wider">Time</span>
                         </div>
-                        <div className="text-3xl font-black">{formatTime(review.totalTime)}</div>
-                        <div className="text-sm text-zinc-500 mt-1">total time</div>
+                        <div className="text-3xl font-black text-brand-text">{formatTime(review.totalTime)}</div>
+                        <div className="text-sm text-brand-text-secondary mt-1">total time</div>
                     </div>
                 </div>
 
                 {/* Question Navigator */}
-                <div className="bg-zinc-900 border border-white/5 rounded-2xl p-6 mb-8">
-                    <h3 className="text-sm font-bold text-zinc-500 uppercase tracking-wider mb-4">Question Navigator</h3>
+                <div className="bg-brand-card/30 border border-brand-border rounded-2xl p-6 mb-8">
+                    <h3 className="text-sm font-bold text-brand-text-secondary uppercase tracking-wider mb-4">Question Navigator</h3>
                     <div className="flex flex-wrap gap-2">
                         {review.questions.map((q, idx) => {
                             // Determine style based on status
-                            let styles = 'bg-zinc-800 text-zinc-500 border border-zinc-700'; // Default/Skipped
+                            let styles = 'bg-brand-secondary/10 text-brand-text-secondary border border-brand-border'; // Default/Skipped
 
                             if (idx === currentQuestionIndex) {
-                                styles = 'bg-white text-black border-white';
+                                styles = 'bg-brand-text text-brand-bg border-brand-text';
                             } else if (q.status === 'correct' || q.isCorrect) {
                                 styles = 'bg-green-500/20 text-green-500 border border-green-500/30';
                             } else if (q.status === 'incorrect' || (!q.isCorrect && q.status !== 'skipped')) {
@@ -211,11 +213,11 @@ const TestReviewDetail = () => {
                     key={currentQuestionIndex}
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
-                    className="bg-zinc-900 border border-white/5 rounded-3xl p-8 mb-8"
+                    className="bg-brand-card/30 border border-brand-border rounded-3xl p-8 mb-8"
                 >
                     {/* Question Header */}
                     <div className="flex items-center gap-3 mb-6">
-                        <span className="px-3 py-1 bg-white/5 border border-white/10 rounded-lg text-xs font-bold text-zinc-400 uppercase tracking-wider">
+                        <span className="px-3 py-1 bg-brand-secondary/10 border border-brand-border rounded-lg text-xs font-bold text-brand-text-secondary uppercase tracking-wider">
                             Question {currentQuestionIndex + 1}
                         </span>
                         <span className={`px-3 py-1 rounded-lg text-xs font-bold uppercase tracking-wider ${currentQuestion.difficulty === 'easy' ? 'bg-green-500/10 text-green-500 border border-green-500/20' :
@@ -232,9 +234,9 @@ const TestReviewDetail = () => {
 
                         {/* Status Badge */}
                         {currentQuestion.status === 'skipped' ? (
-                            <div className="ml-auto flex items-center gap-2 px-4 py-2 bg-zinc-500/10 border border-zinc-500/20 rounded-lg">
-                                <ArrowLeft className="w-5 h-5 text-zinc-500" />
-                                <span className="text-sm font-bold text-zinc-500">Skipped</span>
+                            <div className="ml-auto flex items-center gap-2 px-4 py-2 bg-brand-secondary/10 border border-brand-border rounded-lg">
+                                <ArrowLeft className="w-5 h-5 text-brand-text-secondary" />
+                                <span className="text-sm font-bold text-brand-text-secondary">Skipped</span>
                             </div>
                         ) : currentQuestion.isCorrect ? (
                             <div className="ml-auto flex items-center gap-2 px-4 py-2 bg-green-500/10 border border-green-500/20 rounded-lg">
@@ -250,24 +252,24 @@ const TestReviewDetail = () => {
                     </div>
 
                     {/* Question Title & Description */}
-                    <h2 className="text-2xl font-bold mb-4">{currentQuestion.title}</h2>
-                    <p className="text-zinc-400 mb-6 whitespace-pre-wrap">{currentQuestion.description}</p>
+                    <h2 className="text-2xl font-bold mb-4 text-brand-text">{currentQuestion.title}</h2>
+                    <p className="text-brand-text-secondary mb-6 whitespace-pre-wrap">{currentQuestion.description}</p>
 
                     {/* Code Snippet */}
                     {currentQuestion.codeSnippet && (
                         <div className="mb-6">
                             <div className="flex items-center gap-2 mb-3">
                                 <Code2 className="w-4 h-4 text-blue-500" />
-                                <span className="text-sm font-bold text-zinc-500 uppercase tracking-wider">Code Snippet</span>
+                                <span className="text-sm font-bold text-brand-text-secondary uppercase tracking-wider">Code Snippet</span>
                             </div>
-                            <div className="rounded-2xl overflow-hidden border border-white/10">
+                            <div className="rounded-2xl overflow-hidden border border-brand-border">
                                 <SyntaxHighlighter
                                     language={currentQuestion.codeLanguage || 'javascript'}
-                                    style={vscDarkPlus}
+                                    style={theme === 'dark' ? vscDarkPlus : prism}
                                     customStyle={{
                                         margin: 0,
                                         padding: '1.5rem',
-                                        background: '#0a0a0a',
+                                        background: theme === 'dark' ? '#0a0a0a' : '#f4f4f5',
                                         fontSize: '0.875rem'
                                     }}
                                 >
@@ -291,7 +293,7 @@ const TestReviewDetail = () => {
                                             ? 'border-green-500 bg-green-500/10'
                                             : isUserAnswer
                                                 ? 'border-red-500 bg-red-500/10'
-                                                : 'border-white/10 bg-white/[0.02]'
+                                                : 'border-brand-border bg-brand-bg/40'
                                             }`}
                                     >
                                         <div className="flex items-center gap-3">
@@ -299,11 +301,11 @@ const TestReviewDetail = () => {
                                                 ? 'border-green-500 bg-green-500 text-white'
                                                 : isUserAnswer
                                                     ? 'border-red-500 bg-red-500 text-white'
-                                                    : 'border-zinc-700 text-zinc-600'
+                                                    : 'border-brand-border text-brand-text-secondary'
                                                 }`}>
                                                 {String.fromCharCode(65 + idx)}
                                             </div>
-                                            <span className={`font-medium ${isCorrectAnswer || isUserAnswer ? 'text-white' : 'text-zinc-400'
+                                            <span className={`font-medium ${isCorrectAnswer || isUserAnswer ? 'text-brand-text' : 'text-brand-text-secondary'
                                                 }`}>
                                                 {option.text}
                                             </span>
@@ -325,16 +327,16 @@ const TestReviewDetail = () => {
                         <div className="mb-6">
                             <div className="flex items-center gap-2 mb-3">
                                 <Code2 className="w-4 h-4 text-purple-500" />
-                                <span className="text-sm font-bold text-zinc-500 uppercase tracking-wider">Your Code</span>
+                                <span className="text-sm font-bold text-brand-text-secondary uppercase tracking-wider">Your Code</span>
                             </div>
-                            <div className="rounded-2xl overflow-hidden border border-white/10">
+                            <div className="rounded-2xl overflow-hidden border border-brand-border">
                                 <SyntaxHighlighter
                                     language="javascript"
-                                    style={vscDarkPlus}
+                                    style={theme === 'dark' ? vscDarkPlus : prism}
                                     customStyle={{
                                         margin: 0,
                                         padding: '1.5rem',
-                                        background: '#0a0a0a',
+                                        background: theme === 'dark' ? '#0a0a0a' : '#f4f4f5',
                                         fontSize: '0.875rem'
                                     }}
                                 >
@@ -372,7 +374,7 @@ const TestReviewDetail = () => {
                                         <Lightbulb className="w-6 h-6 text-blue-500 shrink-0 mt-1" />
                                         <div>
                                             <h4 className="text-lg font-bold text-blue-500 mb-2">Explanation</h4>
-                                            <p className="text-zinc-300 leading-relaxed whitespace-pre-wrap">
+                                            <p className="text-brand-text-secondary leading-relaxed whitespace-pre-wrap">
                                                 {currentQuestion.explanation}
                                             </p>
                                         </div>
@@ -382,8 +384,8 @@ const TestReviewDetail = () => {
                         </div>
                     ) : (
                         !currentQuestion.isCorrect && (
-                            <div className="mt-6 p-4 bg-zinc-800/50 border border-white/5 rounded-xl text-center">
-                                <p className="text-sm text-zinc-500 mb-4">No explanation available for this question</p>
+                            <div className="mt-6 p-4 bg-brand-secondary/10 border border-brand-border rounded-xl text-center">
+                                <p className="text-sm text-brand-text-secondary mb-4">No explanation available for this question</p>
                                 <button
                                     onClick={() => handleGenerateExplanation(currentQuestion.questionId)}
                                     disabled={generatingId === currentQuestion.questionId}
@@ -411,20 +413,20 @@ const TestReviewDetail = () => {
                     <button
                         onClick={() => setCurrentQuestionIndex(Math.max(0, currentQuestionIndex - 1))}
                         disabled={currentQuestionIndex === 0}
-                        className="flex items-center gap-2 px-6 py-3 bg-zinc-900 border border-white/10 rounded-xl font-bold hover:bg-zinc-800 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="flex items-center gap-2 px-6 py-3 bg-brand-card border border-brand-border rounded-xl font-bold hover:bg-brand-card/80 transition-all disabled:opacity-50 disabled:cursor-not-allowed text-brand-text"
                     >
                         <ChevronLeft size={20} />
                         Previous
                     </button>
 
-                    <span className="text-sm font-bold text-zinc-500">
+                    <span className="text-sm font-bold text-brand-text-secondary">
                         {currentQuestionIndex + 1} / {review.questions.length}
                     </span>
 
                     <button
                         onClick={() => setCurrentQuestionIndex(Math.min(review.questions.length - 1, currentQuestionIndex + 1))}
                         disabled={currentQuestionIndex === review.questions.length - 1}
-                        className="flex items-center gap-2 px-6 py-3 bg-zinc-900 border border-white/10 rounded-xl font-bold hover:bg-zinc-800 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="flex items-center gap-2 px-6 py-3 bg-brand-card border border-brand-border rounded-xl font-bold hover:bg-brand-card/80 transition-all disabled:opacity-50 disabled:cursor-not-allowed text-brand-text"
                     >
                         Next
                         <ChevronRight size={20} />

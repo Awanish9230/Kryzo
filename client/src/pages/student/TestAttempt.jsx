@@ -28,10 +28,12 @@ import {
 import Editor from '@monaco-editor/react';
 import Loader from '../../components/Loader';
 import { Panel, Group as PanelGroup, Separator as PanelResizeHandle } from 'react-resizable-panels';
+import { useTheme } from '../../context/ThemeContext';
 
 const TestAttempt = () => {
     const { testId } = useParams();
     const navigate = useNavigate();
+    const { theme } = useTheme();
     const [test, setTest] = useState(null);
     const [currentIdx, setCurrentIdx] = useState(0);
     const [answers, setAnswers] = useState({});
@@ -263,8 +265,8 @@ const TestAttempt = () => {
         const isVisited = visited.has(q.originalIdx);
         const isActive = currentIdx === q.originalIdx;
 
-        let bgColor = 'bg-zinc-800 text-zinc-500 border-white/5';
-        if (isActive) bgColor = 'bg-white text-black border-white shadow-lg shadow-white/10';
+        let bgColor = 'bg-brand-card/50 text-brand-text-secondary border-brand-border';
+        if (isActive) bgColor = 'bg-brand-text text-brand-bg border-brand-text shadow-lg shadow-brand-text/10';
         else if (isAnswered) bgColor = 'bg-green-600 text-white border-green-500';
         else if (isVisited) bgColor = 'bg-amber-600 text-white border-amber-500';
 
@@ -279,37 +281,37 @@ const TestAttempt = () => {
     };
 
     return (
-        <div className="h-screen bg-black flex flex-col overflow-hidden">
+        <div className="h-screen bg-brand-bg flex flex-col overflow-hidden transition-colors duration-300">
             {/* Navbar */}
-            <nav className="h-16 border-b border-white/5 bg-zinc-950/80 backdrop-blur-xl px-6 flex items-center justify-between shrink-0">
+            <nav className="h-16 border-b border-brand-border bg-brand-bg/80 backdrop-blur-xl px-6 flex items-center justify-between shrink-0">
                 <div className="flex items-center gap-4">
-                    <span className="text-white font-black tracking-tighter text-xl">KRYZO</span>
-                    <div className="h-5 w-px bg-white/10" />
-                    <span className="text-zinc-400 font-bold text-[10px] uppercase tracking-[0.2em]">{test.title || 'Assessment'}</span>
+                    <span className="text-brand-text font-black tracking-tighter text-xl">KRYZO</span>
+                    <div className="h-5 w-px bg-brand-border" />
+                    <span className="text-brand-text-secondary font-bold text-[10px] uppercase tracking-[0.2em]">{test.title || 'Assessment'}</span>
                 </div>
 
                 <div className="flex items-center gap-3">
                     <button
                         onClick={() => setShowSidebar(!showSidebar)}
-                        className="p-2 bg-white/5 border border-white/10 rounded-xl text-zinc-400 hover:text-white transition-all"
+                        className="p-2 bg-brand-secondary/10 border border-brand-border rounded-xl text-brand-text-secondary hover:text-brand-text transition-all"
                         title={showSidebar ? "Hide Sidebar" : "Show Sidebar"}
                     >
                         {showSidebar ? <PanelLeftClose size={18} /> : <PanelLeftOpen size={18} />}
                     </button>
-                    <div className="flex items-center gap-3 px-4 py-1.5 bg-white/5 border border-white/10 rounded-2xl">
-                        <Timer size={16} className={timeLeft < 300 ? 'text-red-500 animate-pulse' : 'text-zinc-400'} />
-                        <span className={`text-sm font-mono font-black ${timeLeft < 300 ? 'text-red-500' : 'text-white'}`}>
+                    <div className="flex items-center gap-3 px-4 py-1.5 bg-brand-secondary/10 border border-brand-border rounded-2xl">
+                        <Timer size={16} className={timeLeft < 300 ? 'text-red-500 animate-pulse' : 'text-brand-text-secondary'} />
+                        <span className={`text-sm font-mono font-black ${timeLeft < 300 ? 'text-red-500' : 'text-brand-text'}`}>
                             {formatTime(timeLeft)}
                         </span>
                     </div>
                     <button
                         onClick={() => setShowReportModal(true)}
-                        className="p-2 text-zinc-500 hover:text-red-500 transition-colors"
+                        className="p-2 text-brand-text-secondary hover:text-red-500 transition-colors"
                         title="Report Question"
                     >
                         <FlagIcon size={18} />
                     </button>
-                    <div className="h-5 w-px bg-white/10" />
+                    <div className="h-5 w-px bg-brand-border" />
                     <button
                         onClick={() => setShowSummaryModal(true)}
                         className="px-5 py-1.5 bg-blue-600 text-white text-[11px] font-black uppercase tracking-widest rounded-full hover:bg-blue-500 transition-all shadow-lg shadow-blue-500/20"
@@ -326,13 +328,13 @@ const TestAttempt = () => {
                             initial={{ width: 0, opacity: 0 }}
                             animate={{ width: 288, opacity: 1 }}
                             exit={{ width: 0, opacity: 0 }}
-                            className="border-r border-white/5 bg-zinc-950/50 flex flex-col shrink-0 overflow-hidden"
+                            className="border-r border-brand-border bg-brand-card/30 flex flex-col shrink-0 overflow-hidden"
                         >
                             <div className="p-5 flex-1 overflow-y-auto space-y-8 min-w-[288px]">
                                 <div>
                                     <div className="flex items-center gap-2 mb-4 px-1">
                                         <CheckCircle2 size={12} className="text-blue-500" />
-                                        <span className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em]">Multiple Choice</span>
+                                        <span className="text-[10px] font-black text-brand-text-secondary uppercase tracking-[0.2em]">Multiple Choice</span>
                                     </div>
                                     <div className="grid grid-cols-5 gap-2">
                                         {mcqs.map((q) => <QuestionButton key={q._id} q={q} />)}
@@ -343,7 +345,7 @@ const TestAttempt = () => {
                                     <div>
                                         <div className="flex items-center gap-2 mb-4 px-1">
                                             <Code2 size={12} className="text-purple-500" />
-                                            <span className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em]">Coding Challenges</span>
+                                            <span className="text-[10px] font-black text-brand-text-secondary uppercase tracking-[0.2em]">Coding Challenges</span>
                                         </div>
                                         <div className="grid grid-cols-5 gap-2">
                                             {coding.map((q) => <QuestionButton key={q._id} q={q} />)}
@@ -351,24 +353,25 @@ const TestAttempt = () => {
                                     </div>
                                 )}
 
-                                <div className="pt-8 border-t border-white/5 space-y-3">
-                                    <span className="text-[10px] font-black text-zinc-600 uppercase tracking-[0.2em] px-1">Legend</span>
+                                <div className="pt-8 border-t border-brand-border space-y-3">
+                                    <span className="text-[10px] font-black text-brand-text-secondary uppercase tracking-[0.2em] px-1">Legend</span>
                                     <div className="grid grid-cols-2 gap-x-4 gap-y-2 px-1">
                                         <div className="flex items-center gap-2">
                                             <div className="w-3 h-3 rounded-sm bg-green-500/20 border border-green-500/30" />
-                                            <span className="text-[10px] text-zinc-500 font-bold">Answered</span>
+                                            <span className="text-[10px] text-brand-text-secondary font-bold">Answered</span>
                                         </div>
                                         <div className="flex items-center gap-2">
                                             <div className="w-3 h-3 rounded-sm bg-amber-500/20 border border-amber-500/30" />
-                                            <span className="text-[10px] text-zinc-500 font-bold">Visited</span>
+                                            <span className="text-[10px] text-brand-text-secondary font-bold">Visited</span>
                                         </div>
                                         <div className="flex items-center gap-2">
-                                            <div className="w-3 h-3 rounded-sm bg-zinc-800/30 border border-white/5" />
-                                            <span className="text-[10px] text-zinc-500 font-bold">Not Visited</span>
+                                            <div className="w-3 h-3 rounded-sm bg-brand-card-hover border border-brand-border" />
+                                            <span className="text-[10px] text-brand-text-secondary font-bold">Not Visited</span>
                                         </div>
+
                                         <div className="flex items-center gap-2">
-                                            <div className="w-3 h-3 rounded-sm bg-white border border-white" />
-                                            <span className="text-[10px] text-zinc-500 font-bold">Current</span>
+                                            <div className="w-3 h-3 rounded-sm bg-brand-text border border-brand-text" />
+                                            <span className="text-[10px] text-brand-text-secondary font-bold">Current</span>
                                         </div>
                                     </div>
                                 </div>
@@ -377,50 +380,50 @@ const TestAttempt = () => {
                     )}
                 </AnimatePresence>
 
-                <div className="flex-1 flex flex-col relative bg-zinc-950/20 overflow-hidden">
+                <div className="flex-1 flex flex-col relative bg-brand-bg/50 overflow-hidden">
                     {currentQuestion.type === 'MCQ' ? (
                         <div className="flex-1 flex overflow-hidden">
-                            <PanelGroup direction="horizontal" autoSaveId="test-attempt-layout-mcq-v3" key={test?._id}>
+                            <PanelGroup direction="horizontal" autoSaveId="kryzo-workspace-v1">
                                 <AnimatePresence initial={false}>
                                     {showQuestionPanel && (
                                         <>
-                                            <Panel id="mcq-question-panel" defaultSize={40} minSize={20} className="h-full border-r border-white/5 bg-zinc-950/30 overflow-y-auto custom-scrollbar">
+                                            <Panel id="kryzo-question-panel" defaultSize={35} minSize={22} className="h-full border-r border-brand-border bg-brand-card/30 overflow-y-auto custom-scrollbar">
                                                 <div className="p-8 pb-32">
                                                     <div className="flex items-center gap-2 mb-6">
-                                                        <span className="px-3 py-1 bg-white/5 border border-white/10 rounded-lg text-[9px] font-black text-zinc-400 uppercase tracking-[0.2em]">Question {currentIdx + 1}</span>
+                                                        <span className="px-3 py-1 bg-brand-secondary/10 border border-brand-border rounded-lg text-[9px] font-black text-brand-text-secondary uppercase tracking-[0.2em]">Question {currentIdx + 1}</span>
                                                         <span className={`px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-[0.2em] ${currentQuestion.difficulty === 'hard' ? 'bg-red-500/10 text-red-500 border border-red-500/20' : currentQuestion.difficulty === 'medium' ? 'bg-yellow-500/10 text-yellow-500 border border-yellow-500/20' : 'bg-green-500/10 text-green-500 border border-green-500/20'
                                                             }`}>
                                                             {currentQuestion.difficulty}
                                                         </span>
                                                     </div>
-                                                    <h1 className="text-2xl font-black tracking-tight text-white mb-6 leading-tight">
+                                                    <h1 className="text-2xl font-black tracking-tight text-brand-text mb-6 leading-tight">
                                                         {currentQuestion.title}
                                                     </h1>
-                                                    <div className="text-zinc-400 text-sm leading-relaxed prose prose-invert prose-blue max-w-none">
+                                                    <div className="text-brand-text-secondary text-sm leading-relaxed prose prose-invert prose-blue max-w-none">
                                                         <ReactMarkdown remarkPlugins={[remarkGfm]}>
                                                             {currentQuestion.description}
                                                         </ReactMarkdown>
                                                     </div>
                                                 </div>
                                             </Panel>
-                                            <PanelResizeHandle className="w-1.5 bg-black hover:bg-blue-500/50 transition-colors flex flex-col justify-center items-center group cursor-col-resize z-50">
-                                                <div className="h-8 w-0.5 bg-zinc-700/50 rounded-full group-hover:bg-white transition-colors" />
+                                            <PanelResizeHandle className="w-1.5 bg-brand-bg hover:bg-blue-500/50 transition-colors flex flex-col justify-center items-center group cursor-col-resize z-50 border-x border-brand-border">
+                                                <div className="h-8 w-0.5 bg-brand-border rounded-full group-hover:bg-brand-text transition-colors" />
                                             </PanelResizeHandle>
                                         </>
                                     )}
                                 </AnimatePresence>
-                                <Panel id="mcq-answer-panel" defaultSize={60} minSize={30}>
-                                    <div className="h-full flex flex-col relative bg-zinc-950/20 overflow-hidden">
-                                        <div className="p-4 border-b border-white/5 flex items-center justify-between bg-zinc-950/50 backdrop-blur-md sticky top-0 z-10 shrink-0">
+                                <Panel id="kryzo-editor-panel" defaultSize={65} minSize={30}>
+                                    <div className="h-full flex flex-col relative bg-brand-bg/50 overflow-hidden">
+                                        <div className="p-4 border-b border-brand-border flex items-center justify-between bg-brand-bg/80 backdrop-blur-md sticky top-0 z-10 shrink-0">
                                             <button
                                                 onClick={() => setShowQuestionPanel(!showQuestionPanel)}
-                                                className="p-1.5 bg-white/5 border border-white/10 rounded-lg text-zinc-500 hover:text-white transition-all"
+                                                className="p-1.5 bg-brand-secondary/10 border border-brand-border rounded-lg text-brand-text-secondary hover:text-brand-text transition-all"
                                             >
                                                 {showQuestionPanel ? <PanelRightClose size={14} /> : <PanelRightOpen size={14} />}
                                             </button>
-                                            <span className="text-[10px] font-black text-zinc-600 uppercase tracking-widest">Select Answer</span>
+                                            <span className="text-[10px] font-black text-brand-text-secondary uppercase tracking-widest">Select Answer</span>
                                         </div>
-                                        <div className="flex-1 overflow-y-auto w-full custom-scrollbar bg-black/20">
+                                        <div className="flex-1 overflow-y-auto w-full custom-scrollbar bg-brand-bg/20">
                                             <div className="p-10 max-w-3xl mx-auto w-full pb-32">
                                                 <div className="grid grid-cols-1 gap-4">
                                                     {currentQuestion.options.map((opt, idx) => (
@@ -428,11 +431,11 @@ const TestAttempt = () => {
                                                             key={idx}
                                                             onClick={() => handleAnswer(currentQuestion._id, idx)}
                                                             className={`group p-6 rounded-3xl border text-left transition-all flex items-center gap-5 ${answers[currentQuestion._id] === idx
-                                                                ? 'bg-white border-white text-black shadow-2xl shadow-white/10'
-                                                                : 'bg-zinc-900/30 border-white/5 text-zinc-400 hover:border-white/20 hover:bg-zinc-900/50'
+                                                                ? 'bg-brand-text border-brand-text text-brand-bg shadow-2xl shadow-brand-text/10'
+                                                                : 'bg-brand-card/30 border-brand-border text-brand-text-secondary hover:border-brand-border/50 hover:bg-brand-card/50'
                                                                 }`}
                                                         >
-                                                            <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center text-xs font-black transition-colors ${answers[currentQuestion._id] === idx ? 'bg-black border-black text-white' : 'border-zinc-700 text-zinc-600 group-hover:border-zinc-500'
+                                                            <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center text-xs font-black transition-colors ${answers[currentQuestion._id] === idx ? 'bg-brand-bg border-brand-bg text-brand-text' : 'border-brand-secondary/30 text-brand-text-secondary group-hover:border-brand-secondary'
                                                                 }`}>
                                                                 {String.fromCharCode(65 + idx)}
                                                             </div>
@@ -448,22 +451,22 @@ const TestAttempt = () => {
                         </div>
                     ) : (
                         <div className="flex-1 flex overflow-hidden">
-                            <PanelGroup direction="horizontal" autoSaveId="test-attempt-layout-coding-v3" key={test?._id}>
+                            <PanelGroup direction="horizontal" autoSaveId="kryzo-workspace-v1">
                                 <AnimatePresence initial={false}>
                                     {showQuestionPanel && (
                                         <>
-                                            <Panel id="coding-question-panel" defaultSize={40} minSize={20} className="h-full border-r border-white/5 bg-zinc-950/30 overflow-y-auto custom-scrollbar">
+                                            <Panel id="kryzo-question-panel" defaultSize={35} minSize={22} className="h-full border-r border-brand-border bg-brand-card/30 overflow-y-auto custom-scrollbar">
                                                 <div className="p-8 pb-32">
-                                                    <div className="flex items-center gap-2 mb-6 text-zinc-500">
-                                                        <span className="text-[10px] font-black uppercase tracking-widest border border-white/10 px-2 py-0.5 rounded">Question {currentIdx + 1}</span>
+                                                    <div className="flex items-center gap-2 mb-6 text-brand-text-secondary">
+                                                        <span className="text-[10px] font-black uppercase tracking-widest border border-brand-border px-2 py-0.5 rounded">Question {currentIdx + 1}</span>
                                                         <span className={`text-[10px] font-black uppercase tracking-widest border px-2 py-0.5 rounded ${currentQuestion.difficulty === 'hard' ? 'bg-red-500/10 text-red-500 border-red-500/20' : currentQuestion.difficulty === 'medium' ? 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20' : 'bg-green-500/10 text-green-500 border-green-500/20'}`}>
                                                             {currentQuestion.difficulty}
                                                         </span>
                                                     </div>
-                                                    <h2 className="text-xl font-black tracking-tight text-white mb-6 leading-tight">
+                                                    <h2 className="text-xl font-black tracking-tight text-brand-text mb-6 leading-tight">
                                                         {currentQuestion.title}
                                                     </h2>
-                                                    <div className="text-zinc-400 text-sm leading-relaxed prose prose-invert prose-blue max-w-none mb-8">
+                                                    <div className="text-brand-text-secondary text-sm leading-relaxed prose prose-invert prose-blue max-w-none mb-8">
                                                         <ReactMarkdown remarkPlugins={[remarkGfm]}>
                                                             {currentQuestion.description}
                                                         </ReactMarkdown>
@@ -471,8 +474,8 @@ const TestAttempt = () => {
 
                                                     {currentQuestion.constraints && (
                                                         <div className="mb-6">
-                                                            <h3 className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-3">Constraints</h3>
-                                                            <pre className="bg-black/50 p-4 border border-white/5 rounded-2xl text-[11px] text-zinc-500 font-mono">
+                                                            <h3 className="text-[10px] font-black text-brand-text-secondary uppercase tracking-widest mb-3">Constraints</h3>
+                                                            <pre className="bg-brand-bg/50 p-4 border border-brand-border rounded-2xl text-[11px] text-brand-text-secondary font-mono">
                                                                 {currentQuestion.constraints}
                                                             </pre>
                                                         </div>
@@ -480,38 +483,38 @@ const TestAttempt = () => {
 
                                                     {currentQuestion.inputFormat && (
                                                         <div className="mb-6">
-                                                            <h3 className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-3">Input Format</h3>
-                                                            <div className="text-[11px] text-zinc-500 italic px-1">{currentQuestion.inputFormat}</div>
+                                                            <h3 className="text-[10px] font-black text-brand-text-secondary uppercase tracking-widest mb-3">Input Format</h3>
+                                                            <div className="text-[11px] text-brand-text-secondary italic px-1">{currentQuestion.inputFormat}</div>
                                                         </div>
                                                     )}
 
                                                     {currentQuestion.outputFormat && (
                                                         <div className="mb-6">
-                                                            <h3 className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-3">Output Format</h3>
-                                                            <div className="text-[11px] text-zinc-500 italic px-1">{currentQuestion.outputFormat}</div>
+                                                            <h3 className="text-[10px] font-black text-brand-text-secondary uppercase tracking-widest mb-3">Output Format</h3>
+                                                            <div className="text-[11px] text-brand-text-secondary italic px-1">{currentQuestion.outputFormat}</div>
                                                         </div>
                                                     )}
                                                 </div>
                                             </Panel>
-                                            <PanelResizeHandle className="w-1.5 bg-black hover:bg-blue-500/50 transition-colors flex flex-col justify-center items-center group cursor-col-resize z-50">
-                                                <div className="h-8 w-0.5 bg-zinc-700/50 rounded-full group-hover:bg-white transition-colors" />
+                                            <PanelResizeHandle className="w-1.5 bg-brand-bg hover:bg-blue-500/50 transition-colors flex flex-col justify-center items-center group cursor-col-resize z-50 border-x border-brand-border">
+                                                <div className="h-8 w-0.5 bg-brand-border rounded-full group-hover:bg-brand-text transition-colors" />
                                             </PanelResizeHandle>
                                         </>
                                     )}
                                 </AnimatePresence>
 
-                                <Panel id="coding-editor-panel" defaultSize={60} minSize={30}>
-                                    <div className="h-full flex flex-col bg-black overflow-hidden relative">
-                                        <div className="bg-zinc-950/50 px-6 py-3 border-b border-white/5 flex items-center justify-between shrink-0 backdrop-blur-md">
+                                <Panel id="kryzo-editor-panel" defaultSize={65} minSize={30}>
+                                    <div className="h-full flex flex-col bg-brand-bg overflow-hidden relative">
+                                        <div className="bg-brand-card/50 px-6 py-3 border-b border-brand-border flex items-center justify-between shrink-0 backdrop-blur-md">
                                             <div className="flex items-center gap-3">
                                                 <button
                                                     onClick={() => setShowQuestionPanel(!showQuestionPanel)}
-                                                    className="p-1.5 bg-white/5 border border-white/10 rounded-lg text-zinc-500 hover:text-white transition-all"
+                                                    className="p-1.5 bg-brand-secondary/10 border border-brand-border rounded-lg text-brand-text-secondary hover:text-brand-text transition-all"
                                                 >
                                                     {showQuestionPanel ? <PanelRightClose size={14} /> : <PanelRightOpen size={14} />}
                                                 </button>
                                                 <select
-                                                    className="bg-black border border-white/10 text-[10px] font-black text-zinc-400 rounded-xl px-4 py-1.5 focus:outline-none hover:text-white cursor-pointer transition-colors appearance-none uppercase tracking-widest"
+                                                    className="bg-brand-bg border border-brand-border text-[10px] font-black text-brand-text-secondary rounded-xl px-4 py-1.5 focus:outline-none hover:text-brand-text cursor-pointer transition-colors appearance-none uppercase tracking-widest"
                                                     value={selectedLanguage}
                                                     onChange={(e) => {
                                                         const newLang = e.target.value;
@@ -529,7 +532,7 @@ const TestAttempt = () => {
                                                 <button
                                                     onClick={handleRunCode}
                                                     disabled={isRunning}
-                                                    className="px-4 py-1.5 bg-zinc-800 text-[10px] font-black text-white uppercase tracking-widest rounded-xl hover:bg-zinc-700 transition-all flex items-center gap-2 disabled:opacity-50"
+                                                    className="px-4 py-1.5 bg-brand-secondary/10 text-[10px] font-black text-brand-text uppercase tracking-widest rounded-xl hover:bg-brand-secondary/20 transition-all flex items-center gap-2 disabled:opacity-50"
                                                 >
                                                     {isRunning ? <Loader size="small" showText={false} /> : <Play size={10} fill="currentColor" />}
                                                     Run
@@ -549,7 +552,7 @@ const TestAttempt = () => {
                                             <Editor
                                                 height="100%"
                                                 language={selectedLanguage?.toLowerCase()}
-                                                theme="vs-dark"
+                                                theme={theme === 'dark' ? 'vs-dark' : 'light'}
                                                 value={answers[currentQuestion._id] || ''}
                                                 onChange={(val) => handleAnswer(currentQuestion._id, val)}
                                                 options={{
@@ -567,11 +570,11 @@ const TestAttempt = () => {
                                             <motion.div
                                                 initial={{ height: 0 }}
                                                 animate={{ height: '40%' }}
-                                                className="h-[40%] bg-zinc-950 border-t border-white/10 flex flex-col absolute bottom-0 left-0 right-0 z-10"
+                                                className="h-[40%] bg-brand-card border-t border-brand-border flex flex-col absolute bottom-0 left-0 right-0 z-10"
                                             >
-                                                <div className="px-6 py-3 border-b border-white/5 flex items-center justify-between shrink-0">
-                                                    <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Test Results</span>
-                                                    <button onClick={() => setRunResults(null)} className="text-zinc-500 hover:text-white"><X size={14} /></button>
+                                                <div className="px-6 py-3 border-b border-brand-border flex items-center justify-between shrink-0">
+                                                    <span className="text-[10px] font-black text-brand-text-secondary uppercase tracking-widest">Test Results</span>
+                                                    <button onClick={() => setRunResults(null)} className="text-brand-text-secondary hover:text-brand-text"><X size={14} /></button>
                                                 </div>
                                                 <div className="flex-1 overflow-y-auto p-6 custom-scrollbar font-mono">
                                                     {!runResults && isRunning ? (
@@ -584,21 +587,21 @@ const TestAttempt = () => {
                                                             {runResults?.results.map((res, idx) => (
                                                                 <div key={idx} className={`p-4 rounded-xl border ${res.passed ? 'bg-green-500/5 border-green-500/10' : 'bg-red-500/5 border-red-500/10'}`}>
                                                                     <div className="flex items-center justify-between mb-3 text-[10px] font-black uppercase tracking-widest">
-                                                                        <span className="text-zinc-600">
+                                                                        <span className="text-brand-text-secondary">
                                                                             {res.isHidden ? `Verification Segment ${idx + 1} (Hidden)` : `Test Case ${idx + 1}`}
                                                                         </span>
                                                                         <span className={res.passed ? "text-green-500" : "text-red-500"}>{res.passed ? "Passed" : "Failed"}</span>
                                                                     </div>
                                                                     {!res.isHidden ? (
                                                                         <>
-                                                                            <div className="grid grid-cols-2 gap-4 text-[11px] text-zinc-400">
-                                                                                <div><span className="text-zinc-600 block mb-1 uppercase text-[8px]">Output</span>{res.actualOutput || 'N/A'}</div>
-                                                                                <div><span className="text-zinc-600 block mb-1 uppercase text-[8px]">Expected</span>{res.expectedOutput || 'N/A'}</div>
+                                                                            <div className="grid grid-cols-2 gap-4 text-[11px] text-brand-text-secondary">
+                                                                                <div><span className="text-brand-text-secondary block mb-1 uppercase text-[8px]">Output</span>{res.actualOutput || 'N/A'}</div>
+                                                                                <div><span className="text-brand-text-secondary block mb-1 uppercase text-[8px]">Expected</span>{res.expectedOutput || 'N/A'}</div>
                                                                             </div>
                                                                             {res.error && <div className="mt-3 p-2 bg-red-500/10 text-red-400 text-[10px] rounded-lg">{res.error}</div>}
                                                                         </>
                                                                     ) : (
-                                                                        <div className="text-[10px] text-zinc-600 italic">
+                                                                        <div className="text-[10px] text-brand-text-secondary italic">
                                                                             Details hidden for verification security
                                                                         </div>
                                                                     )}
@@ -614,24 +617,24 @@ const TestAttempt = () => {
                             </PanelGroup>
                         </div>
                     )}
-                    <footer className="h-16 md:h-20 border-t border-white/5 bg-zinc-950/80 backdrop-blur-md px-4 md:px-10 flex items-center justify-between shrink-0">
+                    <footer className="h-16 md:h-20 border-t border-brand-border bg-brand-bg/80 backdrop-blur-md px-4 md:px-10 flex items-center justify-between shrink-0">
                         <button
                             type="button"
                             disabled={currentIdx === 0}
                             onClick={() => setCurrentIdx(prev => prev - 1)}
-                            className="flex items-center gap-2 md:gap-3 text-zinc-500 hover:text-white disabled:opacity-20 transition-all font-bold text-[10px] md:text-xs uppercase tracking-widest"
+                            className="flex items-center gap-2 md:gap-3 text-brand-text-secondary hover:text-brand-text disabled:opacity-20 transition-all font-bold text-[10px] md:text-xs uppercase tracking-widest"
                         >
                             <ChevronLeft size={16} />
                             <span className="hidden md:inline">Previous</span>
                         </button>
 
                         <div className="flex items-center gap-4 md:gap-8">
-                            <button type="button" className="flex items-center gap-3 text-zinc-600 hover:text-amber-500 transition-all font-bold text-xs uppercase tracking-widest">
+                            <button type="button" className="flex items-center gap-3 text-brand-text-secondary hover:text-amber-500 transition-all font-bold text-xs uppercase tracking-widest">
                                 <Flag size={14} />
                                 <span className="hidden md:inline">Flag</span>
                             </button>
-                            <div className="h-4 w-px bg-white/5" />
-                            <div className="text-[10px] font-black text-zinc-600 uppercase tracking-widest">
+                            <div className="h-4 w-px bg-brand-border" />
+                            <div className="text-[10px] font-black text-brand-text-secondary uppercase tracking-widest">
                                 {currentIdx + 1} / {test.questions.length}
                             </div>
                         </div>
@@ -640,7 +643,7 @@ const TestAttempt = () => {
                             type="button"
                             disabled={currentIdx === test.questions.length - 1}
                             onClick={() => setCurrentIdx(prev => prev + 1)}
-                            className="px-6 md:px-8 py-2 md:py-3 bg-white text-black font-black uppercase tracking-widest rounded-2xl hover:bg-zinc-200 disabled:opacity-20 transition-all flex items-center gap-2 md:gap-4 text-[10px] md:text-xs shadow-xl shadow-white/5"
+                            className="px-6 md:px-8 py-2 md:py-3 bg-brand-text text-brand-bg font-black uppercase tracking-widest rounded-2xl hover:opacity-90 disabled:opacity-20 transition-all flex items-center gap-2 md:gap-4 text-[10px] md:text-xs shadow-xl shadow-brand-text/5"
                         >
                             <span className="hidden md:inline">Next</span>
                             <ChevronRight size={16} />
@@ -657,27 +660,27 @@ const TestAttempt = () => {
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
                             onClick={() => setShowSummaryModal(false)}
-                            className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+                            className="absolute inset-0 bg-brand-bg/80 backdrop-blur-sm"
                         />
                         <motion.div
                             initial={{ opacity: 0, scale: 0.95, y: 20 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                            className="w-full max-w-lg bg-zinc-900 border border-white/10 rounded-[2.5rem] p-10 relative z-10 shadow-3xl shadow-blue-500/5"
+                            className="w-full max-w-lg bg-brand-card border border-brand-border rounded-[2.5rem] p-10 relative z-10 shadow-3xl shadow-blue-500/5"
                         >
                             <div className="text-center mb-10">
-                                <h2 className="text-3xl font-black text-white mb-2 tracking-tight">Finish Assessment?</h2>
-                                <p className="text-zinc-500 text-sm font-bold uppercase tracking-widest">Review your progress before final submission</p>
+                                <h2 className="text-3xl font-black text-brand-text mb-2 tracking-tight">Finish Assessment?</h2>
+                                <p className="text-brand-text-secondary text-sm font-bold uppercase tracking-widest">Review your progress before final submission</p>
                             </div>
 
                             <div className="grid grid-cols-4 gap-4 mb-10">
-                                <div className="bg-zinc-950 p-6 rounded-3xl border border-white/5 text-center col-span-2">
-                                    <div className="text-2xl font-black text-white mb-1">{stats.attempted}</div>
-                                    <div className="text-[10px] font-black text-zinc-600 uppercase tracking-widest">Answered</div>
+                                <div className="bg-brand-bg p-6 rounded-3xl border border-brand-border text-center col-span-2">
+                                    <div className="text-2xl font-black text-brand-text mb-1">{stats.attempted}</div>
+                                    <div className="text-[10px] font-black text-brand-text-secondary uppercase tracking-widest">Answered</div>
                                 </div>
-                                <div className="bg-zinc-950 p-6 rounded-3xl border border-white/5 text-center col-span-2">
-                                    <div className={`text-2xl font-black mb-1 ${stats.remaining > 0 ? 'text-amber-500' : 'text-zinc-400'}`}>{stats.remaining}</div>
-                                    <div className="text-[10px] font-black text-zinc-600 uppercase tracking-widest">Unanswered</div>
+                                <div className="bg-brand-bg p-6 rounded-3xl border border-brand-border text-center col-span-2">
+                                    <div className={`text-2xl font-black mb-1 ${stats.remaining > 0 ? 'text-amber-500' : 'text-brand-text-secondary'}`}>{stats.remaining}</div>
+                                    <div className="text-[10px] font-black text-brand-text-secondary uppercase tracking-widest">Unanswered</div>
                                 </div>
                             </div>
 
@@ -700,7 +703,7 @@ const TestAttempt = () => {
                                 </button>
                                 <button
                                     onClick={() => setShowSummaryModal(false)}
-                                    className="w-full py-5 bg-zinc-800 text-white font-black uppercase tracking-[0.2em] rounded-2xl hover:bg-zinc-700 transition-all"
+                                    className="w-full py-5 bg-brand-bg text-brand-text border border-brand-border font-black uppercase tracking-[0.2em] rounded-2xl hover:bg-brand-card transition-all"
                                 >
                                     Back to Questions
                                 </button>
@@ -718,30 +721,30 @@ const TestAttempt = () => {
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
                             onClick={() => setShowReportModal(false)}
-                            className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+                            className="absolute inset-0 bg-brand-bg/80 backdrop-blur-sm"
                         />
                         <motion.div
                             initial={{ opacity: 0, scale: 0.95, y: 20 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                            className="w-full max-w-md bg-zinc-900 border border-white/10 rounded-[2.5rem] p-8 relative z-10"
+                            className="w-full max-w-md bg-brand-card border border-brand-border rounded-[2.5rem] p-8 relative z-10"
                         >
                             <div className="mb-6 text-center">
                                 <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-4 border border-red-500/20">
                                     <AlertTriangle className="text-red-500" size={28} />
                                 </div>
-                                <h2 className="text-2xl font-black text-white mb-2 tracking-tight">Report Issue</h2>
-                                <p className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.2em]">Question ID: {currentQuestion?._id}</p>
+                                <h2 className="text-2xl font-black text-brand-text mb-2 tracking-tight">Report Issue</h2>
+                                <p className="text-brand-text-secondary text-[10px] font-black uppercase tracking-[0.2em]">Question ID: {currentQuestion?._id}</p>
                             </div>
 
                             <div className="space-y-4 mb-8">
                                 <div className="space-y-2">
-                                    <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest ml-1">Reason for report</label>
+                                    <label className="text-[10px] font-black text-brand-text-secondary uppercase tracking-widest ml-1">Reason for report</label>
                                     <textarea
                                         value={reportReason}
                                         onChange={(e) => setReportReason(e.target.value)}
                                         placeholder="Explain the issue (Options incorrect, wrong sample output, vague description...)"
-                                        className="w-full h-32 bg-black border border-white/10 rounded-3xl p-6 text-sm text-zinc-300 focus:outline-none focus:border-red-500/50 transition-all resize-none leading-relaxed"
+                                        className="w-full h-32 bg-brand-bg border border-brand-border rounded-3xl p-6 text-sm text-brand-text focus:outline-none focus:border-red-500/50 transition-all resize-none leading-relaxed"
                                     />
                                 </div>
                             </div>
@@ -756,7 +759,7 @@ const TestAttempt = () => {
                                 </button>
                                 <button
                                     onClick={() => setShowReportModal(false)}
-                                    className="w-full py-4 bg-zinc-800 text-white font-black uppercase tracking-[0.2em] rounded-2xl hover:bg-zinc-700 transition-all"
+                                    className="w-full py-4 bg-brand-bg text-brand-text border border-brand-border font-black uppercase tracking-[0.2em] rounded-2xl hover:bg-brand-card transition-all"
                                 >
                                     Cancel
                                 </button>
@@ -769,8 +772,8 @@ const TestAttempt = () => {
             <style>{`
                 .custom-scrollbar::-webkit-scrollbar { width: 5px; }
                 .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-                .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.05); border-radius: 10px; }
-                .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.1); }
+                .custom-scrollbar::-webkit-scrollbar-thumb { background: var(--color-brand-border); border-radius: 10px; }
+                .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: var(--color-brand-secondary); }
             `}</style>
         </div >
     );

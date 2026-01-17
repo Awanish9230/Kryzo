@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import api from '../../utils/api';
 import TOPICS_DATA from '../../utils/topicsData';
 import { motion } from 'framer-motion';
+import { useTheme } from '../../context/ThemeContext';
 import {
     ArrowLeft,
     HelpCircle,
@@ -22,6 +23,7 @@ import Loader from '../../components/Loader';
 import toast from 'react-hot-toast';
 
 const EditQuestion = () => {
+    const { theme } = useTheme();
     const { id } = useParams();
     const navigate = useNavigate();
     const [loading, setLoading] = useState(true);
@@ -197,57 +199,57 @@ const EditQuestion = () => {
     );
 
     return (
-        <div className="min-h-screen bg-black pt-28 pb-20 px-6">
+        <div className="min-h-screen bg-brand-bg pt-28 pb-20 px-6 transition-colors duration-300">
             <div className="max-w-5xl mx-auto">
                 <header className="mb-12 flex items-center justify-between">
-                    <button onClick={() => navigate(-1)} className="p-2 text-zinc-500 hover:text-white bg-white/5 border border-white/5 rounded-xl transition-all">
+                    <button onClick={() => navigate(-1)} className="p-2 text-brand-text-secondary hover:text-brand-text bg-brand-secondary/10 border border-brand-border rounded-xl transition-all">
                         <ArrowLeft size={20} />
                     </button>
-                    <div className="flex items-center gap-2 px-4 py-2 bg-zinc-900 border border-white/5 rounded-2xl">
+                    <div className="flex items-center gap-2 px-4 py-2 bg-brand-card border border-brand-border rounded-2xl">
                         {formData.type === 'MCQ' && <HelpCircle size={18} className="text-blue-500" />}
                         {formData.type === 'CODING' && <Code size={18} className="text-purple-500" />}
                         {formData.type === 'DEVELOPMENT' && <FileText size={18} className="text-green-500" />}
-                        <span className="text-sm font-bold text-white">{formData.type}</span>
+                        <span className="text-sm font-bold text-brand-text">{formData.type}</span>
                     </div>
                 </header>
 
                 <form onSubmit={handleSubmit} className="space-y-8">
-                    <div className="bg-zinc-900/50 border border-white/5 rounded-[2.5rem] p-8 md:p-10 backdrop-blur-sm">
+                    <div className="bg-brand-card/30 border border-brand-border rounded-[2.5rem] p-8 md:p-10 backdrop-blur-sm">
                         <div className="flex items-center gap-3 mb-8">
                             <div className="p-3 bg-blue-500/10 rounded-2xl text-blue-500">
                                 <Settings size={20} />
                             </div>
-                            <h2 className="text-xl font-bold tracking-tight">Question Details</h2>
+                            <h2 className="text-xl font-bold tracking-tight text-brand-text">Question Details</h2>
                         </div>
 
                         <div className="space-y-6">
                             <div className="space-y-2">
-                                <label className="text-sm font-medium text-zinc-400 ml-1">Title</label>
-                                <input name="title" required placeholder="Question Title" className="w-full px-5 py-4 bg-zinc-950 border border-white/10 rounded-2xl text-white focus:outline-none focus:border-blue-500 transition-all" value={formData.title} onChange={handleChange} />
+                                <label className="text-sm font-medium text-brand-text-secondary ml-1">Title</label>
+                                <input name="title" required placeholder="Question Title" className="w-full px-5 py-4 bg-brand-bg border border-brand-border rounded-2xl text-brand-text focus:outline-none focus:border-blue-500 transition-all placeholder:text-brand-text-secondary/50" value={formData.title} onChange={handleChange} />
                             </div>
                             <div className="space-y-2">
-                                <label className="text-sm font-medium text-zinc-400 ml-1">Description</label>
-                                <textarea name="description" required rows={4} placeholder="Problem description..." className="w-full px-5 py-4 bg-zinc-950 border border-white/10 rounded-2xl text-white focus:outline-none focus:border-blue-500 transition-all resize-none" value={formData.description} onChange={handleChange} />
+                                <label className="text-sm font-medium text-brand-text-secondary ml-1">Description</label>
+                                <textarea name="description" required rows={4} placeholder="Problem description..." className="w-full px-5 py-4 bg-brand-bg border border-brand-border rounded-2xl text-brand-text focus:outline-none focus:border-blue-500 transition-all resize-none placeholder:text-brand-text-secondary/50" value={formData.description} onChange={handleChange} />
                             </div>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div className="space-y-2">
-                                    <label className="text-sm font-medium text-zinc-400 ml-1">Difficulty</label>
-                                    <select name="difficulty" className="w-full px-5 py-4 bg-zinc-950 border border-white/10 rounded-2xl text-white focus:outline-none" value={formData.difficulty} onChange={handleChange}>
+                                    <label className="text-sm font-medium text-brand-text-secondary ml-1">Difficulty</label>
+                                    <select name="difficulty" className="w-full px-5 py-4 bg-brand-bg border border-brand-border rounded-2xl text-brand-text focus:outline-none" value={formData.difficulty} onChange={handleChange}>
                                         <option value="easy">Easy</option>
                                         <option value="medium">Medium</option>
                                         <option value="hard">Hard</option>
                                     </select>
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-sm font-medium text-zinc-400 ml-1">Time (mins)</label>
-                                    <input name="expectedTime" type="number" className="w-full px-5 py-4 bg-zinc-950 border border-white/10 rounded-2xl text-white focus:outline-none" value={formData.expectedTime} onChange={handleChange} />
+                                    <label className="text-sm font-medium text-brand-text-secondary ml-1">Time (mins)</label>
+                                    <input name="expectedTime" type="number" className="w-full px-5 py-4 bg-brand-bg border border-brand-border rounded-2xl text-brand-text focus:outline-none" value={formData.expectedTime} onChange={handleChange} />
                                 </div>
                             </div>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div className="space-y-2">
-                                    <label className="text-sm font-medium text-zinc-400 ml-1">Topic</label>
+                                    <label className="text-sm font-medium text-brand-text-secondary ml-1">Topic</label>
                                     <select
-                                        className="w-full px-5 py-4 bg-zinc-950 border border-white/10 rounded-2xl text-white focus:outline-none"
+                                        className="w-full px-5 py-4 bg-brand-bg border border-brand-border rounded-2xl text-brand-text focus:outline-none"
                                         value={selectedTopic}
                                         onChange={(e) => {
                                             setSelectedTopic(e.target.value);
@@ -261,9 +263,9 @@ const EditQuestion = () => {
                                     </select>
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-sm font-medium text-zinc-400 ml-1">Subtopic</label>
+                                    <label className="text-sm font-medium text-brand-text-secondary ml-1">Subtopic</label>
                                     <select
-                                        className="w-full px-5 py-4 bg-zinc-950 border border-white/10 rounded-2xl text-white focus:outline-none"
+                                        className="w-full px-5 py-4 bg-brand-bg border border-brand-border rounded-2xl text-brand-text focus:outline-none"
                                         value={selectedSubtopic}
                                         onChange={(e) => setSelectedSubtopic(e.target.value)}
                                         disabled={!selectedTopic}
@@ -279,12 +281,12 @@ const EditQuestion = () => {
                     </div>
 
                     {formData.type === 'MCQ' && (
-                        <div className="bg-zinc-900/50 border border-white/5 rounded-[2.5rem] p-8 md:p-10 backdrop-blur-sm">
+                        <div className="bg-brand-card/30 border border-brand-border rounded-[2.5rem] p-8 md:p-10 backdrop-blur-sm">
                             <div className="flex items-center gap-3 mb-8">
                                 <div className="p-3 bg-purple-500/10 rounded-2xl text-purple-500">
                                     <HelpCircle size={20} />
                                 </div>
-                                <h2 className="text-xl font-bold tracking-tight">Options</h2>
+                                <h2 className="text-xl font-bold tracking-tight text-brand-text">Options</h2>
                             </div>
                             <div className="space-y-4">
                                 {formData.options.map((opt, idx) => (
@@ -294,14 +296,14 @@ const EditQuestion = () => {
                                             onClick={() => handleCorrectOption(idx)}
                                             className={`p-4 border rounded-2xl transition-all ${opt.isCorrect
                                                 ? 'bg-green-500/10 border-green-500 text-green-500'
-                                                : 'bg-zinc-950 border-white/10 text-zinc-600'
+                                                : 'bg-brand-bg border-brand-border text-brand-text-secondary'
                                                 }`}
                                         >
                                             <CheckCircle2 size={24} />
                                         </button>
                                         <input
                                             placeholder={`Option ${idx + 1}`}
-                                            className="flex-1 px-5 py-4 bg-zinc-950 border border-white/10 rounded-2xl text-white focus:outline-none"
+                                            className="flex-1 px-5 py-4 bg-brand-bg border border-brand-border rounded-2xl text-brand-text focus:outline-none placeholder:text-brand-text-secondary/50"
                                             value={opt.text}
                                             onChange={(e) => handleOptionChange(idx, 'text', e.target.value)}
                                         />
@@ -310,16 +312,16 @@ const EditQuestion = () => {
                             </div>
 
                             {/* Explanation Field for MCQ */}
-                            <div className="space-y-2 mt-6 pt-6 border-t border-white/5">
-                                <label className="text-sm font-medium text-zinc-400 ml-1">
+                            <div className="space-y-2 mt-6 pt-6 border-t border-brand-border">
+                                <label className="text-sm font-medium text-brand-text-secondary ml-1">
                                     Explanation (Optional)
-                                    <span className="text-zinc-600 ml-2">Shown for wrong answers during review</span>
+                                    <span className="text-brand-text-secondary/70 ml-2">Shown for wrong answers during review</span>
                                 </label>
                                 <textarea
                                     name="explanation"
                                     rows={3}
                                     placeholder="Explain why the correct answer is correct..."
-                                    className="w-full px-5 py-4 bg-zinc-950 border border-white/10 rounded-2xl text-white focus:outline-none focus:border-blue-500 transition-all resize-none"
+                                    className="w-full px-5 py-4 bg-brand-bg border border-brand-border rounded-2xl text-brand-text focus:outline-none focus:border-blue-500 transition-all resize-none placeholder:text-brand-text-secondary/50"
                                     value={formData.explanation || ''}
                                     onChange={handleChange}
                                 />
@@ -328,45 +330,45 @@ const EditQuestion = () => {
                     )}
 
                     {formData.type === 'CODING' && (
-                        <div className="bg-zinc-900/50 border border-white/5 rounded-[2.5rem] p-8 md:p-10 backdrop-blur-sm">
+                        <div className="bg-brand-card/30 border border-brand-border rounded-[2.5rem] p-8 md:p-10 backdrop-blur-sm">
                             <div className="flex items-center gap-3 mb-8">
                                 <div className="p-3 bg-yellow-500/10 rounded-2xl text-yellow-500">
                                     <Code size={20} />
                                 </div>
-                                <h2 className="text-xl font-bold tracking-tight">Coding Config</h2>
+                                <h2 className="text-xl font-bold tracking-tight text-brand-text">Coding Config</h2>
                             </div>
                             <div className="space-y-6">
                                 <div className="space-y-2">
-                                    <label className="text-sm font-medium text-zinc-400">Constraints</label>
-                                    <textarea name="constraints" className="w-full px-5 py-4 bg-zinc-950 border border-white/10 rounded-2xl text-white focus:outline-none resize-none" rows={3} value={formData.constraints} onChange={handleChange} />
+                                    <label className="text-sm font-medium text-brand-text-secondary">Constraints</label>
+                                    <textarea name="constraints" className="w-full px-5 py-4 bg-brand-bg border border-brand-border rounded-2xl text-brand-text focus:outline-none resize-none placeholder:text-brand-text-secondary/50" rows={3} value={formData.constraints} onChange={handleChange} />
                                 </div>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div className="space-y-2">
-                                        <label className="text-sm font-medium text-zinc-400">Input Format</label>
-                                        <textarea name="inputFormat" className="w-full px-5 py-4 bg-zinc-950 border border-white/10 rounded-2xl text-white focus:outline-none resize-none" rows={3} value={formData.inputFormat} onChange={handleChange} />
+                                        <label className="text-sm font-medium text-brand-text-secondary">Input Format</label>
+                                        <textarea name="inputFormat" className="w-full px-5 py-4 bg-brand-bg border border-brand-border rounded-2xl text-brand-text focus:outline-none resize-none placeholder:text-brand-text-secondary/50" rows={3} value={formData.inputFormat} onChange={handleChange} />
                                     </div>
                                     <div className="space-y-2">
-                                        <label className="text-sm font-medium text-zinc-400">Output Format</label>
-                                        <textarea name="outputFormat" className="w-full px-5 py-4 bg-zinc-950 border border-white/10 rounded-2xl text-white focus:outline-none resize-none" rows={3} value={formData.outputFormat} onChange={handleChange} />
+                                        <label className="text-sm font-medium text-brand-text-secondary">Output Format</label>
+                                        <textarea name="outputFormat" className="w-full px-5 py-4 bg-brand-bg border border-brand-border rounded-2xl text-brand-text focus:outline-none resize-none placeholder:text-brand-text-secondary/50" rows={3} value={formData.outputFormat} onChange={handleChange} />
                                     </div>
                                 </div>
                                 <div className="space-y-4">
                                     <div className="flex items-center justify-between">
-                                        <h3 className="font-bold">Test Cases</h3>
-                                        <button type="button" onClick={addTestCase} className="p-2 bg-white/5 border border-white/5 rounded-xl hover:text-blue-500">
+                                        <h3 className="font-bold text-brand-text">Test Cases</h3>
+                                        <button type="button" onClick={addTestCase} className="p-2 bg-brand-secondary/10 border border-brand-border rounded-xl hover:text-blue-500 transition-colors">
                                             <Plus size={20} />
                                         </button>
                                     </div>
                                     {formData.testCases.map((tc, idx) => (
-                                        <div key={idx} className="p-6 bg-zinc-950 border border-white/5 rounded-3xl space-y-4 relative group">
-                                            <button type="button" onClick={() => removeTestCase(idx)} className="absolute top-4 right-4 p-2 text-zinc-700 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all">
+                                        <div key={idx} className="p-6 bg-brand-bg border border-brand-border rounded-3xl space-y-4 relative group">
+                                            <button type="button" onClick={() => removeTestCase(idx)} className="absolute top-4 right-4 p-2 text-brand-text-secondary hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all">
                                                 <Trash2 size={16} />
                                             </button>
                                             <div className="grid grid-cols-2 gap-4">
-                                                <textarea placeholder="Input" className="bg-black/50 border border-white/10 p-3 rounded-xl text-sm w-full focus:outline-none resize-none font-mono" rows={3} value={tc.input} onChange={(e) => handleTestCaseChange(idx, 'input', e.target.value)} />
-                                                <textarea placeholder="Output" className="bg-black/50 border border-white/10 p-3 rounded-xl text-sm w-full focus:outline-none resize-none font-mono" rows={3} value={tc.output} onChange={(e) => handleTestCaseChange(idx, 'output', e.target.value)} />
+                                                <textarea placeholder="Input" className="bg-brand-card border border-brand-border p-3 rounded-xl text-sm w-full focus:outline-none resize-none font-mono text-brand-text placeholder:text-brand-text-secondary/50" rows={3} value={tc.input} onChange={(e) => handleTestCaseChange(idx, 'input', e.target.value)} />
+                                                <textarea placeholder="Output" className="bg-brand-card border border-brand-border p-3 rounded-xl text-sm w-full focus:outline-none resize-none font-mono text-brand-text placeholder:text-brand-text-secondary/50" rows={3} value={tc.output} onChange={(e) => handleTestCaseChange(idx, 'output', e.target.value)} />
                                             </div>
-                                            <label className="flex items-center gap-2 text-xs font-bold text-zinc-500">
+                                            <label className="flex items-center gap-2 text-xs font-bold text-brand-text-secondary">
                                                 <input type="checkbox" checked={tc.isHidden} onChange={(e) => handleTestCaseChange(idx, 'isHidden', e.target.checked)} />
                                                 Hidden Test Case
                                             </label>
@@ -375,13 +377,13 @@ const EditQuestion = () => {
                                 </div>
 
                                 {/* Real-time Testing Section for Admin */}
-                                <div className="space-y-4 pt-8 border-t border-white/5">
+                                <div className="space-y-4 pt-8 border-t border-brand-border">
                                     <div className="flex items-center justify-between">
                                         <div className="flex items-center gap-3">
                                             <div className="p-2 bg-blue-500/10 rounded-xl text-blue-500">
                                                 <Play size={16} />
                                             </div>
-                                            <h3 className="font-bold text-white">Real-time Testing</h3>
+                                            <h3 className="font-bold text-brand-text">Real-time Testing</h3>
                                         </div>
                                         <button
                                             type="button"
@@ -397,9 +399,9 @@ const EditQuestion = () => {
                                     <div className="space-y-4">
                                         <div className="space-y-2">
                                             <div className="flex items-center justify-between ml-1">
-                                                <label className="text-xs font-medium text-zinc-500">Sample Solution / Test Code</label>
+                                                <label className="text-xs font-medium text-brand-text-secondary">Sample Solution / Test Code</label>
                                                 <select
-                                                    className="bg-black border border-white/10 text-[10px] font-black text-zinc-400 rounded-lg px-3 py-1 focus:outline-none"
+                                                    className="bg-brand-bg border border-brand-border text-[10px] font-black text-brand-text-secondary rounded-lg px-3 py-1 focus:outline-none"
                                                     value={formData.codeLanguage}
                                                     onChange={(e) => setFormData({ ...formData, codeLanguage: e.target.value })}
                                                 >
@@ -410,7 +412,7 @@ const EditQuestion = () => {
                                                 </select>
                                             </div>
                                             <textarea
-                                                className="w-full px-5 py-4 bg-black border border-white/10 rounded-2xl text-white font-mono text-sm focus:outline-none focus:border-blue-500/50 resize-none h-48"
+                                                className="w-full px-5 py-4 bg-brand-bg border border-brand-border rounded-2xl text-brand-text font-mono text-sm focus:outline-none focus:border-blue-500/50 resize-none h-48 placeholder:text-brand-text-secondary/50"
                                                 placeholder="Paste a solution to verify your test cases..."
                                                 value={testCode}
                                                 onChange={(e) => setTestCode(e.target.value)}
@@ -421,10 +423,10 @@ const EditQuestion = () => {
                                             <motion.div
                                                 initial={{ opacity: 0, y: 10 }}
                                                 animate={{ opacity: 1, y: 0 }}
-                                                className="bg-zinc-950 border border-white/5 rounded-3xl overflow-hidden"
+                                                className="bg-brand-card border border-brand-border rounded-3xl overflow-hidden"
                                             >
-                                                <div className="px-6 py-3 border-b border-white/5 flex items-center justify-between bg-white/[0.02]">
-                                                    <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Test Results</span>
+                                                <div className="px-6 py-3 border-b border-brand-border flex items-center justify-between bg-brand-bg/[0.02]">
+                                                    <span className="text-[10px] font-black text-brand-text-secondary uppercase tracking-widest">Test Results</span>
                                                     <div className="flex gap-4">
                                                         <span className="text-[10px] font-black text-green-500 uppercase tracking-widest">Passed: {testResults.summary.passed}</span>
                                                         <span className="text-[10px] font-black text-red-500 uppercase tracking-widest">Failed: {testResults.summary.failed}</span>
@@ -434,17 +436,17 @@ const EditQuestion = () => {
                                                     {testResults.results.map((res, idx) => (
                                                         <div key={idx} className={`p-4 rounded-2xl border ${res.passed ? 'bg-green-500/5 border-green-500/10' : 'bg-red-500/5 border-red-500/10'}`}>
                                                             <div className="flex items-center justify-between mb-2">
-                                                                <span className="text-[10px] font-black text-zinc-600 uppercase tracking-widest">Case {idx + 1}</span>
+                                                                <span className="text-[10px] font-black text-brand-text-secondary uppercase tracking-widest">Case {idx + 1}</span>
                                                                 {res.passed ? <Check size={14} className="text-green-500" /> : <CloseIcon size={14} className="text-red-500" />}
                                                             </div>
                                                             <div className="grid grid-cols-2 gap-4 text-[11px] font-mono">
                                                                 <div>
-                                                                    <span className="text-zinc-600 block mb-1 uppercase text-[8px]">Actual</span>
-                                                                    <span className="text-zinc-400 break-all">{res.actualOutput || 'N/A'}</span>
+                                                                    <span className="text-brand-text-secondary block mb-1 uppercase text-[8px]">Actual</span>
+                                                                    <span className="text-brand-text-secondary/70 break-all">{res.actualOutput || 'N/A'}</span>
                                                                 </div>
                                                                 <div>
-                                                                    <span className="text-zinc-600 block mb-1 uppercase text-[8px]">Expected</span>
-                                                                    <span className="text-zinc-400 break-all">{res.expectedOutput || 'N/A'}</span>
+                                                                    <span className="text-brand-text-secondary block mb-1 uppercase text-[8px]">Expected</span>
+                                                                    <span className="text-brand-text-secondary/70 break-all">{res.expectedOutput || 'N/A'}</span>
                                                                 </div>
                                                             </div>
                                                             {res.error && <div className="mt-2 p-2 bg-red-500/10 text-red-400 text-[10px] rounded-lg border border-red-500/20">{res.error}</div>}
@@ -460,26 +462,26 @@ const EditQuestion = () => {
                     )}
 
                     {formData.type === 'DEVELOPMENT' && (
-                        <div className="bg-zinc-900/50 border border-white/5 rounded-[2.5rem] p-8 md:p-10 backdrop-blur-sm">
+                        <div className="bg-brand-card/30 border border-brand-border rounded-[2.5rem] p-8 md:p-10 backdrop-blur-sm">
                             <div className="flex items-center gap-3 mb-8">
                                 <div className="p-3 bg-green-500/10 rounded-2xl text-green-500">
                                     <FileText size={20} />
                                 </div>
-                                <h2 className="text-xl font-bold tracking-tight">Development Project</h2>
+                                <h2 className="text-xl font-bold tracking-tight text-brand-text">Development Project</h2>
                             </div>
                             <div className="space-y-6">
                                 <div className="space-y-2">
-                                    <label className="text-sm font-medium text-zinc-400">Project Requirements</label>
-                                    <textarea name="projectRequirements" className="w-full px-5 py-4 bg-zinc-950 border border-white/10 rounded-2xl text-white focus:outline-none resize-none" rows={4} value={formData.projectRequirements} onChange={handleChange} placeholder="Describe the project requirements..." />
+                                    <label className="text-sm font-medium text-brand-text-secondary">Project Requirements</label>
+                                    <textarea name="projectRequirements" className="w-full px-5 py-4 bg-brand-bg border border-brand-border rounded-2xl text-brand-text focus:outline-none resize-none placeholder:text-brand-text-secondary/50" rows={4} value={formData.projectRequirements} onChange={handleChange} placeholder="Describe the project requirements..." />
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-sm font-medium text-zinc-400">Submission Guidelines</label>
-                                    <textarea name="submissionGuidelines" className="w-full px-5 py-4 bg-zinc-950 border border-white/10 rounded-2xl text-white focus:outline-none resize-none" rows={3} value={formData.submissionGuidelines} onChange={handleChange} placeholder="How should students submit their work?" />
+                                    <label className="text-sm font-medium text-brand-text-secondary">Submission Guidelines</label>
+                                    <textarea name="submissionGuidelines" className="w-full px-5 py-4 bg-brand-bg border border-brand-border rounded-2xl text-brand-text focus:outline-none resize-none placeholder:text-brand-text-secondary/50" rows={3} value={formData.submissionGuidelines} onChange={handleChange} placeholder="How should students submit their work?" />
                                 </div>
                                 <div className="space-y-4">
                                     <div className="flex items-center justify-between">
-                                        <label className="text-sm font-medium text-zinc-400">Evaluation Criteria</label>
-                                        <button type="button" onClick={() => addArrayField('evaluationCriteria')} className="p-2 bg-white/5 border border-white/5 rounded-xl hover:text-blue-500">
+                                        <label className="text-sm font-medium text-brand-text-secondary">Evaluation Criteria</label>
+                                        <button type="button" onClick={() => addArrayField('evaluationCriteria')} className="p-2 bg-brand-secondary/10 border border-brand-border rounded-xl hover:text-blue-500 transition-colors">
                                             <Plus size={16} />
                                         </button>
                                     </div>
@@ -487,12 +489,12 @@ const EditQuestion = () => {
                                         <div key={idx} className="flex gap-2">
                                             <input
                                                 placeholder={`Criterion ${idx + 1}`}
-                                                className="flex-1 px-4 py-3 bg-zinc-950 border border-white/10 rounded-xl text-white focus:outline-none"
+                                                className="flex-1 px-4 py-3 bg-brand-bg border border-brand-border rounded-xl text-brand-text focus:outline-none placeholder:text-brand-text-secondary/50"
                                                 value={criterion}
                                                 onChange={(e) => handleArrayFieldChange('evaluationCriteria', idx, e.target.value)}
                                             />
                                             {formData.evaluationCriteria.length > 1 && (
-                                                <button type="button" onClick={() => removeArrayField('evaluationCriteria', idx)} className="p-3 text-zinc-600 hover:text-red-500 transition-all">
+                                                <button type="button" onClick={() => removeArrayField('evaluationCriteria', idx)} className="p-3 text-brand-text-secondary hover:text-red-500 transition-all">
                                                     <Trash2 size={16} />
                                                 </button>
                                             )}
@@ -501,8 +503,8 @@ const EditQuestion = () => {
                                 </div>
                                 <div className="space-y-4">
                                     <div className="flex items-center justify-between">
-                                        <label className="text-sm font-medium text-zinc-400">Expected Deliverables</label>
-                                        <button type="button" onClick={() => addArrayField('expectedDeliverables')} className="p-2 bg-white/5 border border-white/5 rounded-xl hover:text-blue-500">
+                                        <label className="text-sm font-medium text-brand-text-secondary">Expected Deliverables</label>
+                                        <button type="button" onClick={() => addArrayField('expectedDeliverables')} className="p-2 bg-brand-secondary/10 border border-brand-border rounded-xl hover:text-blue-500 transition-colors">
                                             <Plus size={16} />
                                         </button>
                                     </div>
@@ -510,12 +512,12 @@ const EditQuestion = () => {
                                         <div key={idx} className="flex gap-2">
                                             <input
                                                 placeholder={`Deliverable ${idx + 1}`}
-                                                className="flex-1 px-4 py-3 bg-zinc-950 border border-white/10 rounded-xl text-white focus:outline-none"
+                                                className="flex-1 px-4 py-3 bg-brand-bg border border-brand-border rounded-xl text-brand-text focus:outline-none placeholder:text-brand-text-secondary/50"
                                                 value={deliverable}
                                                 onChange={(e) => handleArrayFieldChange('expectedDeliverables', idx, e.target.value)}
                                             />
                                             {formData.expectedDeliverables.length > 1 && (
-                                                <button type="button" onClick={() => removeArrayField('expectedDeliverables', idx)} className="p-3 text-zinc-600 hover:text-red-500 transition-all">
+                                                <button type="button" onClick={() => removeArrayField('expectedDeliverables', idx)} className="p-3 text-brand-text-secondary hover:text-red-500 transition-all">
                                                     <Trash2 size={16} />
                                                 </button>
                                             )}
@@ -526,8 +528,8 @@ const EditQuestion = () => {
                         </div>
                     )}
 
-                    <div className="flex justify-end pt-8 border-t border-white/5">
-                        <button type="submit" className="px-10 py-4 bg-white text-black font-bold rounded-2xl hover:bg-zinc-200 transition-all flex items-center gap-3">
+                    <div className="flex justify-end pt-8 border-t border-brand-border">
+                        <button type="submit" className="px-10 py-4 bg-brand-text text-brand-bg font-bold rounded-2xl hover:opacity-90 transition-all flex items-center gap-3">
                             <Save size={20} />
                             Update Question
                         </button>

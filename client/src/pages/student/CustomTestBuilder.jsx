@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import TOPICS_DATA from '../../utils/topicsData';
 import api from '../../utils/api';
+import { useTheme } from '../../context/ThemeContext';
 import { motion } from 'framer-motion';
 import {
     Zap,
@@ -17,6 +18,7 @@ import toast from 'react-hot-toast';
 
 const CustomTestBuilder = () => {
     const navigate = useNavigate();
+    const { theme } = useTheme();
     const [topics, setTopics] = useState([]);
     const [selectedTopics, setSelectedTopics] = useState([]);
     const [config, setConfig] = useState({
@@ -87,23 +89,23 @@ const CustomTestBuilder = () => {
     );
 
     return (
-        <div className="min-h-screen bg-black pt-28 pb-20 px-6">
+        <div className="min-h-screen bg-brand-bg pt-28 pb-20 px-6 transition-colors duration-300">
             <div className="max-w-5xl mx-auto">
                 <header className="mb-12">
                     <div className="flex items-center gap-3 mb-4">
                         <div className="p-3 bg-blue-500/10 rounded-2xl text-blue-500">
                             <Layers size={24} />
                         </div>
-                        <h1 className="text-4xl font-bold tracking-tight">Custom Challenge</h1>
+                        <h1 className="text-4xl font-bold tracking-tight text-brand-text">Custom Challenge</h1>
                     </div>
-                    <p className="text-zinc-500 text-lg">Taylor your practice session by selecting specific topics, difficulty, and question type.</p>
+                    <p className="text-brand-text-secondary text-lg">Taylor your practice session by selecting specific topics, difficulty, and question type.</p>
                 </header>
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     {/* Left: Topic Selection */}
                     <div className="lg:col-span-2 space-y-8">
-                        <section className="bg-zinc-900/50 border border-white/5 rounded-[2.5rem] p-8 backdrop-blur-sm">
-                            <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
+                        <section className="bg-brand-card/30 border border-brand-border rounded-[2.5rem] p-8 backdrop-blur-sm">
+                            <h2 className="text-xl font-bold mb-6 flex items-center gap-2 text-brand-text">
                                 <Zap className="text-yellow-500" size={20} />
                                 Select Topics
                             </h2>
@@ -112,7 +114,7 @@ const CustomTestBuilder = () => {
                             <div className="mb-6 relative">
                                 <select
                                     onChange={toggleTopic}
-                                    className="w-full bg-black border border-white/10 rounded-xl py-4 px-4 text-white appearance-none cursor-pointer focus:border-blue-500 transition-colors"
+                                    className="w-full bg-brand-bg border border-brand-border rounded-xl py-4 px-4 text-brand-text appearance-none cursor-pointer focus:border-blue-500 transition-colors"
                                 >
                                     <option value="">Select a topic to add...</option>
                                     {topics.map(topic => (
@@ -121,7 +123,7 @@ const CustomTestBuilder = () => {
                                         </option>
                                     ))}
                                 </select>
-                                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-zinc-500">
+                                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-brand-text-secondary">
                                     ▼
                                 </div>
                             </div>
@@ -133,16 +135,16 @@ const CustomTestBuilder = () => {
                                         <button
                                             key={topic}
                                             onClick={() => removeTopic(topic)}
-                                            className="px-4 py-2 rounded-full bg-white text-black font-bold text-sm flex items-center gap-2 hover:bg-zinc-200 transition-colors group"
+                                            className="px-4 py-2 rounded-full bg-brand-text text-brand-bg font-bold text-sm flex items-center gap-2 hover:opacity-90 transition-colors group"
                                         >
                                             {topic}
-                                            <div className="bg-black/10 rounded-full p-0.5 group-hover:bg-black/20">
+                                            <div className="bg-brand-bg/10 rounded-full p-0.5 group-hover:bg-brand-bg/20">
                                                 <Zap size={10} className="rotate-45" />
                                             </div>
                                         </button>
                                     ))
                                 ) : (
-                                    <p className="text-zinc-600 italic">No topics selected yet.</p>
+                                    <p className="text-brand-text-secondary italic">No topics selected yet.</p>
                                 )}
                             </div>
                         </section>
@@ -150,8 +152,8 @@ const CustomTestBuilder = () => {
 
                     {/* Right: Configuration */}
                     <div className="space-y-6">
-                        <section className="bg-zinc-900/50 border border-white/5 rounded-[2.5rem] p-8 backdrop-blur-sm sticky top-28">
-                            <h2 className="text-xl font-bold mb-8 flex items-center gap-2">
+                        <section className="bg-brand-card/30 border border-brand-border rounded-[2.5rem] p-8 backdrop-blur-sm sticky top-28">
+                            <h2 className="text-xl font-bold mb-8 flex items-center gap-2 text-brand-text">
                                 <Settings2 className="text-blue-500" size={20} />
                                 Configuration
                             </h2>
@@ -159,13 +161,13 @@ const CustomTestBuilder = () => {
                             <div className="space-y-8">
                                 {/* Question Type */}
                                 <div className="space-y-4">
-                                    <label className="text-xs font-bold text-zinc-600 uppercase tracking-widest px-1">Type</label>
+                                    <label className="text-xs font-bold text-brand-text-secondary uppercase tracking-widest px-1">Type</label>
                                     <div className="flex gap-2">
                                         {['mcq', 'coding', 'mixed'].map(type => (
                                             <button
                                                 key={type}
                                                 onClick={() => setConfig({ ...config, type })}
-                                                className={`flex-1 py-3 rounded-xl border text-sm font-bold uppercase transition-all ${config.type === type ? 'bg-white border-white text-black' : 'bg-zinc-950 border-white/5 text-zinc-500 hover:text-white'}`}
+                                                className={`flex-1 py-3 rounded-xl border text-sm font-bold uppercase transition-all ${config.type === type ? 'bg-brand-text border-brand-text text-brand-bg' : 'bg-brand-bg border-brand-border text-brand-text-secondary hover:text-brand-text'}`}
                                             >
                                                 {type}
                                             </button>
@@ -174,13 +176,13 @@ const CustomTestBuilder = () => {
                                 </div>
 
                                 <div className="space-y-4">
-                                    <label className="text-xs font-bold text-zinc-600 uppercase tracking-widest px-1">Questions</label>
+                                    <label className="text-xs font-bold text-brand-text-secondary uppercase tracking-widest px-1">Questions</label>
                                     <div className="flex gap-2">
                                         {getQuestionOptions().map(n => (
                                             <button
                                                 key={n}
                                                 onClick={() => setConfig({ ...config, numQuestions: n })}
-                                                className={`flex-1 py-3 rounded-xl border text-sm font-bold transition-all ${config.numQuestions === n ? 'bg-white border-white text-black' : 'bg-zinc-950 border-white/5 text-zinc-500 hover:text-white'
+                                                className={`flex-1 py-3 rounded-xl border text-sm font-bold transition-all ${config.numQuestions === n ? 'bg-brand-text border-brand-text text-brand-bg' : 'bg-brand-bg border-brand-border text-brand-text-secondary hover:text-brand-text'
                                                     }`}
                                             >
                                                 {n}
@@ -190,12 +192,12 @@ const CustomTestBuilder = () => {
                                 </div>
 
                                 <div className="space-y-4">
-                                    <label className="text-xs font-bold text-zinc-600 uppercase tracking-widest px-1">Duration (Mins)</label>
+                                    <label className="text-xs font-bold text-brand-text-secondary uppercase tracking-widest px-1">Duration (Mins)</label>
                                     <div className="relative">
-                                        <Clock className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-600" size={18} />
+                                        <Clock className="absolute left-4 top-1/2 -translate-y-1/2 text-brand-text-secondary" size={18} />
                                         <input
                                             type="number"
-                                            className="w-full bg-zinc-950 border border-white/5 rounded-2xl py-4 pl-12 pr-4 text-white focus:outline-none focus:border-blue-500 transition-all font-mono"
+                                            className="w-full bg-brand-bg border border-brand-border rounded-2xl py-4 pl-12 pr-4 text-brand-text focus:outline-none focus:border-blue-500 transition-all font-mono"
                                             value={config.duration}
                                             onChange={(e) => setConfig({ ...config, duration: parseInt(e.target.value) })}
                                         />
@@ -203,9 +205,9 @@ const CustomTestBuilder = () => {
                                 </div>
 
                                 <div className="space-y-4">
-                                    <label className="text-xs font-bold text-zinc-600 uppercase tracking-widest px-1">Difficulty</label>
+                                    <label className="text-xs font-bold text-brand-text-secondary uppercase tracking-widest px-1">Difficulty</label>
                                     <select
-                                        className="w-full bg-zinc-950 border border-white/5 rounded-2xl py-4 px-4 text-white focus:outline-none focus:border-blue-500 transition-all font-bold appearance-none cursor-pointer"
+                                        className="w-full bg-brand-bg border border-brand-border rounded-2xl py-4 px-4 text-brand-text focus:outline-none focus:border-blue-500 transition-all font-bold appearance-none cursor-pointer"
                                         value={config.difficulty}
                                         onChange={(e) => setConfig({ ...config, difficulty: e.target.value })}
                                     >
@@ -223,7 +225,7 @@ const CustomTestBuilder = () => {
                                         Generate Test
                                         <ArrowRight className="group-hover:translate-x-1 transition-transform" />
                                     </button>
-                                    <p className="mt-4 text-[10px] text-zinc-600 font-bold uppercase tracking-widest text-center flex items-center justify-center gap-1">
+                                    <p className="mt-4 text-[10px] text-brand-text-secondary font-bold uppercase tracking-widest text-center flex items-center justify-center gap-1">
                                         <AlertCircle size={10} />
                                         Requires question availability
                                     </p>

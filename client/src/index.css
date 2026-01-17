@@ -1,16 +1,96 @@
 @import "tailwindcss";
 
-@theme {
-    --color-brand-bg: #000000;
-    --color-brand-card: #0a0a0a;
-    --color-brand-border: #1f1f1f;
-    --color-brand-text: #ffffff;
-    --color-brand-secondary: #a1a1aa;
+@layer base {
+    :root {
+        /* Light Mode Defaults */
+        --color-brand-bg: #ffffff;
+        --color-brand-card: #f4f4f5;
+        /* zinc-100 */
+        --color-brand-card-hover: #e4e4e7;
+        /* zinc-200 */
+        --color-brand-border: #e4e4e7;
+        /* zinc-200 */
+        --color-brand-text: #18181b;
+        /* zinc-900 */
+        --color-brand-text-secondary: #52525b;
+        /* zinc-600 */
+        --color-brand-primary: #8b5cf6;
+        /* violet-500 */
+        --color-brand-primary-foreground: #ffffff;
+    }
+
+    .dark {
+        /* Dark Mode Overrides */
+        --color-brand-bg: #09090b;
+        /* zinc-950 */
+        --color-brand-card: #18181b;
+        /* zinc-900 */
+        --color-brand-card-hover: #27272a;
+        /* zinc-800 */
+        --color-brand-border: #27272a;
+        /* zinc-800 */
+        --color-brand-text: #f4f4f5;
+        /* zinc-100 */
+        --color-brand-text-secondary: #a1a1aa;
+        /* zinc-400 */
+        --color-brand-primary: #8b5cf6;
+        /* violet-500 */
+        --color-brand-primary-foreground: #ffffff;
+    }
+
+    body {
+        @apply bg-brand-bg text-brand-text antialiased overflow-y-scroll transition-colors duration-300;
+        font-family: 'Inter', system-ui, sans-serif;
+    }
+
+    /* Custom Scrollbar */
+    .custom-scrollbar::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-track {
+        @apply bg-brand-bg;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+        @apply bg-brand-border rounded-full hover:bg-brand-text-secondary/50 transition-colors;
+    }
 }
 
-@layer base {
-    body {
-        @apply bg-brand-bg text-brand-text antialiased overflow-y-scroll;
-        font-family: 'Inter', system-ui, sans-serif;
+@theme {
+    --color-brand-bg: var(--color-brand-bg);
+    --color-brand-card: var(--color-brand-card);
+    --color-brand-card-hover: var(--color-brand-card-hover);
+    --color-brand-border: var(--color-brand-border);
+    --color-brand-text: var(--color-brand-text);
+    --color-brand-text-secondary: var(--color-brand-text-secondary);
+    --color-brand-primary: var(--color-brand-primary);
+    --color-brand-primary-foreground: var(--color-brand-primary-foreground);
+
+    /* Animation extensions */
+    --animate-fade-in: fade-in 0.2s ease-in-out;
+    --animate-slide-up: slide-up 0.3s ease-out;
+
+    @keyframes fade-in {
+        from {
+            opacity: 0;
+        }
+
+        to {
+            opacity: 1;
+        }
+    }
+
+    @keyframes slide-up {
+        from {
+            transform: translateY(10px);
+            opacity: 0;
+        }
+
+        to {
+            transform: translateY(0);
+            opacity: 1;
+        }
     }
 }

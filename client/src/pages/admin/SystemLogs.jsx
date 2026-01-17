@@ -2,9 +2,11 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Terminal, Shield, List, Play, CheckCircle, AlertTriangle, XCircle, Activity, User, Monitor } from 'lucide-react';
 import { useSocket } from '../../context/SocketContext';
+import { useTheme } from '../../context/ThemeContext';
 import api from '../../utils/api';
 
 const SystemLogs = () => {
+    const { theme } = useTheme();
     const { socket } = useSocket();
     const [logs, setLogs] = useState([]);
     const [filter, setFilter] = useState('ALL');
@@ -67,7 +69,7 @@ const SystemLogs = () => {
             case 'BATTLE': return 'text-purple-400 bg-purple-500/10 border-purple-500/20';
             case 'ERROR': return 'text-red-400 bg-red-500/10 border-red-500/20';
             case 'ADMIN': return 'text-amber-400 bg-amber-500/10 border-amber-500/20';
-            default: return 'text-zinc-400 bg-zinc-500/10 border-zinc-500/20';
+            default: return 'text-brand-text-secondary bg-brand-secondary/10 border-brand-border';
         }
     };
 
@@ -84,7 +86,7 @@ const SystemLogs = () => {
     const filteredLogs = filter === 'ALL' ? logs : logs.filter(l => l.type === filter);
 
     return (
-        <div className="pt-24 min-h-screen bg-black px-4 md:px-8 pb-8">
+        <div className="pt-24 min-h-screen bg-brand-bg px-4 md:px-8 pb-8 transition-colors duration-300">
             <div className="max-w-7xl mx-auto">
 
                 {/* Header Stats */}
@@ -95,27 +97,27 @@ const SystemLogs = () => {
                         { label: 'Battles Fought', count: stats.battles, icon: <Activity />, color: 'bg-purple-500' },
                         { label: 'System Errors', count: stats.errors, icon: <AlertTriangle />, color: 'bg-red-500' },
                     ].map((stat, i) => (
-                        <div key={i} className="bg-zinc-900/50 border border-white/5 rounded-2xl p-6 relative overflow-hidden group">
+                        <div key={i} className="bg-brand-card/30 border border-brand-border rounded-2xl p-6 relative overflow-hidden group">
                             <div className={`absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-all ${stat.color} blur-xl rounded-bl-3xl w-24 h-24`} />
                             <div className="flex items-center gap-4 mb-2">
-                                <div className={`p-2 rounded-lg bg-white/5 text-white`}>{stat.icon}</div>
-                                <div className="text-zinc-400 text-xs font-bold uppercase tracking-widest">{stat.label}</div>
+                                <div className={`p-2 rounded-lg bg-brand-secondary/10 text-brand-text`}>{stat.icon}</div>
+                                <div className="text-brand-text-secondary text-xs font-bold uppercase tracking-widest">{stat.label}</div>
                             </div>
-                            <div className="text-3xl font-black text-white">{stat.count}</div>
+                            <div className="text-3xl font-black text-brand-text">{stat.count}</div>
                         </div>
                     ))}
                 </div>
 
                 {/* Main Terminal Window */}
-                <div className="bg-zinc-950 border border-white/10 rounded-2xl overflow-hidden shadow-2xl flex flex-col h-[600px]">
+                <div className="bg-brand-bg border border-brand-border rounded-2xl overflow-hidden shadow-2xl flex flex-col h-[600px]">
 
                     {/* Toolbar */}
-                    <div className="h-14 bg-zinc-900 border-b border-white/5 flex items-center justify-between px-6 shrink-0">
+                    <div className="h-14 bg-brand-card/50 border-b border-brand-border flex items-center justify-between px-6 shrink-0">
                         <div className="flex items-center gap-2">
                             <div className="w-3 h-3 rounded-full bg-red-500/20 border border-red-500/50" />
                             <div className="w-3 h-3 rounded-full bg-amber-500/20 border border-amber-500/50" />
                             <div className="w-3 h-3 rounded-full bg-green-500/20 border border-green-500/50" />
-                            <div className="ml-4 flex items-center gap-2 text-zinc-400 text-xs font-mono">
+                            <div className="ml-4 flex items-center gap-2 text-brand-text-secondary text-xs font-mono">
                                 <Terminal size={14} />
                                 <span>kryzo-system-logs ~ root</span>
                             </div>
@@ -126,7 +128,7 @@ const SystemLogs = () => {
                                 <button
                                     key={f}
                                     onClick={() => setFilter(f)}
-                                    className={`px-3 py-1.5 rounded-lg text-[10px] font-bold tracking-wider transition-all ${filter === f ? 'bg-white text-black' : 'bg-white/5 text-zinc-500 hover:text-white'}`}
+                                    className={`px-3 py-1.5 rounded-lg text-[10px] font-bold tracking-wider transition-all ${filter === f ? 'bg-brand-text text-brand-bg' : 'bg-brand-secondary/10 text-brand-text-secondary hover:text-brand-text'}`}
                                 >
                                     {f}
                                 </button>
@@ -135,10 +137,10 @@ const SystemLogs = () => {
                     </div>
 
                     {/* Log Stream */}
-                    <div className="flex-1 overflow-y-auto p-6 font-mono text-sm space-y-2 custom-scrollbar bg-black/50">
+                    <div className="flex-1 overflow-y-auto p-6 font-mono text-sm space-y-2 custom-scrollbar bg-brand-bg/50">
                         <AnimatePresence>
                             {filteredLogs.length === 0 && (
-                                <div className="text-zinc-600 italic text-center mt-20">Waiting for system events...</div>
+                                <div className="text-brand-text-secondary italic text-center mt-20">Waiting for system events...</div>
                             )}
                             {filteredLogs.map((log, idx) => (
                                 <motion.div
@@ -147,17 +149,17 @@ const SystemLogs = () => {
                                     animate={{ opacity: 1, x: 0 }}
                                     className="flex items-start gap-4 group"
                                 >
-                                    <div className="text-zinc-600 min-w-[80px] text-xs pt-1">
+                                    <div className="text-brand-text-secondary min-w-[80px] text-xs pt-1">
                                         {new Date(log.createdAt || Date.now()).toLocaleTimeString()}
                                     </div>
                                     <div className={`p-1 px-2 rounded text-[10px] font-bold border flex items-center gap-1 min-w-[80px] justify-center ${getTypeColor(log.type)}`}>
                                         {getTypeIcon(log.type)}
                                         {log.type}
                                     </div>
-                                    <div className="text-zinc-300 break-all flex-1">
-                                        <span className="mr-2">{log.message}</span>
+                                    <div className="text-brand-text-secondary break-all flex-1">
+                                        <span className="mr-2 text-brand-text">{log.message}</span>
                                         {log.metadata && Object.keys(log.metadata).length > 0 && (
-                                            <span className="text-zinc-600 text-xs">
+                                            <span className="text-brand-text-secondary/70 text-xs">
                                                 {JSON.stringify(log.metadata)}
                                             </span>
                                         )}

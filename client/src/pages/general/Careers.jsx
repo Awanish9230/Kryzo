@@ -1,8 +1,10 @@
 import { motion } from 'framer-motion';
 import { ArrowRight, Briefcase } from 'lucide-react';
+import { useTheme } from '../../context/ThemeContext';
 
 
 const Careers = () => {
+    const { theme } = useTheme();
     const roles = [
         { title: "Senior Frontend Engineer", dept: "Engineering", loc: "Remote", type: "Full-time" },
         { title: "Product Designer", dept: "Design", loc: "New York", type: "Full-time" },
@@ -11,16 +13,16 @@ const Careers = () => {
     ];
 
     return (
-        <div className="min-h-screen bg-black text-white">
+        <div className="min-h-screen bg-brand-bg text-brand-text transition-colors duration-300">
             <div className="pt-32 pb-20 px-6">
                 <div className="max-w-4xl mx-auto text-center mb-20">
                     <div className="inline-flex items-center gap-2 px-4 py-2 bg-purple-500/10 rounded-full mb-6 border border-purple-500/20">
                         <span className="text-sm font-bold text-purple-400 uppercase tracking-widest">We're Hiring</span>
                     </div>
-                    <h1 className="text-5xl md:text-7xl font-bold tracking-tighter mb-8 bg-gradient-to-br from-white to-zinc-500 bg-clip-text text-transparent">
+                    <h1 className="text-5xl md:text-7xl font-bold tracking-tighter mb-8 bg-gradient-to-br from-brand-text to-brand-text-secondary bg-clip-text text-transparent">
                         Do your best work here.
                     </h1>
-                    <p className="text-xl text-zinc-400">
+                    <p className="text-xl text-brand-text-secondary">
                         Join us in our mission to transform technical education for everyone.
                         We're a team of dreamers, doers, and relentless problem solvers.
                     </p>
@@ -34,11 +36,11 @@ const Careers = () => {
                                 initial={{ opacity: 0, y: 10 }}
                                 whileInView={{ opacity: 1, y: 0 }}
                                 transition={{ delay: idx * 0.1 }}
-                                className="group p-6 bg-zinc-900/30 border border-white/5 rounded-2xl hover:border-white/20 transition-all cursor-pointer flex items-center justify-between"
+                                className="group p-6 bg-brand-card/30 border border-brand-border rounded-2xl hover:border-brand-border transition-all cursor-pointer flex items-center justify-between"
                             >
                                 <div>
-                                    <h3 className="text-xl font-bold mb-1 group-hover:text-blue-400 transition-colors">{role.title}</h3>
-                                    <div className="flex gap-4 text-sm text-zinc-500 font-medium">
+                                    <h3 className="text-xl font-bold mb-1 group-hover:text-blue-500 transition-colors text-brand-text">{role.title}</h3>
+                                    <div className="flex gap-4 text-sm text-brand-text-secondary font-medium">
                                         <span>{role.dept}</span>
                                         <span>•</span>
                                         <span>{role.loc}</span>
@@ -46,7 +48,7 @@ const Careers = () => {
                                         <span>{role.type}</span>
                                     </div>
                                 </div>
-                                <ArrowRight className="text-zinc-600 group-hover:translate-x-1 group-hover:text-white transition-all" />
+                                <ArrowRight className="text-brand-text-secondary group-hover:translate-x-1 group-hover:text-brand-text transition-all" />
                             </motion.div>
                         ))}
                     </div>

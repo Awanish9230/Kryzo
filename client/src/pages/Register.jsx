@@ -43,8 +43,8 @@ const Register = () => {
     };
 
     return (
-        <div className="flex items-center justify-center min-h-screen bg-black px-6 py-12">
-            <div className="absolute top-0 left-0 w-full h-full pointer-events-none overflow-hidden text-white/5">
+        <div className="flex items-center justify-center min-h-screen bg-brand-bg px-6 py-12 transition-colors duration-300">
+            <div className="absolute top-0 left-0 w-full h-full pointer-events-none overflow-hidden text-brand-text/5">
                 <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] bg-purple-500/5 blur-[120px] rounded-full"></div>
                 <div className="absolute bottom-[-10%] right-[-5%] w-[40%] h-[40%] bg-blue-500/5 blur-[120px] rounded-full"></div>
             </div>
@@ -54,10 +54,10 @@ const Register = () => {
                 animate={{ opacity: 1, scale: 1 }}
                 className="w-full max-w-lg relative z-10"
             >
-                <div className="bg-zinc-900/50 border border-white/10 p-8 md:p-10 rounded-3xl backdrop-blur-xl shadow-2xl">
+                <div className="bg-brand-card/50 border border-brand-border p-8 md:p-10 rounded-3xl backdrop-blur-xl shadow-2xl">
                     <div className="text-center mb-8">
-                        <h2 className="text-3xl font-bold tracking-tight mb-2">Create Account</h2>
-                        <p className="text-zinc-500 text-sm">Join Kryzo and start your learning journey</p>
+                        <h2 className="text-3xl font-bold tracking-tight mb-2 text-brand-text">Create Account</h2>
+                        <p className="text-brand-text-secondary text-sm">Join Kryzo and start your learning journey</p>
                     </div>
 
                     {error && (
@@ -73,15 +73,15 @@ const Register = () => {
                     <form className="space-y-4" onSubmit={handleSubmit}>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="space-y-2">
-                                <label className="text-sm font-medium text-zinc-400 ml-1">Full Name</label>
+                                <label className="text-sm font-medium text-brand-text-secondary ml-1">Full Name</label>
                                 <div className="relative group">
-                                    <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-600 group-focus-within:text-blue-500 transition-colors" />
+                                    <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-brand-text-secondary group-focus-within:text-blue-500 transition-colors" />
                                     <input
                                         type="text"
                                         name="name"
                                         required
                                         placeholder="Kryzo Admin"
-                                        className="w-full pl-12 pr-4 py-3 bg-zinc-950 border border-white/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all text-white placeholder:text-zinc-700"
+                                        className="w-full pl-12 pr-4 py-3 bg-brand-bg border border-brand-border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all text-brand-text placeholder:text-brand-text-secondary/50"
                                         value={formData.name}
                                         onChange={handleChange}
                                     />
@@ -89,15 +89,15 @@ const Register = () => {
                             </div>
 
                             <div className="space-y-2">
-                                <label className="text-sm font-medium text-zinc-400 ml-1">Email Address</label>
+                                <label className="text-sm font-medium text-brand-text-secondary ml-1">Email Address</label>
                                 <div className="relative group">
-                                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-600 group-focus-within:text-blue-500 transition-colors" />
+                                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-brand-text-secondary group-focus-within:text-blue-500 transition-colors" />
                                     <input
                                         type="email"
                                         name="email"
                                         required
                                         placeholder="hello@kryzo.com"
-                                        className="w-full pl-12 pr-4 py-3 bg-zinc-950 border border-white/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all text-white placeholder:text-zinc-700"
+                                        className="w-full pl-12 pr-4 py-3 bg-brand-bg border border-brand-border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all text-brand-text placeholder:text-brand-text-secondary/50"
                                         value={formData.email}
                                         onChange={handleChange}
                                     />
@@ -106,22 +106,22 @@ const Register = () => {
                         </div>
 
                         <div className="space-y-2">
-                            <label className="text-sm font-medium text-zinc-400 ml-1">Password</label>
+                            <label className="text-sm font-medium text-brand-text-secondary ml-1">Password</label>
                             <div className="relative group">
-                                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-600 group-focus-within:text-blue-500 transition-colors" />
+                                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-brand-text-secondary group-focus-within:text-blue-500 transition-colors" />
                                 <input
                                     type={showPassword ? "text" : "password"}
                                     name="password"
                                     required
                                     placeholder="••••••••"
-                                    className="w-full pl-12 pr-12 py-3 bg-zinc-950 border border-white/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all text-white placeholder:text-zinc-700 font-sans"
+                                    className="w-full pl-12 pr-12 py-3 bg-brand-bg border border-brand-border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all text-brand-text placeholder:text-brand-text-secondary/50 font-sans"
                                     value={formData.password}
                                     onChange={handleChange}
                                 />
                                 <button
                                     type="button"
                                     onClick={() => setShowPassword(!showPassword)}
-                                    className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-600 hover:text-blue-500 transition-colors"
+                                    className="absolute right-4 top-1/2 -translate-y-1/2 text-brand-text-secondary hover:text-blue-500 transition-colors"
                                 >
                                     {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                                 </button>
@@ -132,14 +132,14 @@ const Register = () => {
                             {/* Role selection removed - defaulting to student */}
 
                             <div className="space-y-2">
-                                <label className="text-sm font-medium text-zinc-400 ml-1">College/ID</label>
+                                <label className="text-sm font-medium text-brand-text-secondary ml-1">College/ID</label>
                                 <div className="relative group">
-                                    <School className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-600 group-focus-within:text-blue-500 transition-colors" />
+                                    <School className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-brand-text-secondary group-focus-within:text-blue-500 transition-colors" />
                                     <input
                                         type="text"
                                         name="collegeId"
                                         placeholder="COL-123"
-                                        className="w-full pl-12 pr-4 py-3 bg-zinc-950 border border-white/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all text-white placeholder:text-zinc-700"
+                                        className="w-full pl-12 pr-4 py-3 bg-brand-bg border border-brand-border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all text-brand-text placeholder:text-brand-text-secondary/50"
                                         value={formData.collegeId}
                                         onChange={handleChange}
                                     />
@@ -150,15 +150,15 @@ const Register = () => {
                         <button
                             type="submit"
                             disabled={loading}
-                            className="w-full flex items-center justify-center gap-2 px-4 py-3.5 mt-4 font-bold text-black bg-white rounded-xl hover:bg-zinc-200 transition-all active:scale-[0.98] disabled:opacity-50"
+                            className="w-full flex items-center justify-center gap-2 px-4 py-3.5 mt-4 font-bold text-brand-bg bg-brand-text rounded-xl hover:opacity-90 transition-all active:scale-[0.98] disabled:opacity-50"
                         >
                             {loading ? "Creating account..." : "Sign Up"}
                             <ArrowRight className="w-5 h-5" />
                         </button>
 
-                        <div className="text-center text-sm text-zinc-500 pt-4">
+                        <div className="text-center text-sm text-brand-text-secondary pt-4">
                             Already have an account?{" "}
-                            <Link to="/login" className="text-white hover:text-blue-400 font-medium transition-colors">
+                            <Link to="/login" className="text-brand-text hover:text-blue-500 font-medium transition-colors">
                                 Sign In
                             </Link>
                         </div>

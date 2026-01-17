@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTheme } from '../../context/ThemeContext';
 import {
     Settings as SettingsIcon,
     Globe,
@@ -19,6 +20,7 @@ import Loader from '../../components/Loader';
 import api from '../../utils/api';
 
 const SettingsPage = () => {
+    const { theme } = useTheme();
     const [activeTab, setActiveTab] = useState('global');
     const [settings, setSettings] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -66,8 +68,8 @@ const SettingsPage = () => {
     ];
 
     return (
-        <div className="min-h-screen bg-black pt-28 pb-20 px-6">
-            <div className="max-w-6xl mx-auto">
+        <div className="min-h-screen bg-brand-bg pt-28 pb-20 px-6 transition-colors duration-300">
+            <div className="max-w-6xl mx-auto text-brand-text">
                 <div className="flex flex-col md:flex-row gap-8">
                     {/* Side Navigation */}
                     <div className="w-full md:w-64 space-y-2">
@@ -77,7 +79,7 @@ const SettingsPage = () => {
                                 onClick={() => setActiveTab(tab.id)}
                                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl transition-all ${activeTab === tab.id
                                     ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20'
-                                    : 'text-zinc-500 hover:bg-white/5 hover:text-zinc-300'
+                                    : 'text-brand-text-secondary hover:bg-brand-card/30 hover:text-brand-text'
                                     }`}
                             >
                                 <tab.icon size={18} />
@@ -87,7 +89,7 @@ const SettingsPage = () => {
                     </div>
 
                     {/* Main Content Pane */}
-                    <div className="flex-1 bg-zinc-900/50 border border-white/5 rounded-[2.5rem] p-8 md:p-10 backdrop-blur-md relative overflow-hidden">
+                    <div className="flex-1 bg-brand-card/30 border border-brand-border rounded-[2.5rem] p-8 md:p-10 backdrop-blur-md relative overflow-hidden">
                         <div className="absolute top-0 right-0 p-8">
                             <AnimatePresence>
                                 {message && (
@@ -106,10 +108,10 @@ const SettingsPage = () => {
                         </div>
 
                         <div className="mb-10">
-                            <h1 className="text-3xl font-black text-white tracking-tighter mb-2">
+                            <h1 className="text-3xl font-black text-brand-text tracking-tighter mb-2">
                                 {tabs.find(t => t.id === activeTab).label}
                             </h1>
-                            <p className="text-zinc-500 text-sm">Configure your platform behaviors and global variables.</p>
+                            <p className="text-brand-text-secondary text-sm">Configure your platform behaviors and global variables.</p>
                         </div>
 
                         <div className="space-y-8">
@@ -117,21 +119,21 @@ const SettingsPage = () => {
                                 <div className="space-y-6">
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                         <div className="space-y-2">
-                                            <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest ml-1">MCQ Point Value</label>
+                                            <label className="text-[10px] font-black text-brand-text-secondary uppercase tracking-widest ml-1">MCQ Point Value</label>
                                             <input
                                                 type="number"
                                                 value={settings.global.mcqPoints}
                                                 onChange={(e) => setSettings({ ...settings, global: { ...settings.global, mcqPoints: Number(e.target.value) } })}
-                                                className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500"
+                                                className="w-full bg-brand-bg/50 border border-brand-border rounded-xl px-4 py-3 text-brand-text focus:outline-none focus:border-blue-500"
                                             />
                                         </div>
                                         <div className="space-y-2">
-                                            <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest ml-1">Coding Point Value</label>
+                                            <label className="text-[10px] font-black text-brand-text-secondary uppercase tracking-widest ml-1">Coding Point Value</label>
                                             <input
                                                 type="number"
                                                 value={settings.global.codingPoints}
                                                 onChange={(e) => setSettings({ ...settings, global: { ...settings.global, codingPoints: Number(e.target.value) } })}
-                                                className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500"
+                                                className="w-full bg-brand-bg/50 border border-brand-border rounded-xl px-4 py-3 text-brand-text focus:outline-none focus:border-blue-500"
                                             />
                                         </div>
                                     </div>
@@ -168,39 +170,39 @@ const SettingsPage = () => {
                             {activeTab === 'ai' && (
                                 <div className="space-y-6">
                                     <div className="space-y-2">
-                                        <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest ml-1 flex items-center gap-2">
+                                        <label className="text-[10px] font-black text-brand-text-secondary uppercase tracking-widest ml-1 flex items-center gap-2">
                                             <Lock size={10} /> Gemini API Key
                                         </label>
                                         <input
                                             type="password"
                                             value={settings.ai.geminiApiKey}
                                             onChange={(e) => setSettings({ ...settings, ai: { ...settings.ai, geminiApiKey: e.target.value } })}
-                                            className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500"
+                                            className="w-full bg-brand-bg/50 border border-brand-border rounded-xl px-4 py-3 text-brand-text focus:outline-none focus:border-blue-500"
                                             placeholder="sk-..."
                                         />
                                     </div>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                         <div className="space-y-2">
-                                            <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest ml-1 flex items-center gap-2">
+                                            <label className="text-[10px] font-black text-brand-text-secondary uppercase tracking-widest ml-1 flex items-center gap-2">
                                                 <Lock size={10} /> Judge0 API Key
                                             </label>
                                             <input
                                                 type="password"
                                                 value={settings.ai.judge0ApiKey}
                                                 onChange={(e) => setSettings({ ...settings, ai: { ...settings.ai, judge0ApiKey: e.target.value } })}
-                                                className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500"
+                                                className="w-full bg-brand-bg/50 border border-brand-border rounded-xl px-4 py-3 text-brand-text focus:outline-none focus:border-blue-500"
                                                 placeholder="RapidAPI Key"
                                             />
                                         </div>
                                         <div className="space-y-2">
-                                            <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest ml-1 flex items-center gap-2">
+                                            <label className="text-[10px] font-black text-brand-text-secondary uppercase tracking-widest ml-1 flex items-center gap-2">
                                                 <Globe size={10} /> Judge0 Host
                                             </label>
                                             <input
                                                 type="text"
                                                 value={settings.ai.judge0Host}
                                                 onChange={(e) => setSettings({ ...settings, ai: { ...settings.ai, judge0Host: e.target.value } })}
-                                                className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500"
+                                                className="w-full bg-brand-bg/50 border border-brand-border rounded-xl px-4 py-3 text-brand-text focus:outline-none focus:border-blue-500"
                                                 placeholder="judge0-ce.p.rapidapi.com"
                                             />
                                         </div>
@@ -212,15 +214,15 @@ const SettingsPage = () => {
                                             enabled={settings.ai.autoGenerationEnabled}
                                             onChange={(val) => setSettings({ ...settings, ai: { ...settings.ai, autoGenerationEnabled: val } })}
                                         />
-                                        <div className="p-4 bg-white/5 border border-white/5 rounded-2xl space-y-2">
-                                            <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest ml-1">Target Qns Per Subtopic</label>
+                                        <div className="p-4 bg-brand-secondary/5 border border-brand-border rounded-2xl space-y-2">
+                                            <label className="text-[10px] font-black text-brand-text-secondary uppercase tracking-widest ml-1">Target Qns Per Subtopic</label>
                                             <input
                                                 type="number"
                                                 min="1"
                                                 max="20"
                                                 value={settings.ai.targetQuestionsPerTopic}
                                                 onChange={(e) => setSettings({ ...settings, ai: { ...settings.ai, targetQuestionsPerTopic: Number(e.target.value) } })}
-                                                className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-2 text-white focus:outline-none focus:border-blue-500"
+                                                className="w-full bg-brand-bg/50 border border-brand-border rounded-xl px-4 py-2 text-brand-text focus:outline-none focus:border-blue-500"
                                             />
                                         </div>
                                     </div>
@@ -250,14 +252,14 @@ const SettingsPage = () => {
                                         onChange={(val) => setSettings({ ...settings, user: { ...settings.user, registrationOpen: val } })}
                                     />
                                     <div className="space-y-2">
-                                        <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest ml-1">Allowed Email Domains</label>
+                                        <label className="text-[10px] font-black text-brand-text-secondary uppercase tracking-widest ml-1">Allowed Email Domains</label>
                                         <textarea
                                             value={settings.user.allowedDomains.join(', ')}
                                             onChange={(e) => setSettings({ ...settings, user: { ...settings.user, allowedDomains: e.target.value.split(',').map(d => d.trim()).filter(d => d) } })}
-                                            className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500 min-h-[100px]"
+                                            className="w-full bg-brand-bg/50 border border-brand-border rounded-xl px-4 py-3 text-brand-text focus:outline-none focus:border-blue-500 min-h-[100px]"
                                             placeholder="college.edu, university.org"
                                         />
-                                        <p className="text-[10px] text-zinc-600 font-bold uppercase tracking-wider">Separate domains with commas. Leave empty for no restriction.</p>
+                                        <p className="text-[10px] text-brand-text-secondary/80 font-bold uppercase tracking-wider">Separate domains with commas. Leave empty for no restriction.</p>
                                     </div>
                                 </div>
                             )}
@@ -289,41 +291,41 @@ const SettingsPage = () => {
                                 <div className="space-y-6">
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                         <div className="space-y-2">
-                                            <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest ml-1">Primary Logo URL</label>
+                                            <label className="text-[10px] font-black text-brand-text-secondary uppercase tracking-widest ml-1">Primary Logo URL</label>
                                             <input
                                                 type="text"
                                                 value={settings.branding.logoUrl}
                                                 onChange={(e) => setSettings({ ...settings, branding: { ...settings.branding, logoUrl: e.target.value } })}
-                                                className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500"
+                                                className="w-full bg-brand-bg/50 border border-brand-border rounded-xl px-4 py-3 text-brand-text focus:outline-none focus:border-blue-500"
                                             />
                                         </div>
                                         <div className="space-y-2">
-                                            <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest ml-1">Theme Colors</label>
+                                            <label className="text-[10px] font-black text-brand-text-secondary uppercase tracking-widest ml-1">Theme Colors</label>
                                             <div className="flex gap-4">
-                                                <div className="flex items-center gap-2 flex-1 bg-black/50 border border-white/10 rounded-xl px-3 py-2">
+                                                <div className="flex items-center gap-2 flex-1 bg-brand-bg/50 border border-brand-border rounded-xl px-3 py-2">
                                                     <input
                                                         type="color"
                                                         value={settings.branding.primaryColor}
                                                         onChange={(e) => setSettings({ ...settings, branding: { ...settings.branding, primaryColor: e.target.value } })}
                                                         className="w-8 h-8 rounded cursor-pointer bg-transparent border-none"
                                                     />
-                                                    <span className="text-xs font-mono">{settings.branding.primaryColor}</span>
+                                                    <span className="text-xs font-mono text-brand-text">{settings.branding.primaryColor}</span>
                                                 </div>
-                                                <div className="flex items-center gap-2 flex-1 bg-black/50 border border-white/10 rounded-xl px-3 py-2">
+                                                <div className="flex items-center gap-2 flex-1 bg-brand-bg/50 border border-brand-border rounded-xl px-3 py-2">
                                                     <input
                                                         type="color"
                                                         value={settings.branding.secondaryColor}
                                                         onChange={(e) => setSettings({ ...settings, branding: { ...settings.branding, secondaryColor: e.target.value } })}
                                                         className="w-8 h-8 rounded cursor-pointer bg-transparent border-none"
                                                     />
-                                                    <span className="text-xs font-mono">{settings.branding.secondaryColor}</span>
+                                                    <span className="text-xs font-mono text-brand-text">{settings.branding.secondaryColor}</span>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
                                     <div className="p-8 bg-zinc-800/50 rounded-3xl border border-white/5 flex items-center justify-center">
                                         <div className="text-center">
-                                            <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-4">Live Preview</p>
+                                            <p className="text-[10px] font-black text-brand-text-secondary uppercase tracking-widest mb-4">Live Preview</p>
                                             <div className="flex items-center gap-2">
                                                 <div
                                                     className="px-6 py-2 rounded-xl font-bold text-sm shadow-xl"
@@ -345,7 +347,7 @@ const SettingsPage = () => {
                         </div>
 
                         {/* Footer Action */}
-                        <div className="mt-12 pt-8 border-t border-white/5 flex items-center justify-end">
+                        <div className="mt-12 pt-8 border-t border-brand-border flex items-center justify-end">
                             <button
                                 onClick={handleSave}
                                 disabled={saving}
@@ -363,14 +365,14 @@ const SettingsPage = () => {
 };
 
 const Toggle = ({ label, description, enabled, onChange }) => (
-    <div className="flex items-center justify-between p-4 bg-white/5 border border-white/5 rounded-2xl">
+    <div className="flex items-center justify-between p-4 bg-brand-secondary/5 border border-brand-border rounded-2xl">
         <div>
-            <h4 className="text-sm font-bold text-white tracking-tight">{label}</h4>
-            <p className="text-[10px] text-zinc-500 font-medium">{description}</p>
+            <h4 className="text-sm font-bold text-brand-text tracking-tight">{label}</h4>
+            <p className="text-[10px] text-brand-text-secondary font-medium">{description}</p>
         </div>
         <button
             onClick={() => onChange(!enabled)}
-            className={`w-12 h-6 rounded-full p-1 transition-all ${enabled ? 'bg-blue-600' : 'bg-zinc-700'}`}
+            className={`w-12 h-6 rounded-full p-1 transition-all ${enabled ? 'bg-blue-600' : 'bg-brand-secondary/20'}`}
         >
             <div className={`w-4 h-4 rounded-full bg-white transition-all ${enabled ? 'translate-x-6' : 'translate-x-0'}`} />
         </button>
@@ -381,8 +383,8 @@ const Slider = ({ label, description, value, onChange }) => (
     <div className="space-y-3">
         <div className="flex justify-between items-end">
             <div>
-                <h4 className="text-sm font-bold text-white tracking-tight">{label}</h4>
-                <p className="text-[10px] text-zinc-500 font-medium">{description}</p>
+                <h4 className="text-sm font-bold text-brand-text tracking-tight">{label}</h4>
+                <p className="text-[10px] text-brand-text-secondary font-medium">{description}</p>
             </div>
             <span className="text-xs font-mono font-bold text-blue-500">{(value * 10).toFixed(0)}/10</span>
         </div>
@@ -393,18 +395,18 @@ const Slider = ({ label, description, value, onChange }) => (
             step="0.1"
             value={value}
             onChange={(e) => onChange(Number(e.target.value))}
-            className="w-full h-1.5 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-blue-600"
+            className="w-full h-1.5 bg-brand-secondary/20 rounded-lg appearance-none cursor-pointer accent-blue-600"
         />
     </div>
 );
 
 const SystemCard = ({ icon, title, description, action }) => (
-    <div className="bg-white/5 border border-white/5 rounded-3xl p-6 hover:border-white/10 transition-all">
+    <div className="bg-brand-secondary/5 border border-brand-border rounded-3xl p-6 hover:bg-brand-secondary/10 transition-all">
         <div className="flex items-center gap-3 mb-4">
-            <div className="p-2.5 bg-zinc-900 rounded-xl">{icon}</div>
-            <h4 className="font-bold text-sm text-white">{title}</h4>
+            <div className="p-2.5 bg-brand-bg rounded-xl">{icon}</div>
+            <h4 className="font-bold text-sm text-brand-text">{title}</h4>
         </div>
-        <p className="text-xs text-zinc-500 font-medium mb-6 leading-relaxed">{description}</p>
+        <p className="text-xs text-brand-text-secondary font-medium mb-6 leading-relaxed">{description}</p>
         <button className="text-[10px] font-black text-blue-500 uppercase tracking-widest hover:text-blue-400 transition-colors">
             {action} →
         </button>

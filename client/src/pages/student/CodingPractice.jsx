@@ -20,6 +20,7 @@ import {
     PanelLeftOpen
 } from 'lucide-react';
 import { Panel, Group as PanelGroup, Separator as PanelResizeHandle } from 'react-resizable-panels';
+import { useTheme } from '../../context/ThemeContext';
 
 import api from '../../utils/api';
 import Loader from '../../components/Loader';
@@ -29,6 +30,7 @@ const CodingPractice = () => {
     const [searchParams] = useSearchParams();
     const topic = searchParams.get('topic');
     const navigate = useNavigate();
+    const { theme } = useTheme();
 
     const [test, setTest] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -224,11 +226,11 @@ int main() {
     );
 
     if (!test || test.questions.length === 0) return (
-        <div className="min-h-screen bg-[#0a0a0a] pt-28 px-6 text-center">
-            <Info className="w-16 h-16 text-zinc-500 mx-auto mb-4" />
-            <h2 className="text-2xl font-bold text-white mb-2">No questions found</h2>
-            <p className="text-zinc-500 mb-8">We couldn't find any coding questions for this topic.</p>
-            <button onClick={() => navigate(-1)} className="px-6 py-2 bg-white text-black font-bold rounded-xl">Go Back</button>
+        <div className="min-h-screen bg-brand-bg pt-28 px-6 text-center transition-colors duration-300">
+            <Info className="w-16 h-16 text-brand-text-secondary mx-auto mb-4" />
+            <h2 className="text-2xl font-bold text-brand-text mb-2">No questions found</h2>
+            <p className="text-brand-text-secondary mb-8">We couldn't find any coding questions for this topic.</p>
+            <button onClick={() => navigate(-1)} className="px-6 py-2 bg-brand-text text-brand-bg font-bold rounded-xl">Go Back</button>
         </div>
     );
 
@@ -236,15 +238,15 @@ int main() {
     const currentResults = results[currentQuestionIdx] || [];
 
     return (
-        <div className="h-screen bg-[#0a0a0a] pt-4 overflow-hidden flex flex-col">
+        <div className="h-screen bg-brand-bg pt-4 overflow-hidden flex flex-col transition-colors duration-300">
             {/* Minimal Header */}
-            <div className="h-14 border-b border-white/5 px-6 flex items-center justify-between bg-zinc-900/50 backdrop-blur-xl shrink-0">
+            <div className="h-14 border-b border-brand-border px-6 flex items-center justify-between bg-brand-card/50 backdrop-blur-xl shrink-0">
                 <div className="flex items-center gap-4">
-                    <button onClick={() => navigate(-1)} className="p-2 text-zinc-400 hover:text-white transition-colors">
+                    <button onClick={() => navigate(-1)} className="p-2 text-brand-text-secondary hover:text-brand-text transition-colors">
                         <ChevronLeft size={20} />
                     </button>
-                    <div className="h-4 w-px bg-white/10 mx-2"></div>
-                    <span className="text-sm font-bold text-white truncate max-w-[200px]">{test.title}</span>
+                    <div className="h-4 w-px bg-brand-border mx-2"></div>
+                    <span className="text-sm font-bold text-brand-text truncate max-w-[200px]">{test.title}</span>
                 </div>
 
                 <div className="flex items-center gap-2">
@@ -253,13 +255,13 @@ int main() {
                             key={idx}
                             onClick={() => setCurrentQuestionIdx(idx)}
                             className={`w-8 h-8 rounded-lg text-xs font-bold transition-all relative ${currentQuestionIdx === idx
-                                ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/20'
-                                : 'bg-white/5 text-zinc-500 hover:bg-white/10 hover:text-zinc-300'
+                                ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20'
+                                : 'bg-brand-secondary/10 text-brand-text-secondary hover:bg-brand-secondary/20 hover:text-brand-text'
                                 }`}
                         >
                             {idx + 1}
                             {solvedQuestions.has(idx) && (
-                                <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full flex items-center justify-center border-2 border-[#0a0a0a]">
+                                <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full flex items-center justify-center border-2 border-brand-bg">
                                     <CheckCircle2 size={6} className="text-white" />
                                 </div>
                             )}
@@ -270,7 +272,7 @@ int main() {
                 <div className="flex items-center gap-3">
                     <button
                         onClick={togglePanel}
-                        className="p-2 bg-white/5 rounded-lg text-zinc-400 hover:text-white transition-all border border-white/5"
+                        className="p-2 bg-brand-secondary/10 rounded-lg text-brand-text-secondary hover:text-brand-text transition-all border border-brand-border"
                         title={showQuestionPanel ? "Collapse Panel" : "Expand Panel"}
                     >
                         {showQuestionPanel ? <PanelLeftClose size={18} /> : <PanelLeftOpen size={18} />}
@@ -280,10 +282,10 @@ int main() {
 
             {/* Main Split Layout */}
             <div className="flex-grow flex overflow-hidden">
-                <PanelGroup direction="horizontal" autoSaveId="coding-practice-main-v3" key={test?._id}>
+                <PanelGroup direction="horizontal" autoSaveId="kryzo-workspace-v1">
                     {showQuestionPanel && (
                         <>
-                            <Panel id="question-panel" defaultSize={40} minSize={20} className="h-full border-r border-white/5 bg-zinc-900/30 overflow-y-auto">
+                            <Panel id="kryzo-question-panel" defaultSize={35} minSize={22} className="h-full border-r border-brand-border bg-brand-card/30 overflow-y-auto custom-scrollbar">
                                 <div className="p-8 pb-32">
                                     <div className="flex items-center gap-2 mb-6">
                                         <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-widest ${question.difficulty === 'easy' ? 'bg-green-500/10 text-green-500 border border-green-500/20' :
@@ -292,12 +294,12 @@ int main() {
                                             }`}>
                                             {question.difficulty}
                                         </span>
-                                        <span className="text-xs font-bold text-zinc-600 uppercase tracking-tighter">{question.topic}</span>
+                                        <span className="text-xs font-bold text-brand-text-secondary uppercase tracking-tighter">{question.topic}</span>
                                     </div>
 
-                                    <h1 className="text-2xl font-bold text-white mb-6 leading-tight">{question.title}</h1>
+                                    <h1 className="text-2xl font-bold text-brand-text mb-6 leading-tight">{question.title}</h1>
 
-                                    <div className="prose prose-invert prose-blue prose-sm max-w-none text-zinc-400 space-y-6 leading-relaxed">
+                                    <div className="prose prose-invert prose-blue prose-sm max-w-none text-brand-text-secondary space-y-6 leading-relaxed">
                                         <ReactMarkdown remarkPlugins={[remarkGfm]}>
                                             {question.description}
                                         </ReactMarkdown>
@@ -305,11 +307,11 @@ int main() {
 
                                     {question.constraints && (
                                         <div className="mt-8">
-                                            <h3 className="text-sm font-bold text-white uppercase tracking-widest mb-3 flex items-center gap-2">
+                                            <h3 className="text-sm font-bold text-brand-text uppercase tracking-widest mb-3 flex items-center gap-2">
                                                 <Info size={14} className="text-blue-500" />
                                                 Constraints
                                             </h3>
-                                            <pre className="bg-black/50 p-4 rounded-2xl border border-white/5 text-xs text-zinc-500 font-mono">
+                                            <pre className="bg-brand-bg/50 p-4 rounded-2xl border border-brand-border text-xs text-brand-text-secondary font-mono">
                                                 {question.constraints}
                                             </pre>
                                         </div>
@@ -317,34 +319,34 @@ int main() {
 
                                     {question.inputFormat && (
                                         <div>
-                                            <h3 className="text-sm font-bold text-white uppercase tracking-widest mb-3">Input Format</h3>
-                                            <div className="text-zinc-500 text-xs italic">{question.inputFormat}</div>
+                                            <h3 className="text-sm font-bold text-brand-text uppercase tracking-widest mb-3">Input Format</h3>
+                                            <div className="text-brand-text-secondary text-xs italic">{question.inputFormat}</div>
                                         </div>
                                     )}
 
                                     {question.outputFormat && (
                                         <div>
-                                            <h3 className="text-sm font-bold text-white uppercase tracking-widest mb-3">Output Format</h3>
-                                            <div className="text-zinc-500 text-xs italic">{question.outputFormat}</div>
+                                            <h3 className="text-sm font-bold text-brand-text uppercase tracking-widest mb-3">Output Format</h3>
+                                            <div className="text-brand-text-secondary text-xs italic">{question.outputFormat}</div>
                                         </div>
                                     )}
                                 </div>
                             </Panel>
-                            <PanelResizeHandle className="w-1.5 bg-black hover:bg-blue-500/50 transition-colors flex flex-col justify-center items-center group cursor-col-resize z-50">
-                                <div className="h-8 w-0.5 bg-zinc-700/50 rounded-full group-hover:bg-white transition-colors" />
+                            <PanelResizeHandle className="w-1.5 bg-brand-bg hover:bg-blue-500/50 transition-colors flex flex-col justify-center items-center group cursor-col-resize z-50 border-x border-brand-border">
+                                <div className="h-8 w-0.5 bg-brand-border rounded-full group-hover:bg-brand-text transition-colors" />
                             </PanelResizeHandle>
                         </>
                     )}
 
                     {/* Right: Code Editor & Console */}
-                    <Panel id="editor-panel" defaultSize={60} minSize={30}>
-                        <div className="h-full flex flex-col bg-black w-full">
-                            <div className="flex-grow">
+                    <Panel id="kryzo-editor-panel" defaultSize={65} minSize={30}>
+                        <div className="h-full flex flex-col bg-brand-bg overflow-hidden relative">
+                            <div className="flex-1">
                                 <Editor
                                     key={selectedLanguage}
                                     height="100%"
                                     language={selectedLanguage === 'c++' ? 'cpp' : selectedLanguage}
-                                    theme="vs-dark"
+                                    theme={theme === 'dark' ? 'vs-dark' : 'light'}
                                     value={codes[currentQuestionIdx]}
                                     onChange={handleCodeChange}
                                     onMount={(editor, monaco) => {
@@ -368,139 +370,145 @@ int main() {
                             </div>
 
                             {/* Console / Test Results */}
-                            <div className="h-64 border-t border-white/5 bg-[#0d0d0d] flex flex-col shrink-0">
-                                <div className="flex items-center justify-between px-6 h-12 border-b border-white/5 shrink-0">
-                                    <div className="flex items-center gap-6 h-full">
-                                        <button
-                                            onClick={() => setActiveTab('description')}
-                                            className={`text-[10px] font-black uppercase tracking-widest h-full border-b-2 transition-all ${activeTab === 'description' ? 'text-blue-500 border-blue-500' : 'text-zinc-600 border-transparent'
-                                                }`}
-                                        >
-                                            Output
-                                        </button>
-                                        <button
-                                            onClick={() => setActiveTab('testcases')}
-                                            className={`text-[10px] font-black uppercase tracking-widest h-full border-b-2 transition-all flex items-center gap-2 ${activeTab === 'testcases' ? 'text-blue-500 border-blue-500' : 'text-zinc-600 border-transparent'
-                                                }`}
-                                        >
-                                            Test Cases
-                                            {currentResults.length > 0 && (
-                                                <span className={`w-1.5 h-1.5 rounded-full ${currentResults.every(r => r.passed) ? 'bg-green-500' : 'bg-red-500'}`}></span>
-                                            )}
-                                        </button>
-                                    </div>
-
-                                    <div className="flex flex-wrap items-center gap-2 justify-end flex-1 min-w-0 pr-4 py-1">
-                                        <div className="flex items-center gap-2 shrink-0">
-                                            <select
-                                                value={selectedLanguage}
-                                                onChange={(e) => handleLanguageChange(e.target.value)}
-                                                className="bg-zinc-800 border border-white/5 text-[10px] font-bold text-zinc-300 rounded-lg px-2 py-1.5 focus:outline-none hover:text-white cursor-pointer transition-colors appearance-none uppercase tracking-wider"
-                                            >
-                                                <option value="javascript">JavaScript</option>
-                                                <option value="python">Python</option>
-                                                <option value="java">Java</option>
-                                                <option value="cpp">C++</option>
-                                            </select>
-                                        </div>
-                                        <div className="flex items-center gap-2 shrink-0">
+                            {(activeTab !== '' || consoleOutput || currentResults.length > 0) && (
+                                <motion.div
+                                    initial={{ height: 0 }}
+                                    animate={{ height: '40%' }}
+                                    className="h-[40%] bg-brand-card border-t border-brand-border flex flex-col absolute bottom-0 left-0 right-0 z-10"
+                                >
+                                    <div className="flex items-center justify-between px-6 h-12 border-b border-brand-border shrink-0">
+                                        <div className="flex items-center gap-6 h-full">
                                             <button
-                                                onClick={handleRunCode}
-                                                disabled={submitting}
-                                                className="flex items-center gap-2 px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 disabled:opacity-50 text-white text-[10px] font-bold rounded-lg transition-all"
+                                                onClick={() => setActiveTab('description')}
+                                                className={`text-[10px] font-black uppercase tracking-widest h-full border-b-2 transition-all ${activeTab === 'description' ? 'text-blue-500 border-blue-500' : 'text-brand-text-secondary border-transparent'
+                                                    }`}
                                             >
-                                                {submitting ? <Loader size="small" showText={false} /> : <Play size={12} fill="currentColor" />}
-                                                Run
+                                                Output
                                             </button>
                                             <button
-                                                onClick={handleSubmitCode}
-                                                disabled={submitting}
-                                                className="flex items-center gap-2 px-3 py-1.5 bg-blue-500 hover:bg-blue-600 disabled:opacity-50 text-white text-[10px] font-bold rounded-lg transition-all"
+                                                onClick={() => setActiveTab('testcases')}
+                                                className={`text-[10px] font-black uppercase tracking-widest h-full border-b-2 transition-all flex items-center gap-2 ${activeTab === 'testcases' ? 'text-blue-500 border-blue-500' : 'text-brand-text-secondary border-transparent'
+                                                    }`}
                                             >
-                                                {submitting ? <Loader size="small" showText={false} /> : <Send size={12} />}
-                                                Submit
+                                                Test Cases
+                                                {currentResults.length > 0 && (
+                                                    <span className={`w-1.5 h-1.5 rounded-full ${currentResults.every(r => r.passed) ? 'bg-green-500' : 'bg-red-500'}`}></span>
+                                                )}
                                             </button>
                                         </div>
-                                    </div>
-                                </div>
 
-                                <div className="flex-grow overflow-y-auto p-6 font-mono text-sm">
-                                    {activeTab === 'description' ? (
-                                        <div className="text-zinc-500 whitespace-pre-wrap">
-                                            {consoleOutput || 'Click "Run Code" to see results...'}
-                                        </div>
-                                    ) : (
-                                        <div className="space-y-4">
-                                            <div className="flex items-center gap-2 mb-4">
-                                                <input
-                                                    type="checkbox"
-                                                    id="useCustomInput"
-                                                    checked={useCustomInput}
-                                                    onChange={(e) => setUseCustomInput(e.target.checked)}
-                                                    className="rounded bg-zinc-800 border-zinc-700 text-blue-500 focus:ring-0"
-                                                />
-                                                <label htmlFor="useCustomInput" className="text-xs font-bold text-zinc-400 select-none cursor-pointer">Use Custom Input</label>
+                                        <div className="flex flex-wrap items-center gap-2 justify-end flex-1 min-w-0 pr-4 py-1">
+                                            <div className="flex items-center gap-2 shrink-0">
+                                                <select
+                                                    value={selectedLanguage}
+                                                    onChange={(e) => handleLanguageChange(e.target.value)}
+                                                    className="bg-brand-secondary/10 border border-brand-border text-[10px] font-bold text-brand-text-secondary rounded-lg px-2 py-1.5 focus:outline-none hover:text-brand-text cursor-pointer transition-colors appearance-none uppercase tracking-wider"
+                                                >
+                                                    <option value="javascript">JavaScript</option>
+                                                    <option value="python">Python</option>
+                                                    <option value="java">Java</option>
+                                                    <option value="cpp">C++</option>
+                                                </select>
                                             </div>
-
-                                            {useCustomInput ? (
-                                                <textarea
-                                                    value={customInput}
-                                                    onChange={(e) => setCustomInput(e.target.value)}
-                                                    placeholder="Enter your custom input here..."
-                                                    className="w-full h-32 bg-black/40 border border-white/5 rounded-xl p-4 text-zinc-300 focus:outline-none focus:border-white/10 resize-none font-mono text-xs"
-                                                />
-                                            ) : (
-                                                currentResults.length > 0 ? (
-                                                    currentResults.map((res, idx) => (
-                                                        <div key={idx} className={`p-4 rounded-xl border ${res.passed ? 'bg-green-500/5 border-green-500/10' : 'bg-red-500/5 border-red-500/10'}`}>
-                                                            <div className="flex items-center justify-between mb-3">
-                                                                <span className="text-xs font-bold uppercase tracking-widest text-zinc-600">
-                                                                    {res.isHidden ? `Verification Segment ${idx + 1} (Hidden)` : `Test Case ${idx + 1}`}
-                                                                </span>
-                                                                {res.passed ?
-                                                                    <span className="flex items-center gap-1.5 text-xs font-bold text-green-500"><CheckCircle2 size={14} /> Passed</span> :
-                                                                    <span className="flex items-center gap-1.5 text-xs font-bold text-red-500"><XCircle size={14} /> Failed</span>
-                                                                }
-                                                            </div>
-                                                            {!res.isHidden ? (
-                                                                <>
-                                                                    <div className="grid grid-cols-2 gap-6">
-                                                                        <div>
-                                                                            <div className="text-[10px] text-zinc-600 font-bold uppercase mb-1">Input</div>
-                                                                            <div className="bg-black/40 p-2 rounded text-xs text-zinc-400 border border-white/5">{res.input || 'None'}</div>
-                                                                        </div>
-                                                                        <div>
-                                                                            <div className="text-[10px] text-zinc-600 font-bold uppercase mb-1">Expected</div>
-                                                                            <div className="bg-black/40 p-2 rounded text-xs text-zinc-400 border border-white/5">{res.expectedOutput || 'None'}</div>
-                                                                        </div>
-                                                                    </div>
-                                                                    {!res.passed && (
-                                                                        <div className="mt-4">
-                                                                            <div className="text-[10px] text-zinc-600 font-bold uppercase mb-1">Your Output</div>
-                                                                            <div className="bg-red-500/10 p-2 rounded text-xs text-red-400 border border-red-500/10">{res.actualOutput || 'No output'}</div>
-                                                                        </div>
-                                                                    )}
-                                                                    {res.error && (
-                                                                        <div className="mt-4 p-3 bg-red-500/10 border border-red-500/10 rounded-lg text-xs text-red-400 font-mono">
-                                                                            {res.error}
-                                                                        </div>
-                                                                    )}
-                                                                </>
-                                                            ) : (
-                                                                <div className="text-[10px] text-zinc-500 italic">
-                                                                    Details hidden for verification security
-                                                                </div>
-                                                            )}
-                                                        </div>
-                                                    ))
-                                                ) : (
-                                                    <div className="text-zinc-600 italic">No test cases to display yet. Run your code to check against test cases.</div>
-                                                )
-                                            )}
+                                            <div className="flex items-center gap-2 shrink-0">
+                                                <button
+                                                    onClick={handleRunCode}
+                                                    disabled={submitting}
+                                                    className="flex items-center gap-2 px-3 py-1.5 bg-brand-secondary/10 hover:bg-brand-secondary/20 disabled:opacity-50 text-brand-text text-[10px] font-bold rounded-lg transition-all"
+                                                >
+                                                    {submitting ? <Loader size="small" showText={false} /> : <Play size={12} fill="currentColor" />}
+                                                    Run
+                                                </button>
+                                                <button
+                                                    onClick={handleSubmitCode}
+                                                    disabled={submitting}
+                                                    className="flex items-center gap-2 px-3 py-1.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white text-[10px] font-bold rounded-lg transition-all shadow-lg shadow-blue-500/20"
+                                                >
+                                                    {submitting ? <Loader size="small" showText={false} /> : <Send size={12} />}
+                                                    Submit
+                                                </button>
+                                            </div>
                                         </div>
-                                    )}
-                                </div>
-                            </div>
+                                    </div>
+
+                                    <div className="flex-grow overflow-y-auto p-6 font-mono text-sm custom-scrollbar">
+                                        {activeTab === 'description' ? (
+                                            <div className="text-brand-text-secondary whitespace-pre-wrap">
+                                                {consoleOutput || 'Click "Run Code" to see results...'}
+                                            </div>
+                                        ) : (
+                                            <div className="space-y-4">
+                                                <div className="flex items-center gap-2 mb-4">
+                                                    <input
+                                                        type="checkbox"
+                                                        id="useCustomInput"
+                                                        checked={useCustomInput}
+                                                        onChange={(e) => setUseCustomInput(e.target.checked)}
+                                                        className="rounded bg-brand-bg border-brand-border text-blue-500 focus:ring-0"
+                                                    />
+                                                    <label htmlFor="useCustomInput" className="text-xs font-bold text-brand-text-secondary select-none cursor-pointer">Use Custom Input</label>
+                                                </div>
+
+                                                {useCustomInput ? (
+                                                    <textarea
+                                                        value={customInput}
+                                                        onChange={(e) => setCustomInput(e.target.value)}
+                                                        placeholder="Enter your custom input here..."
+                                                        className="w-full h-32 bg-brand-bg/40 border border-brand-border rounded-xl p-4 text-brand-text focus:outline-none focus:border-brand-border/50 resize-none font-mono text-xs placeholder:text-brand-text-secondary/50"
+                                                    />
+                                                ) : (
+                                                    currentResults.length > 0 ? (
+                                                        currentResults.map((res, idx) => (
+                                                            <div key={idx} className={`p-4 rounded-xl border ${res.passed ? 'bg-green-500/5 border-green-500/10' : 'bg-red-500/5 border-red-500/10'}`}>
+                                                                <div className="flex items-center justify-between mb-3">
+                                                                    <span className="text-xs font-bold uppercase tracking-widest text-brand-text-secondary">
+                                                                        {res.isHidden ? `Verification Segment ${idx + 1} (Hidden)` : `Test Case ${idx + 1}`}
+                                                                    </span>
+                                                                    {res.passed ?
+                                                                        <span className="flex items-center gap-1.5 text-xs font-bold text-green-500"><CheckCircle2 size={14} /> Passed</span> :
+                                                                        <span className="flex items-center gap-1.5 text-xs font-bold text-red-500"><XCircle size={14} /> Failed</span>
+                                                                    }
+                                                                </div>
+                                                                {!res.isHidden ? (
+                                                                    <>
+                                                                        <div className="grid grid-cols-2 gap-6">
+                                                                            <div>
+                                                                                <div className="text-[10px] text-brand-text-secondary font-bold uppercase mb-1">Input</div>
+                                                                                <div className="bg-brand-bg/40 p-2 rounded text-xs text-brand-text-secondary border border-brand-border">{res.input || 'None'}</div>
+                                                                            </div>
+                                                                            <div>
+                                                                                <div className="text-[10px] text-brand-text-secondary font-bold uppercase mb-1">Expected</div>
+                                                                                <div className="bg-brand-bg/40 p-2 rounded text-xs text-brand-text-secondary border border-brand-border">{res.expectedOutput || 'None'}</div>
+                                                                            </div>
+                                                                        </div>
+                                                                        {!res.passed && (
+                                                                            <div className="mt-4">
+                                                                                <div className="text-[10px] text-brand-text-secondary font-bold uppercase mb-1">Your Output</div>
+                                                                                <div className="bg-red-500/10 p-2 rounded text-xs text-red-400 border border-red-500/10">{res.actualOutput || 'No output'}</div>
+                                                                            </div>
+                                                                        )}
+                                                                        {res.error && (
+                                                                            <div className="mt-4 p-3 bg-red-500/10 border border-red-500/10 rounded-lg text-xs text-red-400 font-mono">
+                                                                                {res.error}
+                                                                            </div>
+                                                                        )}
+                                                                    </>
+                                                                ) : (
+                                                                    <div className="text-[10px] text-brand-text-secondary italic">
+                                                                        Details hidden for verification security
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        ))
+                                                    ) : (
+                                                        <div className="text-brand-text-secondary italic">No test cases to display yet. Run your code to check against test cases.</div>
+                                                    )
+                                                )}
+                                            </div>
+                                        )}
+                                    </div>
+                                </motion.div>
+                            )}
                         </div>
                     </Panel>
                 </PanelGroup>

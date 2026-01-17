@@ -3,13 +3,13 @@ import { motion } from 'framer-motion';
 
 
 export const Integrations = () => (
-    <div className="min-h-screen bg-black text-white">
+    <div className="min-h-screen bg-brand-bg text-brand-text transition-colors duration-300">
         <div className="pt-32 pb-20 px-6 max-w-7xl mx-auto text-center">
-            <h1 className="text-5xl font-bold mb-6">Integrations</h1>
-            <p className="text-xl text-zinc-400 mb-20">Connect Kryzo with your favorite tools.</p>
+            <h1 className="text-5xl font-bold mb-6 text-brand-text">Integrations</h1>
+            <p className="text-xl text-brand-text-secondary mb-20">Connect Kryzo with your favorite tools.</p>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
                 {['GitHub', 'GitLab', 'Slack', 'Discord', 'Notion', 'VS Code', 'Jira', 'Linear'].map(tool => (
-                    <div key={tool} className="p-8 rounded-2xl bg-zinc-900/50 border border-white/5 flex items-center justify-center font-bold text-xl">
+                    <div key={tool} className="p-8 rounded-2xl bg-brand-card/50 border border-brand-border flex items-center justify-center font-bold text-xl text-brand-text">
                         {tool}
                     </div>
                 ))}
@@ -35,16 +35,16 @@ export const Changelog = () => (
 );
 
 export const HelpCenter = () => (
-    <div className="min-h-screen bg-black text-white">
+    <div className="min-h-screen bg-brand-bg text-brand-text transition-colors duration-300">
         <div className="pt-32 pb-20 px-6 max-w-4xl mx-auto text-center">
-            <h1 className="text-5xl font-bold mb-8">How can we help?</h1>
-            <input type="text" placeholder="Search for help articles..." className="w-full max-w-xl bg-zinc-900 border border-white/10 rounded-2xl p-6 text-lg focus:border-blue-500 focus:outline-none mb-12" />
+            <h1 className="text-5xl font-bold mb-8 text-brand-text">How can we help?</h1>
+            <input type="text" placeholder="Search for help articles..." className="w-full max-w-xl bg-brand-bg border border-brand-border rounded-2xl p-6 text-lg text-brand-text placeholder:text-brand-text-secondary focus:border-blue-500 focus:outline-none mb-12" />
 
             <div className="grid md:grid-cols-3 gap-6 text-left">
                 {['Account & Billing', 'Course Content', 'Technical Issues'].map(cat => (
-                    <div key={cat} className="p-6 rounded-2xl border border-white/5 hover:bg-zinc-900/50 cursor-pointer">
-                        <h3 className="font-bold mb-2">{cat}</h3>
-                        <p className="text-sm text-zinc-500">Manage settings, payments and more.</p>
+                    <div key={cat} className="p-6 rounded-2xl border border-brand-border hover:bg-brand-card/50 cursor-pointer transition-colors bg-brand-card/20">
+                        <h3 className="font-bold mb-2 text-brand-text">{cat}</h3>
+                        <p className="text-sm text-brand-text-secondary">Manage settings, payments and more.</p>
                     </div>
                 ))}
             </div>

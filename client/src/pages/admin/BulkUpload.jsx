@@ -4,6 +4,7 @@ import * as XLSX from 'xlsx';
 import api from '../../utils/api';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
+import { useTheme } from '../../context/ThemeContext';
 import {
     Upload,
     FileSpreadsheet,
@@ -16,6 +17,7 @@ import {
 } from 'lucide-react';
 
 const BulkUpload = () => {
+    const { theme } = useTheme();
     const navigate = useNavigate();
     const [previewData, setPreviewData] = useState([]);
     const [fileName, setFileName] = useState('');
@@ -120,20 +122,20 @@ const BulkUpload = () => {
     };
 
     return (
-        <div className="min-h-screen bg-black pt-28 pb-20 px-6">
+        <div className="min-h-screen bg-brand-bg pt-28 pb-20 px-6 transition-colors duration-300">
             <div className="max-w-6xl mx-auto">
                 <header className="mb-12 flex items-center justify-between">
                     <div>
-                        <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-zinc-500 hover:text-white transition-colors mb-4 font-bold text-xs uppercase tracking-widest">
+                        <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-brand-text-secondary hover:text-brand-text transition-colors mb-4 font-bold text-xs uppercase tracking-widest">
                             <ArrowLeft size={16} />
                             Back to dashboard
                         </button>
-                        <h1 className="text-4xl font-bold mb-2 tracking-tight">Bulk Upload</h1>
-                        <p className="text-zinc-500 text-sm">Upload multiple questions at once using Excel or CSV templates.</p>
+                        <h1 className="text-4xl font-bold mb-2 tracking-tight text-brand-text">Bulk Upload</h1>
+                        <p className="text-brand-text-secondary text-sm">Upload multiple questions at once using Excel or CSV templates.</p>
                     </div>
                     <button
                         onClick={downloadTemplate}
-                        className="px-6 py-3 bg-zinc-900 border border-white/5 rounded-xl hover:bg-zinc-800 transition-all flex items-center gap-2 font-bold text-sm"
+                        className="px-6 py-3 bg-brand-card border border-brand-border rounded-xl hover:bg-brand-card/80 transition-all flex items-center gap-2 font-bold text-sm text-brand-text"
                     >
                         <Download size={18} />
                         Download Template
@@ -149,13 +151,13 @@ const BulkUpload = () => {
                                 onChange={handleFileUpload}
                                 className="hidden"
                             />
-                            <div className="border-2 border-dashed border-white/5 rounded-[3rem] p-20 text-center bg-zinc-900/20 group-hover:bg-zinc-900/40 group-hover:border-white/10 transition-all">
-                                <div className="w-20 h-20 bg-white/5 rounded-3xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
-                                    <Upload size={32} className="text-zinc-400 group-hover:text-white" />
+                            <div className="border-2 border-dashed border-brand-border rounded-[3rem] p-20 text-center bg-brand-secondary/5 group-hover:bg-brand-secondary/10 group-hover:border-brand-border/80 transition-all">
+                                <div className="w-20 h-20 bg-brand-secondary/10 rounded-3xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
+                                    <Upload size={32} className="text-brand-text-secondary group-hover:text-brand-text transition-colors" />
                                 </div>
-                                <h3 className="text-xl font-bold mb-2">Select your file</h3>
-                                <p className="text-zinc-500 text-sm mb-8">Click to browse or drag and drop your spreadsheet here.</p>
-                                <span className="px-6 py-3 bg-white text-black font-bold rounded-2xl">
+                                <h3 className="text-xl font-bold mb-2 text-brand-text">Select your file</h3>
+                                <p className="text-brand-text-secondary text-sm mb-8">Click to browse or drag and drop your spreadsheet here.</p>
+                                <span className="px-6 py-3 bg-brand-text text-brand-bg font-bold rounded-2xl hover:opacity-90 transition-opacity">
                                     Browse Files
                                 </span>
                             </div>
@@ -167,14 +169,14 @@ const BulkUpload = () => {
                         animate={{ opacity: 1, y: 0 }}
                         className="space-y-8"
                     >
-                        <div className="flex items-center justify-between p-6 bg-zinc-900/50 border border-white/5 rounded-3xl backdrop-blur-sm">
+                        <div className="flex items-center justify-between p-6 bg-brand-card/30 border border-brand-border rounded-3xl backdrop-blur-sm">
                             <div className="flex items-center gap-4">
                                 <div className="p-3 bg-green-500/10 rounded-2xl">
                                     <FileSpreadsheet className="text-green-500" size={24} />
                                 </div>
                                 <div>
-                                    <h3 className="font-bold">{fileName}</h3>
-                                    <p className="text-xs text-zinc-500">{previewData.length} questions identified in file.</p>
+                                    <h3 className="font-bold text-brand-text">{fileName}</h3>
+                                    <p className="text-xs text-brand-text-secondary">{previewData.length} questions identified in file.</p>
                                 </div>
                             </div>
                             <div className="flex gap-4">
@@ -188,34 +190,34 @@ const BulkUpload = () => {
                                 <button
                                     onClick={handleUpload}
                                     disabled={uploading}
-                                    className="px-10 py-3 bg-white text-black font-bold rounded-xl hover:bg-zinc-200 transition-all flex items-center gap-2 disabled:opacity-50"
+                                    className="px-10 py-3 bg-brand-text text-brand-bg font-bold rounded-xl hover:opacity-90 transition-all flex items-center gap-2 disabled:opacity-50"
                                 >
                                     {uploading ? 'Uploading...' : <><Save size={18} /> Confirm & Upload</>}
                                 </button>
                             </div>
                         </div>
 
-                        <div className="bg-zinc-900/30 border border-white/5 rounded-3xl overflow-hidden overflow-x-auto">
+                        <div className="bg-brand-card/30 border border-brand-border rounded-3xl overflow-hidden overflow-x-auto">
                             <table className="w-full text-left">
-                                <thead className="bg-white/5">
+                                <thead className="bg-brand-secondary/5">
                                     <tr>
-                                        <th className="px-6 py-4 text-[10px] uppercase font-bold text-zinc-500 tracking-widest">Type</th>
-                                        <th className="px-6 py-4 text-[10px] uppercase font-bold text-zinc-500 tracking-widest">Title</th>
-                                        <th className="px-6 py-4 text-[10px] uppercase font-bold text-zinc-500 tracking-widest">Topic</th>
-                                        <th className="px-6 py-4 text-[10px] uppercase font-bold text-zinc-500 tracking-widest">Difficulty</th>
+                                        <th className="px-6 py-4 text-[10px] uppercase font-bold text-brand-text-secondary tracking-widest">Type</th>
+                                        <th className="px-6 py-4 text-[10px] uppercase font-bold text-brand-text-secondary tracking-widest">Title</th>
+                                        <th className="px-6 py-4 text-[10px] uppercase font-bold text-brand-text-secondary tracking-widest">Topic</th>
+                                        <th className="px-6 py-4 text-[10px] uppercase font-bold text-brand-text-secondary tracking-widest">Difficulty</th>
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-white/5">
+                                <tbody className="divide-y divide-brand-border">
                                     {previewData.map((q, i) => (
-                                        <tr key={i} className="hover:bg-white/[0.02] transition-colors">
+                                        <tr key={i} className="hover:bg-brand-secondary/5 transition-colors">
                                             <td className="px-6 py-4">
                                                 <span className={`px-2 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider ${q.type === 'MCQ' ? 'bg-blue-500/10 text-blue-500' : 'bg-green-500/10 text-green-500'
                                                     }`}>
                                                     {q.type}
                                                 </span>
                                             </td>
-                                            <td className="px-6 py-4 text-sm font-medium">{q.title}</td>
-                                            <td className="px-6 py-4 text-sm text-zinc-400">{q.topic}</td>
+                                            <td className="px-6 py-4 text-sm font-medium text-brand-text">{q.title}</td>
+                                            <td className="px-6 py-4 text-sm text-brand-text-secondary">{q.topic}</td>
                                             <td className="px-6 py-4">
                                                 <span className={`text-[10px] font-bold uppercase tracking-wider ${q.difficulty === 'easy' ? 'text-green-500' :
                                                     q.difficulty === 'medium' ? 'text-yellow-500' : 'text-red-500'

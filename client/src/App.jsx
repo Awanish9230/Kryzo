@@ -59,7 +59,7 @@ const Layout = ({ children }) => {
     location.pathname.match(/\/student\/battle\/.+/);
 
   return (
-    <div className="flex flex-col min-h-screen bg-black text-white">
+    <div className="flex flex-col min-h-screen bg-brand-bg text-brand-text transition-colors duration-300">
       {!isTestRoute && <Navbar />}
       <SessionTracker />
       <main className="flex-grow">
@@ -72,93 +72,97 @@ const Layout = ({ children }) => {
 
 import { Toaster } from 'react-hot-toast';
 
+import { ThemeProvider } from './context/ThemeContext';
+
 function App() {
   return (
-    <AuthProvider>
-      <SocketProvider>
-        <ErrorBoundary>
-          <Router>
-            <Layout>
-              <Routes>
-                {/* Public Routes */}
-                <Route path="/" element={<Landing />} />
-                <Route path="/about" element={<About />} />
-                <Route path="/contact" element={<Contact />} />
-                <Route path="/careers" element={<Careers />} />
-                <Route path="/blog" element={<Blog />} />
-                <Route path="/features" element={<Features />} />
-                <Route path="/pricing" element={<Pricing />} />
-                <Route path="/privacy" element={<PrivacyPolicy />} />
-                <Route path="/terms" element={<TermsOfService />} />
-                <Route path="/integrations" element={<Integrations />} />
-                <Route path="/changelog" element={<Changelog />} />
-                <Route path="/help" element={<HelpCenter />} />
-                <Route path="/docs" element={<Documentation />} />
+    <ThemeProvider>
+      <AuthProvider>
+        <SocketProvider>
+          <ErrorBoundary>
+            <Router>
+              <Layout>
+                <Routes>
+                  {/* Public Routes */}
+                  <Route path="/" element={<Landing />} />
+                  <Route path="/about" element={<About />} />
+                  <Route path="/contact" element={<Contact />} />
+                  <Route path="/careers" element={<Careers />} />
+                  <Route path="/blog" element={<Blog />} />
+                  <Route path="/features" element={<Features />} />
+                  <Route path="/pricing" element={<Pricing />} />
+                  <Route path="/privacy" element={<PrivacyPolicy />} />
+                  <Route path="/terms" element={<TermsOfService />} />
+                  <Route path="/integrations" element={<Integrations />} />
+                  <Route path="/changelog" element={<Changelog />} />
+                  <Route path="/help" element={<HelpCenter />} />
+                  <Route path="/docs" element={<Documentation />} />
 
-                <Route path="/login" element={<Login />} />
-                <Route path="/register" element={<Register />} />
+                  <Route path="/login" element={<Login />} />
+                  <Route path="/register" element={<Register />} />
 
-                {/* Student Routes */}
-                <Route path="/student" element={<PrivateRoute role="student"><StudentDashboard /></PrivateRoute>} />
-                <Route path="/student/dashboard" element={<PrivateRoute role="student"><StudentDashboard /></PrivateRoute>} />
-                <Route path="/student/profile" element={<PrivateRoute role="student"><Profile /></PrivateRoute>} />
-                <Route path="/student/practice/coding" element={<PrivateRoute role="student"><CodingPractice /></PrivateRoute>} />
-                <Route path="/student/battle" element={<PrivateRoute role="student"><BattleLobby /></PrivateRoute>} />
-                <Route path="/student/battle/:roomId" element={<PrivateRoute role="student"><BattleArena /></PrivateRoute>} />
-                <Route path="/student/test/diagnostic" element={<PrivateRoute role="student"><TestAttempt /></PrivateRoute>} />
-                <Route path="/student/test/custom" element={<PrivateRoute role="student"><CustomTestBuilder /></PrivateRoute>} />
-                <Route path="/student/test/daily/:dayNumber" element={<PrivateRoute role="student"><DailyTest /></PrivateRoute>} />
-                <Route path="/student/test/:testId" element={<PrivateRoute role="student"><TestAttempt /></PrivateRoute>} />
-                <Route path="/student/test/result" element={<PrivateRoute role="student"><TestResult /></PrivateRoute>} />
-                <Route path="/student/reviews" element={<PrivateRoute role="student"><TestReviewList /></PrivateRoute>} />
-                <Route path="/student/attempt/:attemptId" element={<PrivateRoute role="student"><TestReviewDetail /></PrivateRoute>} />
-                <Route path="/student/review/:attemptId" element={<PrivateRoute role="student"><TestReviewDetail /></PrivateRoute>} />
-                <Route path="/student/study/:id" element={<PrivateRoute role="student"><StudyDocumentation /></PrivateRoute>} />
+                  {/* Student Routes */}
+                  <Route path="/student" element={<PrivateRoute role="student"><StudentDashboard /></PrivateRoute>} />
+                  <Route path="/student/dashboard" element={<PrivateRoute role="student"><StudentDashboard /></PrivateRoute>} />
+                  <Route path="/student/profile" element={<PrivateRoute role="student"><Profile /></PrivateRoute>} />
+                  <Route path="/student/practice/coding" element={<PrivateRoute role="student"><CodingPractice /></PrivateRoute>} />
+                  <Route path="/student/battle" element={<PrivateRoute role="student"><BattleLobby /></PrivateRoute>} />
+                  <Route path="/student/battle/:roomId" element={<PrivateRoute role="student"><BattleArena /></PrivateRoute>} />
+                  <Route path="/student/test/diagnostic" element={<PrivateRoute role="student"><TestAttempt /></PrivateRoute>} />
+                  <Route path="/student/test/custom" element={<PrivateRoute role="student"><CustomTestBuilder /></PrivateRoute>} />
+                  <Route path="/student/test/daily/:dayNumber" element={<PrivateRoute role="student"><DailyTest /></PrivateRoute>} />
+                  <Route path="/student/test/:testId" element={<PrivateRoute role="student"><TestAttempt /></PrivateRoute>} />
+                  <Route path="/student/test/result" element={<PrivateRoute role="student"><TestResult /></PrivateRoute>} />
+                  <Route path="/student/reviews" element={<PrivateRoute role="student"><TestReviewList /></PrivateRoute>} />
+                  <Route path="/student/attempt/:attemptId" element={<PrivateRoute role="student"><TestReviewDetail /></PrivateRoute>} />
+                  <Route path="/student/review/:attemptId" element={<PrivateRoute role="student"><TestReviewDetail /></PrivateRoute>} />
+                  <Route path="/student/study/:id" element={<PrivateRoute role="student"><StudyDocumentation /></PrivateRoute>} />
 
-                {/* Admin Routes */}
-                <Route path="/admin" element={<PrivateRoute role="admin"><AdminDashboard /></PrivateRoute>} />
-                <Route path="/admin/dashboard" element={<PrivateRoute role="admin"><AdminDashboard /></PrivateRoute>} />
-                <Route path="/admin/profile" element={<PrivateRoute role="admin"><AdminProfile /></PrivateRoute>} />
-                <Route path="/admin/questions" element={<PrivateRoute role="admin"><QuestionList /></PrivateRoute>} />
-                <Route path="/admin/questions/add" element={<PrivateRoute role="admin"><AddQuestion /></PrivateRoute>} />
-                <Route path="/admin/questions/edit/:id" element={<PrivateRoute role="admin"><EditQuestion /></PrivateRoute>} />
-                <Route path="/admin/users" element={<PrivateRoute role="admin"><UserManagement /></PrivateRoute>} />
-                <Route path="/admin/documentation" element={<PrivateRoute role="admin"><AdminDocumentation /></PrivateRoute>} />
-                <Route path="/admin/questions/bulk" element={<PrivateRoute role="admin"><BulkUpload /></PrivateRoute>} />
-                <Route path="/admin/reports" element={<PrivateRoute role="admin"><AdminReports /></PrivateRoute>} />
-                <Route path="/admin/questions/reports" element={<PrivateRoute role="admin"><ReportedQuestions /></PrivateRoute>} />
-                <Route path="/admin/settings" element={<PrivateRoute role="admin"><SettingsPage /></PrivateRoute>} />
-                <Route path="/admin/logs" element={<PrivateRoute role="admin"><SystemLogs /></PrivateRoute>} />
+                  {/* Admin Routes */}
+                  <Route path="/admin" element={<PrivateRoute role="admin"><AdminDashboard /></PrivateRoute>} />
+                  <Route path="/admin/dashboard" element={<PrivateRoute role="admin"><AdminDashboard /></PrivateRoute>} />
+                  <Route path="/admin/profile" element={<PrivateRoute role="admin"><AdminProfile /></PrivateRoute>} />
+                  <Route path="/admin/questions" element={<PrivateRoute role="admin"><QuestionList /></PrivateRoute>} />
+                  <Route path="/admin/questions/add" element={<PrivateRoute role="admin"><AddQuestion /></PrivateRoute>} />
+                  <Route path="/admin/questions/edit/:id" element={<PrivateRoute role="admin"><EditQuestion /></PrivateRoute>} />
+                  <Route path="/admin/users" element={<PrivateRoute role="admin"><UserManagement /></PrivateRoute>} />
+                  <Route path="/admin/documentation" element={<PrivateRoute role="admin"><AdminDocumentation /></PrivateRoute>} />
+                  <Route path="/admin/questions/bulk" element={<PrivateRoute role="admin"><BulkUpload /></PrivateRoute>} />
+                  <Route path="/admin/reports" element={<PrivateRoute role="admin"><AdminReports /></PrivateRoute>} />
+                  <Route path="/admin/questions/reports" element={<PrivateRoute role="admin"><ReportedQuestions /></PrivateRoute>} />
+                  <Route path="/admin/settings" element={<PrivateRoute role="admin"><SettingsPage /></PrivateRoute>} />
+                  <Route path="/admin/logs" element={<PrivateRoute role="admin"><SystemLogs /></PrivateRoute>} />
 
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </Layout>
-            <Toaster
-              position="top-right"
-              toastOptions={{
-                style: {
-                  background: '#18181b', // zinc-900
-                  color: '#fff',
-                  border: '1px solid #27272a', // zinc-800
-                },
-                success: {
-                  iconTheme: {
-                    primary: '#22c55e', // green-500
-                    secondary: '#fff',
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </Layout>
+              <Toaster
+                position="top-right"
+                toastOptions={{
+                  style: {
+                    background: 'var(--color-brand-card)',
+                    color: 'var(--color-brand-text)',
+                    border: '1px solid var(--color-brand-border)',
                   },
-                },
-                error: {
-                  iconTheme: {
-                    primary: '#ef4444', // red-500
-                    secondary: '#fff',
+                  success: {
+                    iconTheme: {
+                      primary: '#22c55e', // green-500
+                      secondary: '#fff',
+                    },
                   },
-                },
-              }}
-            />
-          </Router>
-        </ErrorBoundary>
-      </SocketProvider>
-    </AuthProvider>
+                  error: {
+                    iconTheme: {
+                      primary: '#ef4444', // red-500
+                      secondary: '#fff',
+                    },
+                  },
+                }}
+              />
+            </Router>
+          </ErrorBoundary>
+        </SocketProvider>
+      </AuthProvider>
+    </ThemeProvider>
   );
 }
 

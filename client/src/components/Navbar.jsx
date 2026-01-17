@@ -1,6 +1,7 @@
 import { useContext, useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import AuthContext from '../context/AuthContext';
+import ThemeToggle from './ThemeToggle';
 import { motion } from 'framer-motion';
 import { LogOut, LayoutDashboard, PlusCircle, BookOpen, Settings as SettingsIcon, Swords, Menu, X, User, Terminal } from 'lucide-react';
 
@@ -27,15 +28,16 @@ const Navbar = () => {
     if (isTestAttempt) return null;
 
     if (!user) return (
-        <nav className="fixed top-0 left-0 w-full z-50 border-b border-white/5 bg-black/50 backdrop-blur-xl">
+        <nav className="fixed top-0 left-0 w-full z-50 border-b border-brand-border bg-brand-bg/80 backdrop-blur-xl transition-colors duration-300">
             <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
                 <Link to="/" className="hover:opacity-80 transition-opacity flex items-center gap-3">
-                    <img src="/K_logo.png" alt="Kryzo" className="h-10 w-10 object-cover rounded-full bg-white/5 p-1 border border-white/10" />
-                    <span className="text-xl font-bold tracking-tighter">KRYZO</span>
+                    <img src="/K_logo.png" alt="Kryzo" className="h-10 w-10 object-cover rounded-full bg-brand-card p-1 border border-brand-border" />
+                    <span className="text-xl font-bold tracking-tighter text-brand-text">KRYZO</span>
                 </Link>
-                <div className="flex gap-4">
-                    <Link to="/login" className="text-sm font-medium text-zinc-400 hover:text-white transition-colors">Sign In</Link>
-                    <Link to="/register" className="text-sm font-medium px-4 py-1.5 bg-white text-black rounded-full hover:bg-zinc-200 transition-colors">Get Started</Link>
+                <div className="flex items-center gap-4">
+                    <ThemeToggle />
+                    <Link to="/login" className="text-sm font-medium text-brand-text-secondary hover:text-brand-text transition-colors">Sign In</Link>
+                    <Link to="/register" className="text-sm font-medium px-4 py-1.5 bg-brand-text text-brand-bg rounded-full hover:opacity-90 transition-opacity">Get Started</Link>
                 </div>
             </div>
         </nav>
@@ -44,12 +46,12 @@ const Navbar = () => {
     const isAdmin = user?.role === 'admin';
 
     return (
-        <nav className="fixed top-0 left-0 w-full z-50 border-b border-white/5 bg-black/50 backdrop-blur-xl">
+        <nav className="fixed top-0 left-0 w-full z-50 border-b border-brand-border bg-brand-bg/80 backdrop-blur-xl transition-colors duration-300">
             <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
                 <div className="flex items-center gap-8">
                     <Link to="/" className="mr-8 hover:opacity-80 transition-opacity flex items-center gap-3">
-                        <img src="/K_logo.png" alt="Kryzo" className="h-10 w-10 object-cover rounded-full bg-white/5 p-1 border border-white/10" />
-                        <span className="text-xl font-bold tracking-tighter">KRYZO</span>
+                        <img src="/K_logo.png" alt="Kryzo" className="h-10 w-10 object-cover rounded-full bg-brand-card p-1 border border-brand-border" />
+                        <span className="text-xl font-bold tracking-tighter text-brand-text">KRYZO</span>
                     </Link>
                     <div className="hidden md:flex items-center gap-1">
                         {isAdmin ? (
@@ -72,16 +74,17 @@ const Navbar = () => {
                 </div>
 
                 <div className="flex items-center gap-4">
+                    <ThemeToggle />
                     <Link
                         to={isAdmin ? "/admin/profile" : "/student/profile"}
                         className="hidden sm:flex flex-col items-end mr-2 hover:opacity-80 transition-opacity cursor-pointer"
                     >
-                        <span className="text-xs font-medium text-white">{user.name}</span>
-                        <span className="text-[10px] text-zinc-500 uppercase tracking-widest">{user.role}</span>
+                        <span className="text-xs font-medium text-brand-text">{user.name}</span>
+                        <span className="text-[10px] text-brand-text-secondary uppercase tracking-widest">{user.role}</span>
                     </Link>
                     <button
                         onClick={handleLogout}
-                        className="p-2 hover:bg-white/5 rounded-full text-zinc-400 hover:text-white transition-all group relative hidden md:block" // Hidden on mobile to save space
+                        className="p-2 hover:bg-brand-card rounded-full text-brand-text-secondary hover:text-brand-text transition-all group relative hidden md:block" // Hidden on mobile to save space
                         title="Logout"
                     >
                         <LogOut size={20} />
@@ -90,7 +93,7 @@ const Navbar = () => {
                     {/* Mobile Menu Toggle */}
                     <button
                         onClick={toggleMobileMenu}
-                        className="md:hidden p-2 text-zinc-400 hover:text-white"
+                        className="md:hidden p-2 text-brand-text-secondary hover:text-brand-text"
                     >
                         {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
                     </button>
@@ -102,7 +105,7 @@ const Navbar = () => {
                 <motion.div
                     initial={{ opacity: 0, y: -20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="md:hidden absolute top-16 left-0 w-full bg-zinc-900 border-b border-white/5 p-4 flex flex-col gap-2 shadow-2xl"
+                    className="md:hidden absolute top-16 left-0 w-full bg-brand-card border-b border-brand-border p-4 flex flex-col gap-2 shadow-2xl"
                 >
                     {isAdmin ? (
                         <>
@@ -121,7 +124,7 @@ const Navbar = () => {
                         </>
                     )}
                     <NavLink to={isAdmin ? "/admin/profile" : "/student/profile"} icon={<User size={18} />} active={location.pathname.includes('/profile')} onClick={() => setIsMobileMenuOpen(false)}>Profile</NavLink>
-                    <div className="h-px bg-white/5 my-2" />
+                    <div className="h-px bg-brand-border my-2" />
                     <button
                         onClick={handleLogout}
                         className="flex items-center gap-2 px-4 py-3 rounded-xl text-red-500 hover:bg-red-500/10 transition-colors w-full text-left font-medium text-sm"
@@ -139,7 +142,7 @@ const NavLink = ({ to, children, icon, active, onClick }) => (
     <Link
         to={to}
         onClick={onClick}
-        className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all ${active ? 'bg-white/10 text-white' : 'text-zinc-500 hover:text-white hover:bg-white/5'
+        className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all ${active ? 'bg-brand-text/10 text-brand-text' : 'text-brand-text-secondary hover:text-brand-text hover:bg-brand-text/5'
             }`}
     >
         {icon}
