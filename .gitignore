@@ -34,3 +34,9 @@ Thumbs.db
 *.tmp
 .cache/
 server/temp_code/
+
+# Load Testing Temporary Files
+load_test.js
+os_tuning.ps1
+k6_summary.json
+k6_output.txt

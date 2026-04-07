@@ -445,6 +445,11 @@ Kryzo/
 
 ## 🎨 Screenshots
 
+### Load Testing Performance
+Demonstrating robust local performance handling over 7,400+ concurrent users with blazing fast throughput using the k6 benchmarking utility.
+
+![Local Load Test Data](assets/real_load_test.png)
+
 ### Landing Page
 Premium dark mode landing page with glassmorphism effects, smooth animations, and modern gradient design.
 
